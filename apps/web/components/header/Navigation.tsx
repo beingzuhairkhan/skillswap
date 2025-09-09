@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 import { FaUsers } from "react-icons/fa";
 const navItems = [
   { logo: <AiFillHome size={22} />, title: "Home", href: "/" },
-  {logo : <FaUsers size={22} /> , title="Session" , href="session"},
+  {logo : <FaUsers size={22} /> , title:"Session" , href:"session"},
   { logo: <IoChatbubbleEllipsesSharp size={22} />, title: "Messaging", href: "/messaging" },
   { logo: <IoNotifications size={22} />, title: "Notifications", href: "/notifications" },
   { logo: <RxAvatar size={22} />, title: "Me", href: "/profile" }

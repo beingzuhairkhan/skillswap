@@ -1,7 +1,7 @@
 'use client'
 import React from 'react';
 import Image from 'next/image';
-import BookSessionImage from '../../../public/book-seesion.png';
+import BookSessionImage from '../../../public/book-seesion.png'
 import { useForm, Controller } from 'react-hook-form';
 
 type FormValues = {
@@ -12,24 +12,20 @@ type FormValues = {
 };
 
 const BookSession = () => {
+    const today = new Date().toISOString().split('T')[0];
   const { handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       sessionType: '',
       duration: '',
-      date: '',
+      date: today,
       time: ''
     }
   });
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const response = await fetch('/api/book-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-
-      if (!response.ok) throw new Error('Failed to book session');
+      
+      console.log(data)
 
       alert('Session booked successfully!');
     } catch (error) {
