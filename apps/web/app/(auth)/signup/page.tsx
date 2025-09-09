@@ -26,7 +26,7 @@ const SignUp = () => {
   const onSubmit = (data: IUserSignup) => console.log(data)
 
   return (
-    <div className="max-w-6xl mx-auto items-center md:p-4 p-8">
+    <div className="max-w-6xl mt-20 mx-auto items-center md:p-4 p-8">
       {/* Banner */}
       <div>
         <Image

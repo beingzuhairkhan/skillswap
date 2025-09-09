@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@repo/ui/button";
+import Link from 'next/link'
 
 const PostBody = () => {
   const posts = [
@@ -62,11 +63,17 @@ const PostBody = () => {
       <div className="bg-white rounded-lg shadow border p-4">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
-          <input
+          {/* <input
             type="text"
             placeholder="Start a post"
             className="flex-1 border rounded-full px-4 py-2 focus:outline-none hover:bg-gray-50 cursor-pointer"
-          />
+          /> */}
+          <Link href="/create-post">
+            <div className="flex-1 border w-[490px] rounded-full px-4 py-2 focus:outline-none hover:bg-gray-50 cursor-pointer">
+              Start a post
+            </div>
+          </Link>
+
         </div>
         <div className="flex justify-around mt-4 text-gray-600 text-sm">
           <button className="flex items-center space-x-1 hover:text-blue-500">
@@ -136,9 +143,11 @@ const PostBody = () => {
             <Button className="flex items-center space-x-1 hover:text-blue-500">
               <Share2 size={16} /> <span>Share</span>
             </Button>
+            <Link href="/book-session" >
             <Button className="flex items-center space-x-1 hover:text-blue-500">
               <Send size={16} /> <span>Book Session</span>
             </Button>
+            </Link>
           </div>
         </div>
       ))}

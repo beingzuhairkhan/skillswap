@@ -25,7 +25,7 @@ const LoginPage = () => {
   const onSubmit = (data: IUserLogin) => console.log(data)
 
   return (
-    <div className="max-w-6xl mx-auto md:p-4 p-8">
+    <div className="max-w-6xl mt-20 mx-auto md:p-4 p-8">
       {/* Banner */}
       <div>
         <Image
