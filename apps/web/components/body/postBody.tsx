@@ -58,7 +58,7 @@ const PostBody = () => {
   ];
 
   return (
-    <div className="text-black mt-20 w-[600px] h-[80vh] overflow-y-scroll space-y-6 px-3 hide-scrollbar">
+    <div className="text-black mt-20 w-[600px] h-[89vh] overflow-y-scroll space-y-6 px-3 hide-scrollbar">
       {/* Create Post Box */}
       <div className="bg-white rounded-lg shadow border p-4">
         <div className="flex items-center space-x-3">
@@ -143,11 +143,16 @@ const PostBody = () => {
             <Button className="flex items-center space-x-1 hover:text-blue-500">
               <Share2 size={16} /> <span>Share</span>
             </Button>
-            <Link href="/book-session" >
+            {
+              post && (
+                  <Link href={`/book-session/${post.id}`} >
             <Button className="flex items-center space-x-1 hover:text-blue-500">
               <Send size={16} /> <span>Book Session</span>
             </Button>
             </Link>
+              )
+            }
+          
           </div>
         </div>
       ))}

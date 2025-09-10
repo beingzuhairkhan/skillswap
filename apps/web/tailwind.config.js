@@ -11,7 +11,7 @@ export default {
   theme: {
     extend: {
       maxWidth: {
-        "7.5xl": "95rem", // for example
+        "7.5xl": "90rem", // for example
       },
     },
   },

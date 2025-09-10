@@ -11,6 +11,20 @@ const RightBody = () => {
     "TailwindCSS",
     "MongoDB",
     "TypeScript",
+    "OOPs",
+    "DBMS",
+    "OS",
+    "React.js",
+    "Next.js",
+    "Node.js",
+    "Python",
+    "AI/ML",
+    "TailwindCSS",
+    "MongoDB",
+    "TypeScript",
+    "OOPs",
+    "DBMS",
+    "OS"
   ];
 
   const users = [
@@ -18,6 +32,10 @@ const RightBody = () => {
     { id: 2, name: "Sufiyan Khan", followers: 120, time: "1d ago" },
     { id: 3, name: "Sohail khan", followers: 340, time: "12h ago" },
     { id: 4, name: "Zuhair Khan", followers: 95, time: "2d ago" },
+    { id: 1, name: "Abdul Hameed", followers: 238, time: "18h ago" },
+    { id: 2, name: "Sufiyan Khan", followers: 120, time: "1d ago" },
+    { id: 3, name: "Sohail khan", followers: 340, time: "12h ago" },
+    { id: 4, name: "Zuhair Khan", followers: 95, time: "2d ago" }
   ];
 
   return (
@@ -25,7 +43,7 @@ const RightBody = () => {
       {/* Trending Skills */}
       <div className="bg-white rounded-lg shadow border p-4">
         <h2 className="font-bold text-lg mb-3">Trending Skills</h2>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 overflow-y-auto hide-scrollbar max-h-[150px]">
           {skills.map((skill, i) => (
             <span
               key={i}
@@ -37,10 +55,11 @@ const RightBody = () => {
         </div>
       </div>
 
+
       {/* Suggested Users */}
       <div className="bg-white rounded-lg shadow border p-4">
         <h2 className="font-bold text-lg mb-3">Suggested Users</h2>
-        <div className="space-y-3">
+        <div className="space-y-3 overflow-y-auto hide-scrollbar max-h-[300px]">
           {users.map((user) => (
             <div
               key={user.id}
