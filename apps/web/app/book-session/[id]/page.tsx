@@ -3,28 +3,31 @@ import React from 'react';
 import Image from 'next/image';
 import BookSessionImage from '../../../public/book-seesion.png'
 import { useForm, Controller } from 'react-hook-form';
+import { Textarea } from '@nextui-org/react';
 
 type FormValues = {
   sessionType: string;
   duration: string;
   date: string;
   time: string;
+  studentNotes: string;
 };
 
 const BookSession = () => {
-    const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0];
   const { handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       sessionType: '',
       duration: '',
       date: today,
-      time: ''
+      time: '',
+      studentNotes: ''
     }
   });
 
   const onSubmit = async (data: FormValues) => {
     try {
-      
+
       console.log(data)
 
       alert('Session booked successfully!');
@@ -146,6 +149,18 @@ const BookSession = () => {
               <p className="text-red-500 text-sm mt-1">{errors.time.message}</p>
             )}
           </div>
+
+        </div>
+        <div className="mt-6">
+          <label className="block mb-2 font-medium text-gray-700">Student Note's</label>
+          <textarea
+            placeholder="Send Message"
+            className="w-full border rounded-md p-2"
+            rows={3}
+          />
+          {errors.studentNotes && (
+            <p className="text-red-500 text-sm mt-1">{errors.studentNotes.message}</p>
+          )}
         </div>
 
         {/* Submit Button */}

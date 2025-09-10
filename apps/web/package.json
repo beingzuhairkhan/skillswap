@@ -11,7 +11,9 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@nextui-org/react": "^2.6.11",
     "@repo/ui": "*",
+    "framer-motion": "^12.23.12",
     "next": "^15.5.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
