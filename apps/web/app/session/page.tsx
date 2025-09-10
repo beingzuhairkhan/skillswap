@@ -33,11 +33,11 @@ const Sessions = () => {
           <Button
             key={opt}
             onClick={() => setSelected(opt)}
-            radius="md"
+           
             className={`relative z-10 w-[100px] h-[56px] capitalize font-medium transition-colors duration-300 ${
               selected === opt ? "text-white" : "text-black"
             }`}
-            variant="light"
+          
           >
             {opt}
           </Button>
