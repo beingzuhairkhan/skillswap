@@ -164,7 +164,7 @@ const BookSession = () => {
         </div>
 
         {/* Submit Button */}
-        <div className="flex justify-end">
+        <div className="flex justify-end pb-10">
           <button
             type="submit"
             className="bg-black text-white px-6 py-3 rounded-xl shadow-md hover:bg-gray-700 transition"

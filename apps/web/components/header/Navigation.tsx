@@ -6,9 +6,11 @@ import { IoChatbubbleEllipsesSharp, IoNotifications } from "react-icons/io5";
 import { RxAvatar } from "react-icons/rx";
 import { usePathname } from "next/navigation";
 import { FaUsers } from "react-icons/fa";
+import { SiGooglemeet } from "react-icons/si";
 const navItems = [
   { logo: <AiFillHome size={22} />, title: "Home", href: "/" },
-  {logo : <FaUsers size={22} /> , title:"Session" , href:"session"},
+  {logo : <FaUsers size={22} /> , title:"Session" , href:"/session"},
+  {logo : <SiGooglemeet size={22} /> , title:"Room" , href:"/room"},
   { logo: <IoChatbubbleEllipsesSharp size={22} />, title: "Messaging", href: "/messaging" },
   { logo: <IoNotifications size={22} />, title: "Notifications", href: "/notifications" },
   { logo: <RxAvatar size={22} />, title: "Me", href: "/profile" }
