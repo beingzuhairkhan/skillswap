@@ -67,8 +67,8 @@ const NotesEditor = () => {
       const items = event.clipboardData.items
       for (let i = 0; i < items.length; i++) {
         const item = items[i]
-        if (item.type.indexOf('image') !== -1) {
-          const file = item.getAsFile()
+        if (item?.type.indexOf('image') !== -1) {
+          const file = item?.getAsFile()
           if (file) {
             const reader = new FileReader()
             reader.onload = () => {
