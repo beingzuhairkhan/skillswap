@@ -1,5 +1,5 @@
 {
-  "name": "my-turborepo",
+  "name": "skillswap",
   "private": true,
   "scripts": {
     "build": "turbo run build",
