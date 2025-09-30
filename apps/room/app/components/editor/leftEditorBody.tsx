@@ -24,7 +24,7 @@ const CodeEditorBody = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             source_code: code,
-            language_id: language.id,
+            language_id: language?.id,
           }),
         }
       );
@@ -32,7 +32,7 @@ const CodeEditorBody = () => {
       const result = await response.json();
       setOutput(result.stdout || result.stderr || result.compile_output || "No output");
     } catch (err) {
-      setOutput("Error: " + err.message);
+      setOutput("Error: " + err);
     }
   };
 
@@ -42,7 +42,7 @@ const CodeEditorBody = () => {
       <div className="flex items-center gap-4 bg-black p-2">
         <label className="text-white text-sm">Language:</label>
         <select
-          value={language.id}
+          value={language?.id}
           onChange={(e) =>
             setLanguage(languages.find((lang) => lang.id === parseInt(e.target.value))!)
           }
@@ -70,7 +70,7 @@ const CodeEditorBody = () => {
             height="100%"
             width="100%"
             theme="vs-dark"
-            language={language.value}
+            language={language?.value}
             value={code}
             onChange={(value) => setCode(value || "")}
             options={{
