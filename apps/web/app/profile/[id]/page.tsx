@@ -5,8 +5,8 @@ import ProfileImage from '../../../public/book-seesion.png';
 import { FaUserFriends, FaUserPlus, FaStar } from "react-icons/fa";
 import { AiOutlineUserAdd } from "react-icons/ai";
 
-const skills = ["React", "Node.js", "MongoDB", "C++", "Blockchain", "Generative AI", "Cloud Computing"];
-const learning = ["Rust", "GoLang", "System Design"];
+const skills = ["React", "Node.js", "MongoDB", "C++", "Blockchain", "Generative AI", "Cloud Computing" , " + "];
+const learning = ["Rust", "GoLang", "System Design" , " + "];
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("Posts");

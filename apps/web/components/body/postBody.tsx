@@ -2,9 +2,6 @@
 
 import React from "react";
 import {
-  Image as ImageIcon,
-  Video,
-  FileText,
   ThumbsUp,
   MessageSquare,
   Share2,
@@ -12,79 +9,56 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@repo/ui/button";
-import Link from 'next/link'
+import Link from "next/link";
 
 const PostBody = () => {
   const posts = [
     {
       id: 1,
       user: "Anindita Prakash",
-      role: "Assistant Talent Acquisition Partner at Jacobs, India",
+      role: "Full Stack Developer @ Jacobs",
       time: "2d",
-      content:
-        "Hello Connections!! You are welcome to participate in our WalkIn Drive for Structural Design",
-      hashtags: [
-        "#StructuralDesign",
-        "#WalkInDrive",
-        "#GurgaonJobs",
-        "#EngineeringCareers",
-      ],
-      image: "https://media.istockphoto.com/id/477473902/photo/tea-plantations.jpg?s=2048x2048&w=is&k=20&c=tiwPjnNHBJxrEXs6XWjshgpuzEjFq-8L9zn1A6TDxFM=", // ✅ safe dummy
+      teach: "Node.js",
+      learn: "Python",
+      tags: ["#Backend", "#JavaScript", "#Coding"],
+      image:
+        "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&q=80&w=1080&auto=format&fit=crop", // 👩‍💻 laptop coding
     },
     {
       id: 2,
       user: "Priya Sharma",
-      role: "Talent Acquisition Partner @ Jacobs || Ex-AECOM",
-      time: "2d",
-      content: "We are hiring for multiple positions 🚀",
-      hashtags: ["#WeAreHiring", "#WalkIn", "#StructuralEngineer"],
-      image: "https://media.istockphoto.com/id/995369236/photo/starfish-on-beach.jpg?s=2048x2048&w=is&k=20&c=DfQPdxYOerxX7YOeV2KZ8USjw4vOHwbsec5vYJ9ppDc=",
+      role: "Frontend Developer @ AECOM",
+      time: "3d",
+      teach: "React",
+      learn: "Blockchain",
+      tags: ["#WebDev", "#SmartContracts", "#Frontend"],
+      image:
+        "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&q=80&w=1080&auto=format&fit=crop", // 🔗 blockchain visual
     },
     {
       id: 3,
-      user: "Anindita Prakash",
-      role: "Assistant Talent Acquisition Partner at Jacobs, India",
-      time: "2d",
-      content:
-        "Hello Connections!! You are welcome to participate in our WalkIn Drive for Structural Design",
-      hashtags: [
-        "#StructuralDesign",
-        "#WalkInDrive",
-        "#GurgaonJobs",
-        "#EngineeringCareers",
-      ],
-      image: "https://media.istockphoto.com/id/995369236/photo/starfish-on-beach.jpg?s=2048x2048&w=is&k=20&c=DfQPdxYOerxX7YOeV2KZ8USjw4vOHwbsec5vYJ9ppDc=",
+      user: "Rahul Mehta",
+      role: "AI Enthusiast",
+      time: "1d",
+      teach: "Python",
+      learn: "GoLang",
+      tags: ["#AI", "#MachineLearning", "#Backend"],
+      image:
+        "https://images.unsplash.com/photo-1677442136019-21780ecad995?ixlib=rb-4.0.3&q=80&w=1080&auto=format&fit=crop", // 🤖 AI background
     },
   ];
 
   return (
     <div className="text-black mt-20 w-[600px] h-[89vh] overflow-y-scroll space-y-6 px-3 hide-scrollbar">
       {/* Create Post Box */}
-      <div className="bg-white rounded-lg shadow border p-4">
+      <div className="bg-white rounded-2xl shadow-md border p-4 hover:shadow-lg transition">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
-          {/* <input
-            type="text"
-            placeholder="Start a post"
-            className="flex-1 border rounded-full px-4 py-2 focus:outline-none hover:bg-gray-50 cursor-pointer"
-          /> */}
           <Link href="/create-post">
-            <div className="flex-1 border w-[490px] rounded-full px-4 py-2 focus:outline-none hover:bg-gray-50 cursor-pointer">
-              Start a post
+            <div className="flex-1 border w-[490px] rounded-full px-4 py-2 focus:outline-none hover:bg-gray-50 cursor-pointer text-gray-600">
+              Offer to teach & learn...
             </div>
           </Link>
-
-        </div>
-        <div className="flex justify-around mt-4 text-gray-600 text-sm">
-          <button className="flex items-center space-x-1 hover:text-blue-500">
-            <Video size={18} /> <span>Video</span>
-          </button>
-          <button className="flex items-center space-x-1 hover:text-green-500">
-            <ImageIcon size={18} /> <span>Photo</span>
-          </button>
-          <button className="flex items-center space-x-1 hover:text-orange-500">
-            <FileText size={18} /> <span>Write article</span>
-          </button>
         </div>
       </div>
 
@@ -92,30 +66,42 @@ const PostBody = () => {
       {posts.map((post) => (
         <div
           key={post.id}
-          className="bg-white rounded-lg shadow border p-4 space-y-3"
+          className="bg-white rounded-2xl shadow-md border p-4 space-y-4 hover:shadow-lg transition"
         >
           {/* User Info */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
               <div>
-                <h3 className="font-semibold">{post.user}</h3>
+                <h3 className="font-semibold text-gray-900">{post.user}</h3>
                 <p className="text-xs text-gray-500">{post.role}</p>
                 <span className="text-xs text-gray-400">{post.time} · 🌍</span>
               </div>
             </div>
             <button className="text-blue-600 font-semibold text-sm">
-              + Follow
+              + Connect
             </button>
           </div>
 
-          {/* Post Content */}
-          <p className="text-sm text-gray-800">{post.content}</p>
+          {/* Teach & Learn Skills */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
+              <p className="text-xs text-gray-500">Teaches</p>
+              <p className="text-lg font-bold text-green-600">{post.teach}</p>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
+              <p className="text-xs text-gray-500">Wants to Learn</p>
+              <p className="text-lg font-bold text-blue-600">{post.learn}</p>
+            </div>
+          </div>
 
-          {/* Hashtags */}
-          <div className="flex flex-wrap gap-2 text-blue-600 text-sm">
-            {post.hashtags.map((tag, i) => (
-              <span key={i} className="cursor-pointer hover:underline">
+          {/* Tags */}
+          <div className="flex flex-wrap gap-2">
+            {post.tags.map((tag, i) => (
+              <span
+                key={i}
+                className="bg-gray-100 text-blue-600 text-xs px-3 py-1 rounded-full cursor-pointer hover:bg-blue-100"
+              >
                 {tag}
               </span>
             ))}
@@ -128,31 +114,38 @@ const PostBody = () => {
               alt="post"
               width={600}
               height={300}
-              className="rounded-lg border"
+              className="rounded-xl border object-cover"
             />
           )}
 
           {/* Actions */}
           <div className="flex justify-around text-gray-600 text-sm pt-2 border-t">
-            <Button className="flex items-center space-x-1 hover:text-blue-500">
+            <Button
+              variant="ghost"
+              className="flex items-center space-x-1 hover:text-blue-500"
+            >
               <ThumbsUp size={16} /> <span>Like</span>
             </Button>
-            <Button className="flex items-center space-x-1 hover:text-blue-500">
+            <Button
+              variant="ghost"
+              className="flex items-center space-x-1 hover:text-blue-500"
+            >
               <MessageSquare size={16} /> <span>Comment</span>
             </Button>
-            <Button className="flex items-center space-x-1 hover:text-blue-500">
+            <Button
+              variant="ghost"
+              className="flex items-center space-x-1 hover:text-blue-500"
+            >
               <Share2 size={16} /> <span>Share</span>
             </Button>
-            {
-              post && (
-                  <Link href={`/book-session/${post.id}`} >
-            <Button className="flex items-center space-x-1 hover:text-blue-500">
-              <Send size={16} /> <span>Book Session</span>
-            </Button>
+            <Link href={`/book-session/${post.id}`}>
+              <Button
+                variant="ghost"
+                className="flex items-center space-x-1 hover:text-blue-500"
+              >
+                <Send size={16} /> <span>Book Session</span>
+              </Button>
             </Link>
-              )
-            }
-          
           </div>
         </div>
       ))}

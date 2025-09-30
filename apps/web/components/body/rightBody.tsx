@@ -28,14 +28,14 @@ const RightBody = () => {
   ];
 
   const users = [
-    { id: 1, name: "Abdul Hameed", followers: 238, time: "18h ago" },
-    { id: 2, name: "Sufiyan Khan", followers: 120, time: "1d ago" },
-    { id: 3, name: "Sohail khan", followers: 340, time: "12h ago" },
-    { id: 4, name: "Zuhair Khan", followers: 95, time: "2d ago" },
-    { id: 1, name: "Abdul Hameed", followers: 238, time: "18h ago" },
-    { id: 2, name: "Sufiyan Khan", followers: 120, time: "1d ago" },
-    { id: 3, name: "Sohail khan", followers: 340, time: "12h ago" },
-    { id: 4, name: "Zuhair Khan", followers: 95, time: "2d ago" }
+    { id: 1, name: "Abdul Hameed", followers: 238, time: "Node.js" },
+    { id: 2, name: "Sufiyan Khan", followers: 120, time: "Blockchain" },
+    { id: 3, name: "Sohail khan", followers: 340, time: "React.js" },
+    { id: 4, name: "Zuhair Khan", followers: 95, time: "Next.js" },
+    { id: 1, name: "Abdul Hameed", followers: 238, time: "GenAI" },
+    { id: 2, name: "Sufiyan Khan", followers: 120, time: "AI/ML" },
+    { id: 3, name: "Sohail khan", followers: 340, time: "Oops" },
+    { id: 4, name: "Zuhair Khan", followers: 95, time: "Data Analysis" }
   ];
 
   return (

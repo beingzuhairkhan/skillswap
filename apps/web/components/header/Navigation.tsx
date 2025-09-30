@@ -13,7 +13,7 @@ const navItems = [
   {logo : <SiGooglemeet size={22} /> , title:"Room" , href:"/room"},
   { logo: <IoChatbubbleEllipsesSharp size={22} />, title: "Messaging", href: "/messaging" },
   { logo: <IoNotifications size={22} />, title: "Notifications", href: "/notifications" },
-  { logo: <RxAvatar size={22} />, title: "Me", href: "/profile" }
+  { logo: <RxAvatar size={22} />, title: "Me", href: "/profile/1" }
   
 ];
 
