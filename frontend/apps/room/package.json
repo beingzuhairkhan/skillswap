@@ -1,0 +1,42 @@
+{
+  "name": "room",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack --port 3001",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint --max-warnings 0",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@excalidraw/excalidraw": "^0.18.0",
+    "@monaco-editor/react": "^4.7.0",
+    "@repo/ui": "*",
+    "@tiptap/extension-bold": "^3.4.4",
+    "@tiptap/extension-bubble-menu": "^3.4.4",
+    "@tiptap/extension-bullet-list": "^3.4.4",
+    "@tiptap/extension-heading": "^3.4.4",
+    "@tiptap/extension-image": "^3.4.4",
+    "@tiptap/extension-italic": "^3.4.4",
+    "@tiptap/extension-list-item": "^3.4.4",
+    "@tiptap/extension-ordered-list": "^3.4.4",
+    "@tiptap/extension-strike": "^3.4.4",
+    "@tiptap/extension-underline": "^3.4.4",
+    "@tiptap/react": "^3.4.4",
+    "@tiptap/starter-kit": "^3.4.4",
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
+    "@types/node": "^22.15.3",
+    "@types/react": "19.1.0",
+    "@types/react-dom": "19.1.1",
+    "eslint": "^9.34.0",
+    "typescript": "5.9.2"
+  }
+}
