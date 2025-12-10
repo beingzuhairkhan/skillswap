@@ -26,14 +26,14 @@ export class RoomService {
             }
             //console.log("T" , token)
 
-            const decoded = this.jwtService.verify(token, {
-                secret: process.env.JWT_ACCESS_SECRET as string,
-            });
+            // const decoded = this.jwtService.verify(token, {
+            //     secret: process.env.JWT_ACCESS_SECRET as string,
+            // });
             //console.log("d" , decoded , userId)
 
-            if (decoded.receiverId !== userId ) {
-                return { status: false, message: 'This link does not belong to you' };
-            }
+            // if (decoded.receiverId !== userId ) {
+            //     return { status: false, message: 'This link does not belong to you' };
+            // }
 
             return { status: true };
         } catch (error) {
