@@ -19,7 +19,7 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         source: "."
-        target: "/home/ubuntu/skillswap"
+        target: "/home/ubuntu/skillswap/backend"
 
     - name: Run deploy commands on EC2
       uses: appleboy/ssh-action@v0.1.8
@@ -28,7 +28,7 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          cd /home/ubuntu/skillswap
+          cd /home/ubuntu/skillswap/backend
           npm install
           npm run build
           sudo systemctl restart nest-backend.service
