@@ -48,8 +48,3 @@ const Sessions = () => {
 };
 
 export default Sessions;
-
-
-//  <UpComingSessions/>
-//     <AcceptSessions/>
-//     <RejectSessions/>

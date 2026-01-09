@@ -1,10 +1,10 @@
-import { Controller, Get, Post, Query, Req, UseGuards, Body } from '@nestjs/common';
+import { Controller, Get, Post, Query, Req, UseGuards, Body, Param, BadRequestException } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from 'src/auth/jwt-http.guard';
 
 @Controller('chat')
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(private readonly chatService: ChatService) { }
 
   // 1️ Get all chats (for sidebar)
   @UseGuards(JwtAuthGuard)
@@ -16,12 +16,17 @@ export class ChatController {
 
   // 2️ Get messages with a specific user
   @UseGuards(JwtAuthGuard)
-  @Get('/messages')
-  async getMessages(@Req() req, @Query('userId') otherUserId: string) {
+  @Get('/messages/:userId')
+  async getMessages(@Req() req, @Param('userId') otherUserId: string) {
+
     const userId = req.user.userId;
+
+    if (!otherUserId) {
+      throw new BadRequestException('Other user ID is required');
+    }
+
     return this.chatService.getMessagesBetweenUsers(userId, otherUserId);
   }
-
   // 3️ Send message
   @UseGuards(JwtAuthGuard)
   @Post('/send')
@@ -33,4 +38,15 @@ export class ChatController {
     const { receiverId, message } = body;
     return this.chatService.sendMessage(senderId, receiverId, message);
   }
+
+  // @UseGuards(JwtAuthGuard)
+  // @Get('single-message')
+  // async getSingleMessage(
+  //  @Req() req ,
+  //  @Query() 
+  // ){
+
+  // }
+
+
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import signupImage from "../../../public/signup-image.png"
@@ -12,6 +12,8 @@ import { GoogleIcon } from "../../../components/svgIcon/google"
 import { useAuth } from "../../../contexts/AuthContext"
 import { useRouter } from 'next/navigation';
 import toast from "react-hot-toast"
+import ReCAPTCHA from "react-google-recaptcha";
+import axios from "axios"
 
 interface IUserLogin {
   email: string
@@ -19,6 +21,9 @@ interface IUserLogin {
 }
 
 const LoginPage = () => {
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -28,15 +33,22 @@ const LoginPage = () => {
   const router = useRouter();
   const onSubmit = async (data: IUserLogin) => {
     try {
+      setIsLoading(true);
       const response = await login(data.email, data.password);
-      if (response.success) {
+      if (response) {
         toast.success("User Login Successfully");
         router.push("/"); // Redirect after login
       } else {
-        toast.error(response.message || "Login failed");
+        toast.error(response || "Login failed");
       }
-    } catch (err) {
-      toast.error("Login failed");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        toast.error(err.response?.data?.message || 'Failed to login');
+      } else {
+        toast.error('Failed to login');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -97,13 +109,26 @@ const LoginPage = () => {
             </Link>
           </div>
         </div>
+        <div className="w-full flex justify-center">
+          <div className="w-full max-w-6xl">
+            <ReCAPTCHA
+              sitekey="6Lc-3fcrAAAAAKOctjYBuJVd5ERuLKsyi_DChQuV"
+              onChange={(value: any) => setToken(value)}
+              theme="light"
+            />
+          </div>
+        </div>
 
-        {/* Submit */}
+
+        {/* Submit 6Lc-3fcrAAAAAMbmVm1KRSpQwdzg9X2ZUM8Gp_uP */}
         <Button
           type="submit"
-          className="w-full bg-neutral-900 hover:bg-black text-white font-medium py-3 rounded-md transition duration-200"
+          disabled={isLoading}
+          className={`w-full bg-neutral-900 text-white font-medium py-3 rounded-md transition duration-200
+    ${isLoading ? "opacity-60 cursor-not-allowed" : "hover:bg-black"}
+  `}
         >
-          Sign In
+          {isLoading ? "Signing in..." : "Sign In"}
         </Button>
 
         {/* Sign up link */}
@@ -137,10 +162,15 @@ const LoginPage = () => {
         <Button
           type="button"
           className="flex-1 flex items-center justify-center gap-2 bg-gray-900/90 text-white hover:bg-gray-900 py-3 rounded-md transition duration-200"
+          onClick={() => {
+            // Redirect to NestJS backend route for GitHub login
+            window.location.href = 'http://localhost:4000/auth/github';
+          }}
         >
           <GithubIcon />
           GitHub
         </Button>
+
       </div>
     </div>
   )

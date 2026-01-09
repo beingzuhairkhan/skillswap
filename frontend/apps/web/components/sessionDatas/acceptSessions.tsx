@@ -28,9 +28,9 @@ const AcceptSessions = () => {
   };
 
   const sessionDateTime =
-  selectedSession && selectedSession.date && selectedSession.time
-    ? new Date(`${selectedSession.date}T${selectedSession.time}`)
-    : new Date();
+    selectedSession && selectedSession.date && selectedSession.time
+      ? new Date(`${selectedSession.date}T${selectedSession.time}`)
+      : new Date();
 
 
   return (
@@ -72,7 +72,7 @@ const AcceptSessions = () => {
 
       {/* Session Accept Details Card */}
       <div className="flex-1">
-        <div className="border rounded-lg shadow-sm p-6 bg-white">
+        <div className="border rounded-lg shadow-lg p-6 h-[600px] overflow-y-auto hide-scrollbar">
           <h2 className="text-xl font-semibold text-black flex items-center gap-2 mb-4">
             Your session has been accepted!
           </h2>
@@ -154,20 +154,20 @@ const AcceptSessions = () => {
               </div>
 
               {/* Countdown (Placeholder) */}
-            
-               <Countdown targetDate={sessionDateTime} />
-             
+
+              <Countdown targetDate={sessionDateTime} />
+
 
               {/* Actions */}
               <div className="flex justify-between">
-                <Link href="/messaging">
+                <Link
+                  href={`/messaging/${selectedSession.requesterId._id}`}
+                >
                   <button className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800">
                     Chat with Student
                   </button>
                 </Link>
-                <button className="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200">
-                  Cancel Session
-                </button>
+
               </div>
             </>
           ) : (

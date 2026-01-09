@@ -1,14 +1,28 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Video from '../components/video/mainBody'
 import RightChatBody from './video/rightChatBody';
 import CodeEditorBody from './editor/leftEditorBody'
 import WhiteBoard from './board/leftBoardBody'
 import Notes from './notes/leftnotesBody'
+import { usePathname } from 'next/navigation';
+
 const Navigation = () => {
+  // const pathName = usePathname()
+  // const [roomId, setRoomId] = useState<string | null>(null);
   const [selected, setSelected] = useState("Video");
   const options = ["Video", "Code Editor", "WhiteBoard", "Notes"];
 
+  // useEffect(()=>{
+  //   const parts = pathName.split("/")
+  //   const token = parts[2];
+  //   if(token){
+  //     setRoomId(token)
+  //   }
+  // },[pathName])
+
+  //  if (!roomId) return <p>Loading...</p>;
+  const roomId = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZWNlaXZlcklkIjoiNjhmNjEyYjFhZDkxNmE1ODQ0MThhNDE2IiwicmVxdWVzdGVySWQiOiI2OGY2MjdhYTc1MDg5MGVlNTliMzZiMWUiLCJpYXQiOjE3NjA5Nzg2MjgsImV4cCI6MTc2MDk4NTgyOH0.QaqcPCSeatqGGVUcHhIXXAk6p9lncB-RB1CxnRzgFz0"
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       {/* Left Side (70%) */}
@@ -27,9 +41,8 @@ const Navigation = () => {
               <button
                 key={option}
                 onClick={() => setSelected(option)}
-                className={`relative z-10 flex-1 text-center py-2 text-sm rounded-md transition-colors duration-300 ${
-                  selected === option ? "text-white font-semibold" : "text-black"
-                }`}
+                className={`relative z-10 flex-1 text-center py-2 text-sm rounded-md transition-colors duration-300 ${selected === option ? "text-white font-semibold" : "text-black"
+                  }`}
               >
                 {option}
               </button>
@@ -39,16 +52,30 @@ const Navigation = () => {
 
         {/* Main Content */}
         <div className="flex-1 p-2 overflow-auto">
-          {selected === "Video" && <Video />}
-          {selected === "Code Editor" && <CodeEditorBody/>}
-          {selected === "WhiteBoard" && <WhiteBoard/>}
-          {selected === "Notes" && <Notes/>}
+
+          <div className={selected === "Video" ? "block" : "hidden"}>
+            <Video roomId={roomId} />
+          </div>
+
+          <div className={selected === "Code Editor" ? "block" : "hidden"}>
+            <CodeEditorBody />
+          </div>
+
+          <div className={selected === "WhiteBoard" ? "block" : "hidden"}>
+            <WhiteBoard />
+          </div>
+
+          <div className={selected === "Notes" ? "block" : "hidden"}>
+            <Notes />
+          </div>
+
         </div>
+
       </div>
 
       {/* Right Side Chat (30%) */}
       <div className="w-[30%] h-full border-l bg-white overflow-auto">
-        <RightChatBody />
+        <RightChatBody roomId={roomId} />
       </div>
     </div>
   )

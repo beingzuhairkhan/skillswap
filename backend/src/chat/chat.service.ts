@@ -2,10 +2,13 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Chat, ChatDocument, ChatMessage } from 'src/schemas/chat.schema';
+import { User, UserDocument } from 'src/schemas/user.schema';
 
 @Injectable()
 export class ChatService {
-  constructor(@InjectModel(Chat.name) private readonly chatModel: Model<ChatDocument>) {}
+  constructor(@InjectModel(Chat.name) private readonly chatModel: Model<ChatDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>
+  ) { }
 
   // Fetch all chats for a user (return latest message per chat)
   async getAllUserChats(userId: string): Promise<any> {
@@ -48,64 +51,78 @@ export class ChatService {
   }
 
   // Send a message (push to messages array)
-  async sendMessage(senderId: string, receiverId: string, message: string): Promise<any> {
-    try {
-      const senderObjectId = new Types.ObjectId(senderId);
-      const receiverObjectId = new Types.ObjectId(receiverId);
-
-      // Find existing chat between two users
-      let chat = await this.chatModel.findOne({
-        $or: [
-          { user1: senderObjectId, user2: receiverObjectId },
-          { user1: receiverObjectId, user2: senderObjectId },
-        ],
-      });
-
-      const newMessage: Partial<ChatMessage> = {
-        sender: senderObjectId,
-        message,
-        sentAt: new Date(),
-        read: false,
-      };
-
-      if (chat) {
-        // Push message into existing chat
-        chat.messages.push(newMessage as ChatMessage);
-        await chat.save();
-      } else {
-        // Create new chat
-        chat = new this.chatModel({
-          user1: senderObjectId,
-          user2: receiverObjectId,
-          messages: [newMessage],
-        });
-        await chat.save();
-      }
-      //console.log("s" , chat)
-
-      return chat;
-    } catch (error) {
-      console.error('Error sending message:', error);
-      throw new InternalServerErrorException('Failed to send message');
+  async sendMessage(senderId: string, receiverId: string, message: string) {
+    if (!message?.trim()) {
+      throw new InternalServerErrorException('Message cannot be empty');
     }
+
+    if (senderId === receiverId) {
+      throw new InternalServerErrorException('Cannot message yourself');
+    }
+
+    const sender = new Types.ObjectId(senderId);
+    const receiver = new Types.ObjectId(receiverId);
+
+    const newMessage: ChatMessage = {
+      sender,
+      message,
+      sentAt: new Date(),
+      read: false,
+    };
+
+    const chat = await this.chatModel.findOneAndUpdate(
+      {
+        $or: [
+          { user1: sender, user2: receiver },
+          { user1: receiver, user2: sender },
+        ],
+      },
+      {
+        $setOnInsert: { user1: sender, user2: receiver },
+        $push: { messages: newMessage },
+      },
+      { upsert: true, new: true }
+    );
+
+    return chat;
   }
 
+
   // Fetch all messages between two users
- async getMessagesBetweenUsers(userId1: string, userId2: string): Promise<ChatMessage[]> {
+async getMessagesBetweenUsers(userId1: string, userId2: string) {
   try {
-    const chat = await this.chatModel.findOne({
-      $or: [
-        { user1: new Types.ObjectId(userId1), user2: new Types.ObjectId(userId2) },
-        { user1: new Types.ObjectId(userId2), user2: new Types.ObjectId(userId1) },
-      ],
-    });
 
-  //  console.log("chatmessage" , chat?.messages)
+    const findUser = await this.userModel.findById(userId2).select('name domain imageUrl');
+    if (!findUser) {
+      throw new InternalServerErrorException('User does not exist');
+    }
 
-    return chat?.messages || [];
+    const chat = await this.chatModel
+      .findOne({
+        $or: [
+          { user1: new Types.ObjectId(userId1), user2: new Types.ObjectId(userId2) },
+          { user1: new Types.ObjectId(userId2), user2: new Types.ObjectId(userId1) },
+        ],
+      })
+      .populate('messages.sender', 'name imageUrl')
+      .lean();
+
+    return {
+      user: {
+        _id: findUser._id,
+        name: findUser.name,
+        domain: findUser.domain,
+        imageUrl: findUser.imageUrl,
+      },
+      messages: chat?.messages
+        ? chat.messages.sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime())
+        : [],
+    };
   } catch (error) {
-    console.error('Error fetching messages:', error);
+    console.error('Error fetching messages between users:', error);
     throw new InternalServerErrorException('Failed to fetch messages');
   }
 }
+
+
 }

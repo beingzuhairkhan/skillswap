@@ -134,6 +134,13 @@ export class UserService {
             }
 
             //console.log("image" , imageUrl , publicId)
+            const parsedSkillsToTeach = addProfileDto.skillsToTeach
+                ? JSON.parse(addProfileDto.skillsToTeach as unknown as string)
+                : [];
+
+            const parsedSkillsToLearn = addProfileDto.skillsToLearn
+                ? JSON.parse(addProfileDto.skillsToLearn as unknown as string)
+                : [];
 
             // Update the user
             const updatedUser = await this.userModel.findByIdAndUpdate(
@@ -141,6 +148,8 @@ export class UserService {
                 {
                     $set: {
                         ...addProfileDto,
+                        skillsToTeach: parsedSkillsToTeach,
+                        skillsToLearn: parsedSkillsToLearn,
                         imageUrl,
                         publicId,
                     },
@@ -229,7 +238,7 @@ export class UserService {
             }
 
             const newPost = new this.postModel({
-                user: userId,
+                user:  new Types.ObjectId(userId),
                 ...createPostDto,
                 postImageUrl: imageUrl,
                 postImagePublicId: publicId
@@ -412,43 +421,98 @@ export class UserService {
         }
     }
 
-   async followUser(userId: string, followId: string): Promise<any> {
-  try {
-    if (userId === followId) {
-      throw new ConflictException("You cannot follow yourself");
+    async followUser(userId: string, followId: string): Promise<any> {
+        try {
+            if (userId === followId) {
+                throw new ConflictException("You cannot follow yourself");
+            }
+
+            const user = await this.userModel.findById(userId);
+            const followUser = await this.userModel.findById(followId);
+
+            if (!user || !followUser) {
+                throw new NotFoundException("User not found");
+            }
+
+            const followObjectId = new Types.ObjectId(followId);
+            const userObjectId = new Types.ObjectId(userId);
+
+            const alreadyFollowing = user.following.some(
+                (id) => id.toString() === followId
+            );
+
+            if (alreadyFollowing) {
+                return { message: "User already followed" };
+            }
+
+            user.following.push(followObjectId);
+            followUser.follower.push(userObjectId);
+
+            await user.save();
+            await followUser.save();
+
+            return { message: "Followed successfully" };
+        } catch (error) {
+            throw new InternalServerErrorException(
+                'Failed to follow user: ' + error.message
+            );
+        }
+    }
+    async suggestedUsers(userId: string): Promise<any[]> {
+        try {
+            const currentUser = await this.userModel.findById(userId);
+            if (!currentUser) return [];
+
+            const candidates = await this.userModel.find({
+                _id: { $nin: [userId, ...currentUser.following] }
+            });
+            // const filtered = candidates.filter((candidate) => {
+            //     const teachesWhatILearn = candidate.skillsToTeach.some(skill =>
+            //         currentUser.skillsToLearn.includes(skill)
+            //     );
+
+            //     const learnsWhatITeach = candidate.skillsToLearn.some(skill =>
+            //         currentUser.skillsToTeach.includes(skill)
+            //     );
+
+            //     return teachesWhatILearn || learnsWhatITeach;
+            // });
+
+            const formatted = candidates.map((u) => ({
+                _id: u._id,
+                name: u.name,
+                imageUrl: u.imageUrl || null,
+                followerCount: u.follower.length,
+                firstSkillToLearn: u.skillsToLearn[0] || null,
+            }));
+
+            return formatted.slice(0, 5);
+
+        } catch (error) {
+            console.error("Error fetching suggested users:", error);
+            return [];
+        }
     }
 
-    const user = await this.userModel.findById(userId);
-    const followUser = await this.userModel.findById(followId);
 
-    if (!user || !followUser) {
-      throw new NotFoundException("User not found");
+    async myPostsData(userId: string): Promise<any> {
+        try {
+            if (!userId) {
+                throw new NotFoundException("User not found");
+            }
+
+            const postData = await this.postModel
+                .find({ user: userId.toString() })
+                .sort({ createdAt: -1 });
+            return postData
+
+
+        } catch (error) {
+            console.error("Error fetching suggested users:", error);
+            return [];
+        }
     }
 
-    const followObjectId = new Types.ObjectId(followId);
-    const userObjectId = new Types.ObjectId(userId);
-
-    const alreadyFollowing = user.following.some(
-      (id) => id.toString() === followId
-    );
-
-    if (alreadyFollowing) {
-      return { message: "User already followed" };
-    }
-
-    user.following.push(followObjectId);
-    followUser.follower.push(userObjectId);
-
-    await user.save();
-    await followUser.save();
-
-    return { message: "Followed successfully" };
-  } catch (error) {
-    throw new InternalServerErrorException(
-      'Failed to follow user: ' + error.message
-    );
-  }
-}
 
 
 }

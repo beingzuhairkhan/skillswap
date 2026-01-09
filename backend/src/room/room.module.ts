@@ -7,6 +7,7 @@ import { Post, PostSchema } from 'src/schemas/post.schema';
 import { Session, SessionSchema } from 'src/schemas/session.schema';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { RoomGateway } from './room.gateway';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { JwtModule } from '@nestjs/jwt';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({}),
   ],
-  providers: [RoomService],
-  controllers: [RoomController]
+  providers: [RoomService, RoomGateway],
+  controllers: [RoomController],
+  exports:[RoomGateway]
 })
 export class RoomModule { }

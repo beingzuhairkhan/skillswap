@@ -26,15 +26,22 @@ const UpComingSessions = () => {
 
   const handleAccept = async (requesterId: string, sessionId: string) => {
     try {
-      // console.log("Accepting session:", { requesterId, sessionId });
 
-      // // Example API call (you can replace with your real one)
       await SessionAPI.postAcceptSession({ requesterId, sessionId });
-
-      // Optionally: refresh session list or update UI
       toast.success("Session accepted successfully");
     } catch (error) {
       console.error("Error accepting session:", error);
+      toast.error("Failed to accept session");
+    }
+  };
+
+  const handleReject = async (requesterId: string, sessionId: string) => {
+    try {
+      await SessionAPI.postCancelSession({ requesterId, sessionId });
+
+      toast.success("Session Cancel successfully");
+    } catch (error) {
+      console.error("Error Cancel session:", error);
       toast.error("Failed to accept session");
     }
   };
@@ -66,7 +73,7 @@ const UpComingSessions = () => {
                 </div>
                 <div>
                   <p className="font-medium">{session.requesterId?.name}</p>
-                  <p className="text-sm text-gray-500">{session.requesterId?.domain || "GenAI"}</p>
+                  <p className="text-sm text-gray-500">@{session.requesterId?.domain || "N/A"}</p>
                 </div>
               </div>
             ))}
@@ -143,7 +150,9 @@ const UpComingSessions = () => {
                 >
                   Accept Request
                 </button>
-                <button className="px-4 py-2 bg-gray-300 text-black rounded-md">Decline</button>
+                <button className="px-4 py-2 bg-gray-300 text-black rounded-md"
+                 onClick={() => handleReject(selectedSession.requesterId._id, selectedSession._id)}
+                >Decline</button>
               </div>
 
               {/* Message Box */}

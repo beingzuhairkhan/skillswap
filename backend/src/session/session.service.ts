@@ -8,6 +8,8 @@ import { UploadService } from 'src/upload/upload.service';
 import { BookSessionDto } from './dto/book-session.dto';
 import { JwtService } from '@nestjs/jwt';
 import { Chat, ChatDocument } from 'src/schemas/chat.schema';
+import {EVENTS} from '../notification/eventTypes'
+import eventBus from 'src/notification/eventBus';
 
 @Injectable()
 export class SessionService {
@@ -45,17 +47,15 @@ export class SessionService {
       const user = await this.userModel.findById(userId);
       if (!user) throw new NotFoundException('User not found');
 
-      // Find the post
       const post = await this.postModel.findById(bookSessionDto.receiverId).select('_id user');
       if (!post) throw new NotFoundException('Post not found');
 
       if (userId === post.user.toString())
         throw new BadRequestException('Cannot book your own session');
 
-      // Create the session
       const newSession = new this.sessionModel({
         requesterId: user._id,
-        receiverId: post.user,
+        receiverId: new Types.ObjectId(post.user),
         postId: post._id,
         sessionType: bookSessionDto.sessionType,
         durationTime: bookSessionDto.durationTime,
@@ -67,29 +67,17 @@ export class SessionService {
       });
 
       const savedSession = await newSession.save();
+      console.log("event bus hitting")
 
-      // Ensure Chat exists between users (using messages array schema)
-      const senderId = new Types.ObjectId(userId);
-      const receiverId = new Types.ObjectId(post.user);
-
-      let chat = await this.chatModel.findOne({
-        $or: [
-          { user1: senderId, user2: receiverId },
-          { user1: receiverId, user2: senderId },
-        ],
-      });
-
-      if (!chat) {
-        chat = new this.chatModel({
-          user1: senderId,
-          user2: receiverId,
-          messages: [],
-        });
-        await chat.save();
-        console.log('New chat created:', chat._id);
-      } else {
-        console.log('Chat already exists:', chat._id);
-      }
+      eventBus.emit(EVENTS.SESSION_CREATED , {
+        sessionId:savedSession._id, 
+        requesterId:savedSession.requesterId,
+        receiverId:savedSession.receiverId,
+        postId:savedSession.postId,
+        date:savedSession.date,
+        time:savedSession.time,
+        sessionData:savedSession
+      })
 
       return savedSession;
     } catch (error) {
@@ -102,37 +90,26 @@ export class SessionService {
     try {
       if (!userId) throw new NotFoundException('User not found');
 
-      // Fetch all posts by this user
-      const userPosts = await this.postModel.find({ user: userId }).select('_id') as { _id: Types.ObjectId }[];
-
-      if (!userPosts || userPosts.length === 0) {
-        // User has no posts, so no sessions
-        return [];
-      }
-
-      const postIds = userPosts.map((post) => post._id.toString());
-
-      // Fetch pending sessions for these posts
+      // Fetch pending sessions where this user is the receiver
       const sessions = await this.sessionModel
         .find({
-          postId: { $in: postIds },
+          receiverId: new Types.ObjectId(userId), // filter by receiver
           status: SessionStatus.PENDING,
         })
         .populate({
-          path: 'requesterId',
-          select: '_id name imageUrl collegeName bio domain', // don't include password
+          path: 'requesterId', // get info about who requested
+          select: '_id name imageUrl collegeName bio domain', // exclude sensitive info
         })
         .populate({
-          path: 'postId',
+          path: 'postId', // get info about the post
           select: 'wantToLearn wantToTeach specificTopic postImageUrl postUrl',
         })
         .sort({ createdAt: -1 });
 
-      // Return empty array if no sessions found
       return sessions || [];
     } catch (error) {
       console.error(error);
-      throw new InternalServerErrorException('Failed to fetch session requests for your posts');
+      throw new InternalServerErrorException('Failed to fetch pending requests for your posts');
     }
   }
 
@@ -178,49 +155,201 @@ export class SessionService {
     }
   }
 
-  async getAllAcceptedRequestsForMyPosts(userId: string): Promise<any> {
+  async getAllAcceptedRequestsForMe(userId: string): Promise<any[]> {
     try {
       if (!userId) throw new NotFoundException('User not found');
 
-      const userPosts = await this.postModel
-        .find({ user: userId })
-        .select('_id') as { _id: mongoose.Types.ObjectId }[];
-
-      const postIds = userPosts.map((post) => post._id.toString());
-
-      if (postIds.length === 0) {
-        return []; // No posts = no sessions
-      }
-
       const sessions = await this.sessionModel
         .find({
-          postId: { $in: postIds },
+          receiverId: new Types.ObjectId(userId),
           status: SessionStatus.ACCEPT,
         })
         .populate({
           path: 'requesterId',
-          select: '_id name imageUrl collegeName domain -password', // bio removed
+          select: '_id name imageUrl collegeName domain -password',
         })
         .populate({
           path: 'postId',
-          select: 'wantToLearn  specificTopic ',
+          select: 'wantToLearn specificTopic',
         })
-        .select('-studentNotes') // remove studentNotes from session
+        .select('-studentNotes') // optional
         .sort({ createdAt: -1 });
 
-      if (!sessions || sessions.length === 0) {
-        throw new NotFoundException('No accepted session requests for your posts');
-      }
-
-      return sessions;
+      return sessions || [];
     } catch (error) {
       console.error(error);
-      throw new InternalServerErrorException('Failed to fetch accepted session requests for your posts');
+      throw new InternalServerErrorException(
+        'Failed to fetch accepted session requests'
+      );
     }
   }
 
 
+  async getMyRequestSessions(userId: string, status: SessionStatus) {
+    try {
+      const sessionData = await this.sessionModel.aggregate([
+        {
+          $match: {
+            $expr: {
+              $and: [
+                {
+                  $or: [
+                    { $eq: ["$requesterId", userId] },
+                    { $eq: ["$requesterId", { $toObjectId: userId }] }
+                  ]
+                },
+                { $eq: ["$status", status] }
+              ]
+            }
+          }
 
+        },
+
+        // Requester
+        {
+          $lookup: {
+            from: "users",
+            let: { requesterIdObj: { $toObjectId: "$requesterId" } },
+            pipeline: [
+              { $match: { $expr: { $eq: ["$_id", "$$requesterIdObj"] } } },
+              { $project: { _id: 1, name: 1, imageUrl: 1 } },
+            ],
+            as: "requester",
+          },
+        },
+        { $unwind: { path: "$requester", preserveNullAndEmptyArrays: true } },
+
+        // Receiver
+        {
+          $lookup: {
+            from: "users",
+            let: { receiverIdObj: { $toObjectId: "$receiverId" } },
+            pipeline: [
+              { $match: { $expr: { $eq: ["$_id", "$$receiverIdObj"] } } },
+              { $project: { _id: 1, name: 1, imageUrl: 1 } },
+            ],
+            as: "receiver",
+          },
+        },
+        { $unwind: { path: "$receiver", preserveNullAndEmptyArrays: true } },
+
+        // Post
+        {
+          $lookup: {
+            from: "posts",
+            let: { postIdObj: { $toObjectId: "$postId" } },
+            pipeline: [
+              { $match: { $expr: { $eq: ["$_id", "$$postIdObj"] } } },
+              { $project: { wantToLearn: 1, wantToTeach: 1, specificTopic: 1, postImageUrl: 1, postUrl: 1 } },
+            ],
+            as: "post",
+          },
+        },
+        { $unwind: { path: "$post", preserveNullAndEmptyArrays: true } },
+
+        // Project
+        {
+          $project: {
+            _id: 1,
+            sessionType: 1,
+            durationTime: 1,
+            date: 1,
+            time: 1,
+            studentNotes: 1,
+            status: 1,
+            isCompleted: 1,
+            googleMeetLink: 1,
+            createdAt: 1,
+            "requester._id": 1,
+            "requester.name": 1,
+            "requester.imageUrl": 1,
+            "receiver._id": 1,
+            "receiver.name": 1,
+            "receiver.imageUrl": 1,
+            "post.wantToLearn": 1,
+            "post.wantToTeach": 1,
+            "post.specificTopic": 1,
+            "post.postImageUrl": 1,
+            "post.postUrl": 1,
+          },
+        },
+
+        { $sort: { createdAt: -1 } },
+      ]);
+
+
+
+      return sessionData;
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        "Failed to fetch session requests"
+      );
+    }
+  }
+
+  async cancelBookSession(requesterId: string, receiverId: string, sessionId: string): Promise<any> {
+    try {
+      if (!requesterId || !receiverId || !sessionId) {
+        throw new NotFoundException('Missing requesterId, receiverId, or sessionId');
+      }
+
+      if (requesterId === receiverId) {
+        throw new UnauthorizedException('You are not authorized to accept this session');
+      }
+
+      const session = await this.sessionModel.findById(sessionId);
+
+      if (!session) {
+        throw new NotFoundException('Booked session not found');
+      }
+
+      if (session.receiverId.toString() !== receiverId) {
+        throw new UnauthorizedException('You are not authorized to accept this session');
+      }
+
+      if (session.status !== SessionStatus.PENDING) {
+        throw new Error('Session is not in a pending state');
+      }
+      session.status = SessionStatus.REJECT;
+      await session.save();
+      return {
+        message: 'Session Cancel successfully',
+        session,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to accept booked sessions');
+    }
+  }
+
+  async getAllCanceledRequestsForMe(userId: string): Promise<any[]> {
+    try {
+      if (!userId) throw new NotFoundException('User not found');
+
+      const sessions = await this.sessionModel
+        .find({
+          receiverId: new Types.ObjectId(userId),
+          status: SessionStatus.REJECT,
+        })
+        .populate({
+          path: 'requesterId',
+          select: '_id name imageUrl collegeName domain -password',
+        })
+        .populate({
+          path: 'postId',
+          select: 'wantToLearn specificTopic',
+        })
+        .select('-studentNotes') // optional
+        .sort({ createdAt: -1 });
+
+      return sessions || [];
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        'Failed to fetch accepted session requests'
+      );
+    }
+  }
 
 
 

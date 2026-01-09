@@ -7,33 +7,45 @@ import { AiOutlineUserAdd } from "react-icons/ai";
 import { useAuth } from '../../../contexts/AuthContext'
 import { userDataAPI } from '../../../services/api'
 import toast from 'react-hot-toast';
+import ProfilePosts from "../../../components/ProfileData/ProfilePosts";
+import ProfileRequestSessio from "../../../components/ProfileData/ProfileRequestSessio";
+import ProfileAcceptSession from "../../../components/ProfileData/ProfileAcceptSession";
+import ProfileCancelSession from "../../../components/ProfileData/ProfileCancelSession";
+import { SessionStatus } from '../../../components/constants/sessionStatus'
 
-// const skills = ["React", "Node.js", "MongoDB", "C++", "Blockchain", "Generative AI", "Cloud Computing"];
-// const learning = ["Rust", "GoLang", "System Design"];
+
+// export const SessionStatus = {
+//   ACCEPT: "accept",
+//   PENDING: "pending",
+//   REJECT: "reject",
+// } as const;
+
+// export type SessionStatusType =
+//   (typeof SessionStatus)[keyof typeof SessionStatus];
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("Posts");
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { token, user } = useAuth();
-  let skillsTeach: string[] = [];
-  let skillsLearn: string[] = [];
+  // let skillsTeach: string[] = [];
+  // let skillsLearn: string[] = [];
 
-  if (profile?.skillsToTeach) {
-    try {
-      skillsTeach = JSON.parse(profile.skillsToTeach);
-    } catch (error) {
-      console.error("Invalid JSON for skillsToTeach:", error);
-    }
-  }
+  // if (profile?.skillsToTeach) {
+  //   try {
+  //     skillsTeach = JSON.parse(profile.skillsToTeach);
+  //   } catch (error) {
+  //     console.error("Invalid JSON for skillsToTeach:", error);
+  //   }
+  // }
 
-  if (profile?.skillsToLearn) {
-    try {
-      skillsLearn = JSON.parse(profile.skillsToLearn);
-    } catch (error) {
-      console.error("Invalid JSON for skillsToLearn:", error);
-    }
-  }
+  // if (profile?.skillsToLearn) {
+  //   try {
+  //     skillsLearn = JSON.parse(profile.skillsToLearn);
+  //   } catch (error) {
+  //     console.error("Invalid JSON for skillsToLearn:", error);
+  //   }
+  // }
 
   const tabs = ["Posts", "Reviews", "Upcoming Sessions", "Request Sessions", "Cancel Session"];
   // console.log("P" , profile)
@@ -44,7 +56,6 @@ const Profile = () => {
       try {
         if (!token) return;
         const res = await userDataAPI.getProfile();
-        // console.log("res", res)
         setProfile(res.data);
       } catch (err) {
         toast.error("Failed to load profile");
@@ -60,15 +71,15 @@ const Profile = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "Posts":
-        return <div>Here are your posts...</div>;
+        return <ProfilePosts/>;
       case "Reviews":
         return <div>Here are your reviews...</div>;
       case "Upcoming Sessions":
-        return <div>Here are your upcoming sessions...</div>;
+        return <ProfileAcceptSession status={SessionStatus.ACCEPT} />;
       case "Request Sessions":
-        return <div>Here are your requested sessions...</div>;
+        return <ProfileRequestSessio status={SessionStatus.PENDING} />;
       case "Cancel Session":
-        return <div>Here are your canceled sessions...</div>;
+        return <ProfileCancelSession status={SessionStatus.REJECT}/>;
       default:
         return null;
     }
@@ -137,7 +148,7 @@ const Profile = () => {
         <div>
           <h2 className="text-black text-lg font-semibold mb-2">Skills</h2>
           <div className="flex flex-wrap gap-2">
-            {skillsTeach.map((skill: string, index: number) => (
+            {profile?.skillsToTeach.map((skill: string, index: number) => (
               <span
                 key={index}
                 className="bg-gray-100 text-black rounded-full px-3 py-1 text-sm"
@@ -150,7 +161,7 @@ const Profile = () => {
         <div>
           <h2 className="text-black text-lg font-semibold mb-2">Learning</h2>
           <div className="flex flex-wrap gap-2">
-            {skillsLearn?.map((item: string, index: number) => (
+            {profile?.skillsToLearn.map((item: string, index: number) => (
               <span
                 key={index}
                 className="bg-gray-100 text-black rounded-full px-3 py-1 text-sm"

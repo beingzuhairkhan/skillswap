@@ -2,6 +2,7 @@ import axios from 'axios'
 import type { AxiosRequestConfig } from 'axios';
 import { error } from 'console';
 import { config } from 'process';
+import type { SessionStatusType } from '../components/constants/sessionStatus'
 const API_BASE_URL = 'http://localhost:4000'
 
 
@@ -71,11 +72,17 @@ export const userDataAPI = {
     return authAPI.get('/user/coding-leetcode')
   },
 
-  getUserProfileData: async (id:any) => {
+  getUserProfileData: async (id: any) => {
     return authAPI.get(`/user/${id}`);
   },
-  userFollow:async(id:any)=>{
+  userFollow: async (id: any) => {
     return authAPI.post(`/user/${id}/follow`)
+  },
+  suggestedUser: async () => {
+    return authAPI.get('/user/suggestedUser')
+  },
+  myPosts: async () => {
+    return authAPI.get('/user/myPosts')
   }
 };
 
@@ -85,15 +92,30 @@ export const SessionAPI = {
   },
 
   getAllBookSession: async () => {
-    return authAPI.get('/session/book-session')
+    return authAPI.get('/session/pending-session')
   },
 
   postAcceptSession: async (payload: { requesterId: string; sessionId: string }) => {
     return authAPI.post('/session/accept-session', payload);
   },
 
-   getAllAcceptSession: async () => {
+  getAllAcceptSession: async () => {
     return authAPI.get('/session/accept-session')
+  },
+
+  getMyPendingSessions: async (params: { status: SessionStatusType }) => {
+    console.log("P" , params)
+    return authAPI.get("/session/my-request-session", {
+      params,
+    });
+  },
+
+   postCancelSession: async (payload: { requesterId: string; sessionId: string }) => {
+    return authAPI.post('/session/cancel-session', payload);
+  },
+
+    getAllCancelSession: async () => {
+    return authAPI.get('/session/cancel-session')
   },
 
 }
@@ -104,7 +126,7 @@ export const ChatAPI = {
 
   // Fetch messages for a specific user
   getMessages: (otherUserId: string) =>
-    authAPI.get(`/chat/messages?userId=${otherUserId}`),
+    authAPI.get(`/chat/messages/${otherUserId}`),
 
   // Send message to a specific user
   sendMessage: (receiverId: string, message: string) =>
@@ -116,3 +138,17 @@ export const RoomAPI = {
     return authAPI.post('/room/decode', { meetLink });
   },
 };
+
+export const notificationAPI = {
+  getMyNotification: ()=>{
+    return authAPI.get('/notifications')
+  },
+
+  updateRead:(id:string)=>{
+    return authAPI.patch(`/notifications/${id}/read`) ;
+  },
+
+  unreadCount:()=>{
+    return authAPI.get('/notifications/unread/count')
+  }
+}
