@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { ChatAPI } from "../../services/api";
+// import sessionImage from "../../public/book-sesion.png"; 
 
 interface User {
   id: string;
@@ -29,28 +30,34 @@ const Message = () => {
 
   // 1️⃣ Fetch all chats (sidebar)
   useEffect(() => {
-    const fetchChats = async () => {
-      try {
-        const res = await ChatAPI.getAllChats(); // GET /chat
-        const chats = res.data;
+  const fetchChats = async () => {
+    try {
+      const res = await ChatAPI.getAllChats(); // GET /chat
+      const chats = res.data;
 
-        const usersList: User[] = chats.map((chat: any) => ({
-          id: chat.user._id,
-          name: chat.user.name,
-          topic: chat.user.domain || "No domain",
-          imageUrl: chat.user.imageUrl || "https://via.placeholder.com/40?text=User",
-          collegeName: chat.user.collegeName,
-          online: false,
-        }));
+      // Map chats to users
+      const usersList: User[] = chats.map((chat: any) => {
+        const user = chat.user; // your backend already gives the other user
+        return {
+          id: user._id,
+          name: user.name,
+          topic: user.domain || "No domain",
+          imageUrl: user.imageUrl ,
+          collegeName: user.collegeName,
+          online: false, // backend doesn't send online status here
+          lastMessage: chat.lastMessage, // optional
+          lastMessageAt: chat.lastMessageAt, // optional
+        };
+      });
 
-        setUsers(usersList);
-      } catch (err) {
-        console.error("Error fetching chats:", err);
-      }
-    };
+      setUsers(usersList);
+    } catch (err) {
+      console.error("Error fetching chats:", err);
+    }
+  };
 
-    fetchChats();
-  }, []);
+  fetchChats();
+}, []);
 
   // 2️⃣ Scroll to bottom when messages change
   useEffect(() => {
@@ -60,44 +67,37 @@ const Message = () => {
   }, [messages]);
 
   // 3️⃣ Fetch messages for selected user
-// Fetch messages for selected user
-const handleSelectUser = async (user: User) => {
-  setSelectedUser(user);
-  try {
-    console.log("user" , user)
-    const res = await ChatAPI.getMessages(user.id); // GET /chat/messages?userId=...
-    const chatMessages = res.data;
-    console.log("chat", chatMessages);
+  const handleSelectUser = async (user: User) => {
+    setSelectedUser(user);
+    try {
+      const res = await ChatAPI.getMessages(user.id); // GET /chat/messages/:userId
+      const chatMessages = res.data.messages || []; // backend returns { messages: [...], user: {...} }
 
-    const formattedMessages: ChatMessage[] = chatMessages.map((msg: any) => ({
-      text: msg.message,
-      sender: msg.sender._id
-        ? msg.sender._id === user.id
-          ? "other"
-          : "me"
-        : msg.sender === user.id
-        ? "other"
-        : "me",
-      time: new Date(msg.sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    }));
+      const formattedMessages: ChatMessage[] = chatMessages.map((msg: any) => ({
+        text: msg.message,
+        sender: msg.sender._id === user.id ? "other" : "me",
+        time: new Date(msg.sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      }));
 
-    setMessages(formattedMessages);
-  } catch (err) {
-    console.error("Error fetching messages:", err);
-    setMessages([]);
-  }
-};
-
-
+      setMessages(formattedMessages);
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+      setMessages([]);
+    }
+  };
 
   // 4️⃣ Send a new message
   const handleSend = async () => {
     if (!message.trim() || !selectedUser) return;
     try {
-      await ChatAPI.sendMessage(selectedUser.id, message);
+      await ChatAPI.sendMessage(selectedUser.id, message); // POST /chat/send
       setMessages((prev) => [
         ...prev,
-        { text: message, sender: "me", time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
+        {
+          text: message,
+          sender: "me",
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        },
       ]);
       setMessage("");
     } catch (err) {
@@ -122,35 +122,34 @@ const handleSelectUser = async (user: User) => {
               <p className="text-gray-500 text-center">No chats found</p>
             ) : (
               users.map((user) => (
-  <div
-    key={user.id}
-    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors duration-200 ${
-      selectedUser?.id === user.id ? "bg-gray-50" : "hover:bg-gray-100"
-    }`}
-    onClick={() => handleSelectUser(user)}
-  >
-    {/* User avatar */}
-    <div className="relative flex-shrink-0">
-      <Image
-        src={user.imageUrl || sessionImage}
-        alt={user.name}
-        width={50}
-        height={50}
-        className="rounded-full object-cover border-2 border-gray-200"
-      />
-      {user.online && (
-        <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border border-white"></span>
-      )}
-    </div>
+                <div
+                  key={user.id}
+                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors duration-200 ${
+                    selectedUser?.id === user.id ? "bg-gray-50" : "hover:bg-gray-100"
+                  }`}
+                  onClick={() => handleSelectUser(user)}
+                >
+                  {/* User avatar */}
+                  <div className="relative flex-shrink-0">
+                    <Image
+                      src={user.imageUrl}
+                      alt={user.name}
+                      width={50}
+                      height={50}
+                      className="rounded-full object-cover border-2 border-gray-200"
+                    />
+                    {user.online && (
+                      <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border border-white"></span>
+                    )}
+                  </div>
 
-    {/* User info */}
-    <div className="flex flex-col overflow-hidden">
-      <p className="font-semibold text-gray-900 truncate">{user.name}</p>
-      <p className="text-sm text-gray-500 truncate">@{user.topic}</p>
-    </div>
-  </div>
-))
-
+                  {/* User info */}
+                  <div className="flex flex-col overflow-hidden">
+                    <p className="font-semibold text-gray-900 truncate">{user.name}</p>
+                    <p className="text-sm text-gray-500 truncate">@{user.topic}</p>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </div>

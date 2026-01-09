@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, InternalServerErrorException, UnauthorizedException , Res} from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, UnauthorizedException, Res } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument, UserRole } from '../schemas/user.schema'
@@ -46,7 +46,7 @@ export class AuthService {
       expiresIn: process.env.JWT_REFRESH_EXPIRY ? parseInt(process.env.JWT_REFRESH_EXPIRY, 10) : '7d',
     })
 
-    return {accessToken , refreshToken}
+    return { accessToken, refreshToken }
   }
 
   async signUp(signupDto: SignupDto): Promise<UserDocument> {
@@ -79,6 +79,7 @@ export class AuthService {
   async login(loginDto: LoginDto): Promise<LoginResponse> {
     try {
       const { email, password } = loginDto;
+      console.log(email, password)
       const existingUser = await this.userModel.findOne({ email });
       // console.log(existingUser )
       if (!existingUser) {
@@ -97,8 +98,8 @@ export class AuthService {
       // console.log(sanitizedUser)
       // console.log(sanitizedUser , tokens)
       return {
-        user:sanitizedUser!,
-        tokens 
+        user: sanitizedUser!,
+        tokens
       }
 
 
@@ -106,7 +107,7 @@ export class AuthService {
       throw new InternalServerErrorException('Failed to Login ' + error);
     }
   }
-   async generateNewRefreshToken(refreshToken: string): Promise<AuthTokens> {
+  async generateNewRefreshToken(refreshToken: string): Promise<AuthTokens> {
     try {
       if (!refreshToken) {
         throw new UnauthorizedException('Refresh token missing');
@@ -133,4 +134,43 @@ export class AuthService {
       );
     }
   }
+
+  async githubCallback(githubData: any) {
+    try {
+      const { githubId, username, email } = githubData;
+
+      // Step 1: Check if user already exists
+      let user = await this.userModel.findOne({ email });
+
+      if (!user) {
+        // Step 2: Create new user (no password!)
+        user = new this.userModel({
+          name: username,
+          email,
+          password: githubId,
+          githubUsername: username,
+          role: UserRole.USER
+        });
+        await user.save();
+      }
+      const tokens = this.generateToken(user);
+
+      const sanitizedUser = await this.userModel.findById(user._id).select('-password');
+    
+      return {
+        user: sanitizedUser!,
+        tokens
+      }
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to register/login: ' + error);
+    }
+  }
+
 }
+
+// github {
+//   githubId: '144715213',
+//   username: 'beingzuhairkhan',
+//   email: 'zuhairkhan5134@gmail.com',
+//   displayName: null
+// }

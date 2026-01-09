@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import signupImage from "../../../public/signup-image.png"
 import Image from "next/image"
 import { Input } from "@repo/ui/input"
@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form"
 import { GithubIcon } from "../../../components/svgIcon/github"
 import { GoogleIcon } from "../../../components/svgIcon/google"
 import Link from "next/link"
-import { useAuth  } from '../../../contexts/AuthContext'
+import { useAuth } from '../../../contexts/AuthContext'
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation";
 
@@ -25,23 +25,27 @@ const SignUp = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<IUserSignup>()
-  const {Register} = useAuth()
-   const router = useRouter();
+  const { Register } = useAuth()
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false)
   const onSubmit = async (data: IUserSignup) => {
     try {
-      const response =await  Register(data);
-      // console.log("response" , reponse)
-      if(response.success){
-        toast.success("User Register Successfully")
+      setIsLoading(true);
+
+      const response = await Register(data.name , data.email , data.password);
+
+      if (response.success) {
+        toast.success("User registered successfully");
         router.push("/login");
-      }else {
-      toast.success("User Register Successfully")
-    }
-      
+      } else {
+        toast.error(response.message || "Registration failed");
+      }
     } catch (error) {
-         toast.error("Registration failed");
+      toast.error("Registration failed");
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-6xl mt-20 mx-auto items-center md:p-4 p-8">
@@ -111,10 +115,14 @@ const SignUp = () => {
         {/* Submit */}
         <Button
           type="submit"
-          className="w-full bg-neutral-900 hover:bg-black text-white font-medium py-3 rounded-md transition duration-200"
+          disabled={isLoading}
+          className={`w-full bg-neutral-900 text-white font-medium py-3 rounded-md transition duration-200
+    ${isLoading ? "opacity-60 cursor-not-allowed" : "hover:bg-black"}
+  `}
         >
-          Sign Up
+          {isLoading ? "Signing up..." : "Sign Up"}
         </Button>
+
 
         {/* Already have account */}
         <p className="text-center text-sm text-gray-600 mt-2">

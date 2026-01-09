@@ -22,13 +22,17 @@
     "@tiptap/extension-italic": "^3.4.4",
     "@tiptap/extension-list-item": "^3.4.4",
     "@tiptap/extension-ordered-list": "^3.4.4",
+    "@tiptap/extension-placeholder": "^3.14.0",
     "@tiptap/extension-strike": "^3.4.4",
+    "@tiptap/extension-text-align": "^3.14.0",
     "@tiptap/extension-underline": "^3.4.4",
     "@tiptap/react": "^3.4.4",
     "@tiptap/starter-kit": "^3.4.4",
     "next": "^15.5.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-icons": "^5.5.0",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",

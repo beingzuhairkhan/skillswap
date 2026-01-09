@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { AiFillHome, AiOutlineEdit } from "react-icons/ai";
+import { AiFillHome, AiOutlineEdit, AiOutlineSafetyCertificate } from "react-icons/ai";
 import { IoChatbubbleEllipsesSharp, IoNotifications, IoLogOutOutline } from "react-icons/io5";
 import { RxAvatar } from "react-icons/rx";
 import { FaUsers } from "react-icons/fa";
@@ -11,12 +11,20 @@ import { FiCode } from 'react-icons/fi';
 import { usePathname } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { userDataAPI } from "../../services/api";
+import { io, Socket } from "socket.io-client";
 
 interface UserData {
   _id: string;
   name?: string;
   email?: string;
   imageUrl?: string;
+}
+
+interface Notification {
+  title: string;
+  message: string;
+  type?: string;
+  _id?: string;
 }
 
 const Navigation = () => {
@@ -26,6 +34,9 @@ const Navigation = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [userFetchData, setUserFetchData] = useState<UserData | null>(null);
   const [imageError, setImageError] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const socketRef = useRef<Socket | null>(null);
+
   const navItems = [
     { logo: <AiFillHome size={22} />, title: "Home", href: "/" },
     { logo: <FaUsers size={22} />, title: "Session", href: "/session" },
@@ -34,25 +45,51 @@ const Navigation = () => {
     { logo: <IoNotifications size={22} />, title: "Notifications", href: "/notifications" },
   ];
 
-  // Fetch user profile
+  // Fetch user profile and setup socket
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        console.log("[Navigation] Fetching user profile...");
         const response = await userDataAPI.getProfile();
-        // Ensure imageUrl always exists
         const userData = {
           ...response.data,
-          imageUrl: response.data.imageUrl || "/default-avatar.png", // fallback image
+          imageUrl: response.data.imageUrl || "/default-avatar.png",
         };
+        console.log("[Navigation] User data fetched:", userData);
         setUserFetchData(userData);
+
+        // Connect to socket.io
+        socketRef.current = io("http://localhost:4000", {
+          query: { userId: userData._id },
+          transports: ["websocket"],
+        });
+
+        socketRef.current.on("connect", () => {
+          console.log("[Navigation] Socket connected, id:", socketRef.current?.id);
+        });
+
+        socketRef.current.on("connect_error", (err) => {
+          console.error("[Navigation] Socket connection error:", err);
+        });
+
+        socketRef.current.on("notification", (notif: Notification) => {
+          console.log("[Navigation] Received notification:", notif);
+          setNotifications((prev) => [notif, ...prev]);
+        });
+
       } catch (error) {
-        console.error("Failed to fetch user data:", error);
+        console.error("[Navigation] Failed to fetch user data:", error);
       }
     };
     fetchUser();
+
+    return () => {
+      console.log("[Navigation] Cleaning up socket...");
+      socketRef.current?.disconnect();
+    };
   }, []);
 
-  // Close dropdown when route changes
+  // Close dropdown on route change
   useEffect(() => {
     setShowDropdown(false);
   }, [pathname]);
@@ -68,11 +105,22 @@ const Navigation = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Reset notifications when visiting /notifications page
+  useEffect(() => {
+    if (pathname === "/notifications") {
+      console.log("[Navigation] Resetting notifications as user visited /notifications");
+      setNotifications([]);
+    }
+  }, [pathname]);
+
+
   return (
     <nav className="flex items-center gap-14 h-16 relative px-6 shadow-sm">
       {/* Navigation Links */}
       {navItems.map((item) => {
         const isActive = pathname === item.href;
+        const isNotification = item.title === "Notifications";
+
         return (
           <Link
             key={item.title}
@@ -81,6 +129,14 @@ const Navigation = () => {
               }`}
           >
             {item.logo}
+
+            {/* Notification badge */}
+            {isNotification && notifications.length > 0 && (
+              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                {notifications.length}
+              </span>
+            )}
+
             <span className="text-xs">{item.title}</span>
             {isActive && <div className="absolute bottom-0 h-0.5 w-12 bg-black rounded"></div>}
           </Link>
@@ -113,8 +169,7 @@ const Navigation = () => {
           </button>
 
           {showDropdown && (
-            <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-[14px] shadow-lg py-2 z-50">
-              {/* Profile */}
+            <div className="absolute right-0 mt-2 w-52 px-1 bg-white border border-gray-200 rounded-[14px] shadow-lg py-2 z-50">
               <Link
                 href={`/profile/${userFetchData._id}`}
                 className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
@@ -123,7 +178,6 @@ const Navigation = () => {
                 <span className="text-gray-500 font-medium">Profile</span>
               </Link>
 
-              {/* Coding Profile */}
               <Link
                 href={`/coding-profile/${userFetchData._id}`}
                 className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
@@ -132,7 +186,6 @@ const Navigation = () => {
                 <span className="text-gray-500 font-medium">Coding Profile</span>
               </Link>
 
-              {/* Edit Profile */}
               <Link
                 href="/profile/edit"
                 className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
@@ -140,8 +193,14 @@ const Navigation = () => {
                 <AiOutlineEdit size={20} />
                 <span className="text-gray-500 font-medium">Edit Profile</span>
               </Link>
+              <Link
+                href="/profile/certificates"
+                className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+              >
+                <AiOutlineSafetyCertificate size={20} />
+                <span className="text-gray-500 font-medium">Certificates</span>
+              </Link>
 
-              {/* Logout */}
               <button
                 onClick={logout}
                 className="flex items-center gap-3 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"

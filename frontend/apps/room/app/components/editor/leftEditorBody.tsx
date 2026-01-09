@@ -1,93 +1,162 @@
 'use client'
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
+import { Play, Code2, Terminal } from 'lucide-react';
 
 // Judge0 language mapping
 const languages = [
-  { id: 63, label: "JavaScript (Node.js)", value: "javascript" },
-  { id: 71, label: "Python 3", value: "python" },
-  { id: 54, label: "C++ (GCC 9.2.0)", value: "cpp" },
-  { id: 62, label: "Java (OpenJDK 13)", value: "java" },
+  { id: 63, label: "JavaScript", value: "javascript", icon: "JS" },
+  { id: 71, label: "Python", value: "python", icon: "PY" },
+  { id: 54, label: "C++", value: "cpp", icon: "C++" },
+  { id: 62, label: "Java", value: "java", icon: "☕" },
 ];
 
 const CodeEditorBody = () => {
-  const [code, setCode] = useState("// Start coding here...");
+  const [code, setCode] = useState("// Write your code here...\nconsole.log('Hello, World!');");
   const [output, setOutput] = useState("");
-  const [language, setLanguage] = useState(languages[0]); // default JS
+  const [language, setLanguage] = useState(languages[0]);
+  const [isRunning, setIsRunning] = useState(false);
 
   const runCode = async () => {
+    setIsRunning(true);
+    setOutput(" Executing code...");
+    if (!language) {
+      throw new Error("Language not selected");
+    }
+
+
     try {
       const response = await fetch(
         "https://ce.judge0.com/submissions?base64_encoded=false&wait=true",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             source_code: code,
-            language_id: language?.id,
+            language_id: language.id,
           }),
         }
       );
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
-      setOutput(result.stdout || result.stderr || result.compile_output || "No output");
+
+      if (result.status?.id === 3) {
+        setOutput(result.stdout || "✓ Code executed successfully (no output)");
+      } else if (result.status?.id === 6) {
+        setOutput(`Compilation Error:\n\n${result.compile_output || "Unknown error"}`);
+      } else if (result.status?.id === 11 || result.status?.id === 12) {
+        setOutput(` Runtime Error:\n\n${result.stderr || "Unknown error"}`);
+      } else {
+        setOutput(result.stdout || result.stderr || result.compile_output || "No output");
+      }
     } catch (err) {
-      setOutput("Error: " + err);
+      setOutput(` Error: ${err instanceof Error ? err.message : 'Unknown error occurred'}`);
+    } finally {
+      setIsRunning(false);
     }
   };
 
   return (
-    <div className="h-full w-full bg-black flex flex-col">
+    <div className="w-full h-[90vh] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col rounded-lg overflow-hidden shadow-2xl border border-slate-700">
       {/* Top Bar */}
-      <div className="flex items-center gap-4 bg-black p-2">
-        <label className="text-white text-sm">Language:</label>
-        <select
-          value={language?.id}
-          onChange={(e) =>
-            setLanguage(languages.find((lang) => lang.id === parseInt(e.target.value))!)
-          }
-          className="px-2 py-1 rounded bg-black text-white"
-        >
-          {languages.map((lang) => (
-            <option key={lang.id} value={lang.id}>
-              {lang.label}
-            </option>
-          ))}
-        </select>
-        <button
-          onClick={runCode}
-          className="ml-auto bg-green-500 text-white py-1 px-4 rounded hover:bg-green-600"
-        >
-          Run
-        </button>
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 border-b border-slate-700 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Code2 className="w-6 h-6 text-blue-400" />
+              <h1 className="text-xl font-bold text-white">Code Playground</h1>
+            </div>
+
+            <div className="flex items-center gap-2 ml-8">
+              <span className="text-sm text-slate-400">Language:</span>
+              <div className="flex gap-2">
+                {languages.map((lang) => (
+                  <button
+                    key={lang.id}
+                    onClick={() => setLanguage(lang)}
+                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${language?.id === lang.id
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                      }`}
+                  >
+                    <span className="font-mono">{lang.icon}</span> {lang.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={runCode}
+            disabled={isRunning}
+            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-green-500/30 disabled:shadow-none"
+          >
+            <Play className={`w-4 h-4 ${isRunning ? 'animate-pulse' : ''}`} />
+            {isRunning ? "Running..." : "Run Code"}
+          </button>
+        </div>
       </div>
 
-      {/* Split: Left editor, Right output */}
-      <div className="flex flex-1">
-        {/* Code Editor (left) */}
-        <div className="flex-1 bg-black rounded-lg">
-          <Editor
-            height="100%"
-            width="100%"
-            theme="vs-dark"
-            language={language?.value}
-            value={code}
-            onChange={(value) => setCode(value || "")}
-            options={{
-              fontSize: 14,
-              minimap: { enabled: false },
-              scrollBeyondLastLine: false,
-              automaticLayout: true,
-            }}
-          />
+      {/* Editor and Output Container */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Code Editor (Left - 65%) */}
+        <div className="flex-[0.65] flex flex-col border-r border-slate-700">
+          <div className="bg-slate-800/50 px-4 py-2 border-b border-slate-700">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Editor</span>
+          </div>
+          <div className="flex-1">
+            <Editor
+              height="100%"
+              language={language?.value}
+              value={code}
+              onChange={(value) => setCode(value || "")}
+              theme="vs-dark"
+              options={{
+                fontSize: 15,
+                fontFamily: "'Fira Code', 'Consolas', 'Monaco', monospace",
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                lineNumbers: "on",
+                roundedSelection: true,
+                padding: { top: 16, bottom: 16 },
+                scrollbar: {
+                  vertical: "visible",
+                  horizontal: "visible",
+                  useShadows: true,
+                  verticalScrollbarSize: 10,
+                  horizontalScrollbarSize: 10,
+                },
+                cursorBlinking: "smooth",
+                cursorSmoothCaretAnimation: "on",
+                smoothScrolling: true,
+                renderLineHighlight: "all",
+              }}
+            />
+          </div>
         </div>
 
-        {/* Output (right, vertical box under run button) */}
-        <div className="w-[29%] bg-black flex flex-col">
-          <div className=" text-white p-2 text-sm">Output</div>
-          <pre className="flex-1 text-green-400 p-2 overflow-y-auto">
-            {output}
-          </pre>
+        {/* Output Panel (Right - 35%) */}
+        <div className="flex-[0.35] flex flex-col bg-slate-900">
+          <div className="bg-slate-800/50 px-4 py-2 border-b border-slate-700 flex items-center gap-2">
+            <Terminal className="w-4 h-4 text-emerald-400" />
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Output</span>
+          </div>
+          <div className="flex-1 overflow-auto p-4 bg-slate-950/30">
+            <pre className="text-slate-100 font-mono text-sm whitespace-pre-wrap leading-relaxed">
+              {output || (
+                <span className="text-slate-500 italic">
+                  Click "Run Code" to execute your program...
+                </span>
+              )}
+            </pre>
+          </div>
         </div>
       </div>
     </div>

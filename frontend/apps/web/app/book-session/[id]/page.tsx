@@ -15,7 +15,7 @@ type FormValues = {
 };
 
 type PageProps = {
-  params: Promise<{ id: string }>; // <-- params is now a Promise
+  params: Promise<{ id: string }>; 
 };
 
 const BookSession = ({ params }: PageProps) => {

@@ -1,23 +1,46 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authAPI } from '../services/api';
-import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+  useCallback,
+} from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { authAPI } from "../services/api";
 
-interface User {
+export interface User {
   _id: string;
-  name: string;
+  name?: string;
   email: string;
-  role: string;
+  role: "user" | "admin";
+  collegeName?: string;
+  domain?: string;
+  bio?: string;
+  ratings: number;
+  follower: string[];
+  following: string[];
+  skillsToTeach: string[];
+  skillsToLearn: string[];
+  imageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
-  Register: (userData: { name: string; email: string; password: string }) => Promise<{ success: boolean; message?: string }>;
+  login: (email: string, password: string) => Promise<boolean>;
+  Register: (
+    name: string,
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  loginWithToken: (accessToken: string) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<string | undefined>;
 }
@@ -25,124 +48,166 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 };
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize token & user from localStorage
-  useEffect(() => {
-    const storedToken = localStorage.getItem('accessToken');
-    const storedUser = localStorage.getItem('user');
-    if (storedToken) setToken(storedToken);
-    if (storedUser) setUser(JSON.parse(storedUser));
-    setLoading(false);
+  /* ---------------- FETCH CURRENT USER ---------------- */
+  const fetchCurrentUser = useCallback(async () => {
+    try {
+      const res = await authAPI.get("/user/me");
+      setUser(res.data);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Set axios auth header whenever token changes
+  /* ---------------- INIT AUTH ---------------- */
   useEffect(() => {
-    if (token) {
-      authAPI.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const storedToken = localStorage.getItem("accessToken");
+
+    if (storedToken) {
+      setToken(storedToken);
+      authAPI.defaults.headers.common[
+        "Authorization"
+      ] = `Bearer ${storedToken}`;
+
+      fetchCurrentUser(); // only fetch once on mount
     } else {
-      delete authAPI.defaults.headers.common['Authorization'];
+      setLoading(false);
     }
-  }, [token]);
+  }, [fetchCurrentUser]); // fetchCurrentUser is memoized, safe dependency
 
-  // Redirect to login if no token and not loading
-  useEffect(() => {
-    if (!loading && !token) {
-      toast.error("Please login to continue");
-      router.push("/login");
-    }
-  }, [loading, token, router]);
-
-  // Login
-  const login: AuthContextType['login'] = async (email, password) => {
+  /* ---------------- LOGIN ---------------- */
+  const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const response = await authAPI.post('/auth/login', { email, password });
-      const { tokens, user: userData } = response.data;
+      const res = await authAPI.post("/auth/login", { email, password });
 
-      if (tokens && userData) {
-        setToken(tokens.accessToken);
-        setUser(userData);
+      const { accessToken, refreshToken } = res.data.tokens;
 
-        localStorage.setItem('accessToken', tokens.accessToken);
-        localStorage.setItem('refreshToken', tokens.refreshToken);
-        localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
 
-        toast.success('Logged in successfully');
-        return { success: true };
-      }
-      return { success: false, message: response.data?.message };
+      setToken(accessToken);
+      authAPI.defaults.headers.common[
+        "Authorization"
+      ] = `Bearer ${accessToken}`;
+
+      await fetchCurrentUser();
+
+      toast.success("Logged in successfully");
+      router.push("/");
+      return true;
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to login');
-      return { success: false, message: err.response?.data?.message || 'Failed to login' };
-    } finally {
+      toast.error(err.response?.data?.message || "Login failed");
       setLoading(false);
+      return false;
     }
   };
 
-  // Register
-  const Register: AuthContextType['Register'] = async (userData) => {
-    try {
-      setLoading(true);
-      const response = await authAPI.post('/auth/signup', userData);
-      if (response.data?.user) {
-        toast.success('Registered successfully. Please login.');
-        return { success: true };
-      }
-      return { success: false, message: response.data?.message };
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Registration failed');
-      return { success: false, message: err.response?.data?.message || 'Registration failed' };
-    } finally {
-      setLoading(false);
-    }
-  };
+ const Register = async (name: string, email: string, password: string) => {
+  setLoading(true);
+  try {
+    const response = await authAPI.post('/auth/signup', { name, email, password });
 
-  // Logout
+    if (response.data?.user) {
+      toast.success('Registered successfully. Please login.');
+      return { success: true };
+    }
+
+    return { success: false, message: response.data?.message || 'Registration failed' };
+  } catch (err: any) {
+    // Optional: check if axios error
+    const message =
+      err?.response?.data?.message || 'Registration failed';
+    toast.error(message);
+    return { success: false, message };
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  /* ---------------- LOGOUT ---------------- */
   const logout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+
     setUser(null);
     setToken(null);
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    delete authAPI.defaults.headers.common['Authorization'];
-    toast.success('Logged out successfully');
+
+    delete authAPI.defaults.headers.common["Authorization"];
+
+    toast.success("Logged out");
     router.push("/login");
   };
 
-  // Refresh token
-  const refreshToken = async (): Promise<string | undefined> => {
+  /* ---------------- REFRESH TOKEN ---------------- */
+  const refreshToken = async () => {
     try {
-      const storedRefreshToken = localStorage.getItem('refreshToken');
-      if (!storedRefreshToken) return undefined;
+      const storedRefreshToken = localStorage.getItem("refreshToken");
+      if (!storedRefreshToken) return;
 
-      const response = await authAPI.post('/auth/refresh', { refreshToken: storedRefreshToken });
-      if (response.data?.accessToken) {
-        setToken(response.data.accessToken);
-        localStorage.setItem('accessToken', response.data.accessToken);
-        return response.data.accessToken;
-      }
-    } catch (err) {
-      console.error('Refresh token failed', err);
+      const res = await authAPI.post("/auth/refresh", {
+        refreshToken: storedRefreshToken,
+      });
+
+      const newAccessToken = res.data.accessToken;
+      setToken(newAccessToken);
+
+      localStorage.setItem("accessToken", newAccessToken);
+      authAPI.defaults.headers.common[
+        "Authorization"
+      ] = `Bearer ${newAccessToken}`;
+
+      return newAccessToken;
+    } catch {
       logout();
     }
   };
 
+  /* ---------------- LOGIN WITH TOKEN ---------------- */
+  const loginWithToken = useCallback(
+    async (accessToken: string) => {
+      const storedToken = localStorage.getItem("accessToken");
+      if (storedToken === accessToken) return; // avoid unnecessary update
+
+      localStorage.setItem("accessToken", accessToken);
+      setToken(accessToken);
+      authAPI.defaults.headers.common[
+        "Authorization"
+      ] = `Bearer ${accessToken}`;
+
+      setLoading(true);
+      await fetchCurrentUser();
+      setLoading(false);
+    },
+    [fetchCurrentUser]
+  );
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, Register, logout, refreshToken }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        login,
+        Register,
+        loginWithToken,
+        logout,
+        refreshToken,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

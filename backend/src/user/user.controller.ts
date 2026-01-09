@@ -118,6 +118,14 @@ export class UserController {
     }
   }
 
+    @UseGuards(JwtAuthGuard)
+  @Get('myPosts')
+  async myPosts(@Req() req:any){
+     const currentUserId = req.user.userId;
+     return this.userService.myPostsData(currentUserId)
+  }
+
+
   @UseGuards(JwtAuthGuard)
   @Post('coding-profile')
   @UseInterceptors(FileInterceptor('resume'))
@@ -151,6 +159,13 @@ export class UserController {
     const userId = req.user.userId;
     return await this.userService.getLeetcodePrfile(userId);
   }
+  @UseGuards(JwtAuthGuard)
+  @Get('suggestedUser')
+  async suggestedUsers(@Req() req) {
+    const currentUserId = req.user.userId;
+    return this.userService.suggestedUsers(currentUserId)
+  }
+
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
@@ -160,10 +175,13 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/follow')
-    async followUser(@Param('id') followId: string, @Req() req) {
+  async followUser(@Param('id') followId: string, @Req() req) {
     const currentUserId = req.user.userId;
     return this.userService.followUser(currentUserId, followId);
   }
+
+ 
+
 
 
 }
