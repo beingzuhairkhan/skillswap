@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { ThumbsUp, MessageSquare, Share2, Send, Bookmark } from "lucide-react";
 import Image from "next/image";
-import { Button } from "@repo/ui/button";
+import { Button } from '../../../../packages/ui/src/button'
 import Link from "next/link";
 import { authAPI, userDataAPI } from "../../services/api";
 import toast from "react-hot-toast";

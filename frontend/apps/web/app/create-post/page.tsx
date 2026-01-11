@@ -2,8 +2,8 @@
 import React, { useState, ChangeEvent } from "react";
 import signupImage from "../../public/create-post.png";
 import Image from "next/image";
-import { Input } from "@repo/ui/input";
-import { Button } from "@repo/ui/button";
+import { Input } from '../../../../packages/ui/src/input'
+import { Button } from '../../../../packages/ui/src/button'
 import { useForm } from "react-hook-form";
 import { AiOutlinePaperClip } from "react-icons/ai";
 import { IoImageOutline } from "react-icons/io5";

@@ -4,8 +4,8 @@ import React, { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import signupImage from "../../../public/signup-image.png"
-import { Input } from "@repo/ui/input"
-import { Button } from "@repo/ui/button"
+import { Input } from '../../../../../packages/ui/src/input'
+import { Button } from '../../../../../packages/ui/src/button'
 import { useForm } from "react-hook-form"
 import { GithubIcon } from "../../../components/svgIcon/github"
 import { GoogleIcon } from "../../../components/svgIcon/google"
