@@ -6,10 +6,6 @@
         "name": "next"
       }
     ],
-    "baseUrl": ".", 
-    "paths": {
-      "@repo/ui": ["../../packages/ui/src"] 
-    }
   },
   "include": [
     "**/*.ts",

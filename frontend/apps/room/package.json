@@ -13,7 +13,6 @@
   "dependencies": {
     "@excalidraw/excalidraw": "^0.18.0",
     "@monaco-editor/react": "^4.7.0",
-    "@repo/ui": "*",
     "@tiptap/extension-bold": "^3.4.4",
     "@tiptap/extension-bubble-menu": "^3.4.4",
     "@tiptap/extension-bullet-list": "^3.4.4",
@@ -35,8 +34,6 @@
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
-    "@repo/eslint-config": "*",
-    "@repo/typescript-config": "*",
     "@types/node": "^22.15.3",
     "@types/react": "19.1.0",
     "@types/react-dom": "19.1.1",
