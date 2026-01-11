@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@nextui-org/react": "^2.6.11",
-    "@repo/ui": "workspace:*",
     "axios": "^1.12.2",
     "framer-motion": "^12.23.12",
     "next": "^16.1.1",
@@ -25,8 +24,6 @@
     "react-pdf": "^10.2.0"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
     "@types/node": "^22.15.3",
     "@types/react": "19.1.0",
     "@types/react-dom": "19.1.1",
