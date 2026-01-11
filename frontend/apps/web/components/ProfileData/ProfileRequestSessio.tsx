@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Clock, Calendar, BookOpen, ExternalLink, Users, User, ArrowRight, MessageSquare } from "lucide-react";
 import { SessionAPI } from "../../services/api";
 import type { SessionStatusType } from '../constants/sessionStatus'
+import Image from "next/image";
 
 const ProfileRequestSession = ({ status }: { status: SessionStatusType }) => {
   const [sessions, setSessions] = useState<any[]>([]);
@@ -106,9 +107,11 @@ const ProfileRequestSession = ({ status }: { status: SessionStatusType }) => {
               <div className="flex items-center justify-between bg-gray-50 rounded-lg p-5 border border-gray-200">
                 {/* Requester */}
                 <div className="flex items-center gap-4">
-                  <img
+                  <Image
                     src={session.requester.imageUrl}
                     alt={session.requester.name}
+                      width={56}
+  height={56}
                     className="w-14 h-14 rounded-full object-cover border-2 border-gray-200"
                   />
                   <div>
@@ -132,9 +135,11 @@ const ProfileRequestSession = ({ status }: { status: SessionStatusType }) => {
                       {session.receiver.name}
                     </h3>
                   </div>
-                  <img
+                  <Image
                     src={session.receiver.imageUrl}
                     alt={session.receiver.name}
+                      width={56}
+  height={56}
                     className="w-14 h-14 rounded-full object-cover border-2 border-gray-200"
                   />
                 </div>
@@ -169,8 +174,10 @@ const ProfileRequestSession = ({ status }: { status: SessionStatusType }) => {
 
                 {session.post.postImageUrl && (
                   <div className="mt-4">
-                    <img
+                    <Image
                       src={session.post.postImageUrl}
+                       width={600}
+  height={192}
                       alt="Post"
                       className="w-full h-48 object-cover rounded-lg border border-gray-200"
                     />
