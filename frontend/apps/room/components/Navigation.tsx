@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import Video from '../components/video/mainBody'
+import Video from './video/mainBody'
 import RightChatBody from './video/rightChatBody';
 import CodeEditorBody from './editor/leftEditorBody'
 import WhiteBoard from './board/leftBoardBody'
@@ -12,21 +12,38 @@ const Navigation = () => {
   // const [roomId, setRoomId] = useState<string | null>(null);
   const [selected, setSelected] = useState("Video");
   const options = ["Video", "Code Editor", "WhiteBoard", "Notes"];
+    const [roomId, setRoomId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // useEffect(()=>{
-  //   const parts = pathName.split("/")
-  //   const token = parts[2];
-  //   if(token){
-  //     setRoomId(token)
-  //   }
-  // },[pathName])
+   useEffect(() => {
+    const id = localStorage.getItem("meet");
+    const parsedId = id ? JSON.parse(id) : null;
 
-  //  if (!roomId) return <p>Loading...</p>;
-  const roomId = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZWNlaXZlcklkIjoiNjhmNjEyYjFhZDkxNmE1ODQ0MThhNDE2IiwicmVxdWVzdGVySWQiOiI2OGY2MjdhYTc1MDg5MGVlNTliMzZiMWUiLCJpYXQiOjE3NjA5Nzg2MjgsImV4cCI6MTc2MDk4NTgyOH0.QaqcPCSeatqGGVUcHhIXXAk6p9lncB-RB1CxnRzgFz0"
+    setRoomId(parsedId);
+    setLoading(false);
+  }, []);
+
+  // 🔄 Loading state
+  if (loading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center">
+        <p className="text-lg font-semibold">Loading...</p>
+      </div>
+    );
+  }
+
+  // ❌ No roomId found
+  if (!roomId) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center">
+        <p className="text-lg text-red-500">Room not found</p>
+      </div>
+    );
+  }
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       {/* Left Side (70%) */}
-      <div className="flex flex-col w-[70%] h-full">
+      <div className="flex flex-col w-[75%] h-full">
         {/* Navigation Bar */}
         <div className="flex justify-center mt-2 px-2">
           <div className="relative flex flex-row bg-gray-200 rounded-lg p-2 max-w-full w-[400px] justify-between items-center overflow-hidden">
@@ -74,7 +91,7 @@ const Navigation = () => {
       </div>
 
       {/* Right Side Chat (30%) */}
-      <div className="w-[30%] h-full border-l bg-white overflow-auto">
+      <div className="w-[25%] h-full border-l bg-white overflow-auto">
         <RightChatBody roomId={roomId} />
       </div>
     </div>

@@ -106,7 +106,7 @@ const RightBody = () => {
                       />
                     ) : (
                       <span className="flex items-center justify-center w-full h-full text-white font-semibold text-lg">
-                        {user?.name?.[0].toUpperCase() || "U"}
+                        {user?.name?.[0]?.toUpperCase() || "U"}
                       </span>
                     )}
                   </div>

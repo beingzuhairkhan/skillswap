@@ -1,10 +1,10 @@
+'use client'
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { IoSearchSharp } from "react-icons/io5";
 import Navigation from "./Navigation";
 import logo from "../../public/logo.png";
-import { PlaceholdersAndVanishInput } from "@repo/ui/placeholders-and-vanish-input"
 import { Input } from "@repo/ui/input";
 
 

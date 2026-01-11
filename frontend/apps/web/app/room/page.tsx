@@ -6,33 +6,34 @@ const Room = () => {
   const [roomUrl, setRoomUrl] = useState("");
   const [loading, setLoading] = useState(false);
 
- const handleJoinRoom = async () => {
-  const trimmedUrl = roomUrl.trim();
-  if (!trimmedUrl) {
-    alert("Please enter a valid room link");
-    return;
-  }
-
-  setLoading(true);
-  try {
-    // Send meet link to backend
-    const response = await RoomAPI.getDecodeRoomId(trimmedUrl);
-    const { status, message } = response.data;
-
-    if (status) {
-      // Only redirect if status is true
-      const roomPageUrl = `http://localhost:3001`;
-      window.open(roomPageUrl, "_blank");
-    } else {
-      alert(message || "Invalid meet link");
+  const handleJoinRoom = async () => {
+    const trimmedUrl = roomUrl.trim();
+    if (!trimmedUrl) {
+      alert("Please enter a valid room link");
+      return;
     }
-  } catch (error: any) {
-    console.error(error);
-    alert(error.response?.data?.message || "Failed to join room");
-  } finally {
-    setLoading(false);
-  }
-};
+
+    setLoading(true);
+    try {
+      // Send meet link to backend
+      console.log("trim" , trimmedUrl)
+      const response = await RoomAPI.getDecodeRoomId(trimmedUrl);
+      const { status, message , token } = response.data;
+     
+      if (status && token) {
+        // Only redirect if status is true
+        const roomPageUrl = `${process.env.NEXT_PUBLIC_ROOM_URL}/${token}`;
+        window.open(roomPageUrl, "_blank");
+      } else {
+        alert(message || "Invalid meet link");
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.message || "Failed to join room");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex items-center justify-center h-screen">

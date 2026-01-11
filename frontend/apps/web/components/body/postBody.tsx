@@ -62,14 +62,14 @@ const PostBody = () => {
             {user?.imageUrl ? (
               <Image
                 src={user.imageUrl}
-                alt={user.name}
+                alt={user.name || "User"}
                 width={40}
                 height={40}
                 className="object-cover w-full h-full"
               />
             ) : (
               <span className="flex items-center justify-center w-full h-full text-white">
-                {user?.name?.[0].toUpperCase() || "U"}
+                {user?.name?.[0]?.toUpperCase() || "U"}
               </span>
             )}
           </div>
