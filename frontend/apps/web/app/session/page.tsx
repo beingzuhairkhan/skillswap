@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Button } from "@repo/ui/button";
+import { Button } from '../../../../packages/ui/src/button'
 import UpComingSessions from "./../../components/sessionDatas/upComingSessions";
 import AcceptSessions from "./../../components/sessionDatas/acceptSessions";
 import RejectSessions from "./../../components/sessionDatas/rejectSessions";
