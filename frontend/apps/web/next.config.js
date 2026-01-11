@@ -1,12 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false,
   images: {
-    domains: [
-      "media.istockphoto.com",
-      "images.unsplash.com",
-      "res.cloudinary.com", // added Cloudinary
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "media.istockphoto.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
     ],
+  },
+  output: "standalone",
+  experimental: {
+    workerThreads: false,
   },
 };
 

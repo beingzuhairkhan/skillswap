@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Clock, Calendar, BookOpen, ExternalLink, Users, User, ArrowRight, MessageSquare, XCircle } from "lucide-react";
 import { SessionAPI } from "../../services/api";
 import type { SessionStatusType } from '../constants/sessionStatus'
+import Image from "next/image";
 
 const ProfileCancelSession = ({ status }: { status: SessionStatusType }) => {
   const [sessions, setSessions] = useState<any[]>([]);
@@ -60,11 +61,10 @@ const ProfileCancelSession = ({ status }: { status: SessionStatusType }) => {
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <span className={`px-3 py-1.5 text-xs font-medium rounded-md ${
-                  session.sessionType === 'group' 
-                    ? 'bg-gray-900 text-white' 
-                    : 'bg-gray-800 text-white'
-                }`}>
+                <span className={`px-3 py-1.5 text-xs font-medium rounded-md ${session.sessionType === 'group'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-800 text-white'
+                  }`}>
                   {session.sessionType === 'group' ? (
                     <span className="flex items-center gap-1.5">
                       <Users className="w-3.5 h-3.5" />
@@ -85,10 +85,10 @@ const ProfileCancelSession = ({ status }: { status: SessionStatusType }) => {
               <div className="flex items-center gap-3 text-sm text-gray-600">
                 <div className="flex items-center gap-1.5">
                   <Calendar className="w-4 h-4" />
-                  {new Date(session.date).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
+                  {new Date(session.date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
                   })}
                 </div>
                 <span className="text-gray-300">|</span>
@@ -120,9 +120,12 @@ const ProfileCancelSession = ({ status }: { status: SessionStatusType }) => {
               <div className="flex items-center justify-between bg-gray-50 rounded-lg p-5 border border-gray-200">
                 {/* Requester */}
                 <div className="flex items-center gap-4">
-                  <img
+                  <Image
                     src={session.requester.imageUrl}
                     alt={session.requester.name}
+                    width={56}
+                    height={56}
+
                     className="w-14 h-14 rounded-full object-cover border-2 border-gray-200"
                   />
                   <div>
@@ -146,9 +149,12 @@ const ProfileCancelSession = ({ status }: { status: SessionStatusType }) => {
                       {session.receiver.name}
                     </h3>
                   </div>
-                  <img
+                  <Image
                     src={session.receiver.imageUrl}
                     alt={session.receiver.name}
+                    width={56}
+                    height={56}
+
                     className="w-14 h-14 rounded-full object-cover border-2 border-gray-200"
                   />
                 </div>
@@ -162,7 +168,7 @@ const ProfileCancelSession = ({ status }: { status: SessionStatusType }) => {
                   <BookOpen className="w-5 h-5 text-gray-700" />
                   <h4 className="font-semibold text-gray-900">Skill Exchange</h4>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <p className="text-xs text-gray-500 font-medium mb-2 uppercase tracking-wide">Wants to Learn</p>
@@ -183,8 +189,10 @@ const ProfileCancelSession = ({ status }: { status: SessionStatusType }) => {
 
                 {session.post.postImageUrl && (
                   <div className="mt-4">
-                    <img
+                    <Image
                       src={session.post.postImageUrl}
+                       width={600}
+  height={192}
                       alt="Post"
                       className="w-full h-48 object-cover rounded-lg border border-gray-200"
                     />
@@ -212,8 +220,8 @@ const ProfileCancelSession = ({ status }: { status: SessionStatusType }) => {
                   <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Created</span>
                 </div>
                 <p className="text-sm font-semibold text-gray-900">
-                  {new Date(session.createdAt).toLocaleDateString('en-US', { 
-                    month: 'short', 
+                  {new Date(session.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
                     day: 'numeric',
                     year: 'numeric'
                   })}
