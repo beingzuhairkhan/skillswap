@@ -3,7 +3,7 @@ import type { AxiosRequestConfig } from 'axios';
 import { error } from 'console';
 import { config } from 'process';
 import type { SessionStatusType } from '../components/constants/sessionStatus'
-const API_BASE_URL = 'http://localhost:4000'
+const API_BASE_URL =process.env.NEXT_PUBLIC_BACKEND_URL
 
 
 interface AxiosRequestConfigWithRetry extends AxiosRequestConfig {
@@ -121,14 +121,11 @@ export const SessionAPI = {
 }
 
 export const ChatAPI = {
-  // Fetch all chats for sidebar
   getAllChats: () => authAPI.get(`/chat`),
 
-  // Fetch messages for a specific user
   getMessages: (otherUserId: string) =>
     authAPI.get(`/chat/messages/${otherUserId}`),
 
-  // Send message to a specific user
   sendMessage: (receiverId: string, message: string) =>
     authAPI.post(`/chat/send`, { receiverId, message }),
 };

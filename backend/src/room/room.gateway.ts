@@ -12,7 +12,7 @@ export class RoomGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
 
-   onModuleInit() {
+  onModuleInit() {
     console.log('[RoomGateway] WebSocket server initialized');
   }
 
@@ -26,18 +26,19 @@ export class RoomGateway implements OnModuleInit {
   @SubscribeMessage('join-room')
   handleJoin(@ConnectedSocket() client: Socket, @MessageBody() roomId: string) {
     // Check if client is already in a room, remove them first
-    const currentRoom = this.clientRooms.get(client.id);
-    if (currentRoom) {
-      client.leave(currentRoom);
-      console.log(`Client ${client.id} left previous room ${currentRoom}`);
-    }
+const oldRoom = this.clientRooms.get(client.id);
+if (oldRoom) {
+  client.leave(oldRoom);
+  this.clientRooms.delete(client.id);
+}
+
 
     // Get current number of clients in room BEFORE joining
     const clients = this.server.sockets.adapter.rooms.get(roomId);
     const numClients = clients ? clients.size : 0;
 
     // Limit to 2 users per room for peer-to-peer
-    if (numClients >= 8) {
+    if (numClients >= 4) {
       client.emit('room-full', { message: 'This room is full. Maximum 2 participants allowed.' });
       console.log(`Client ${client.id} tried to join full room ${roomId}`);
       return;
@@ -58,11 +59,13 @@ export class RoomGateway implements OnModuleInit {
     // Tell the client they joined
     client.emit('joined-room', { isInitiator, userCount });
 
-    // If this is NOT the first user, notify ALL others that someone joined
     if (numClients > 0) {
-      // Broadcast to ALL clients in room (including the one who just joined)
-      this.server.to(roomId).emit('user-joined', { userId: client.id, userCount });
+      client.to(roomId).emit('user-joined', {
+        userId: client.id,
+        userCount,
+      });
     }
+
 
     console.log(`Client ${client.id} joined room ${roomId}. Is initiator: ${isInitiator}, Total users: ${userCount}`);
   }

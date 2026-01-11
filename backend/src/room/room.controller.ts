@@ -12,4 +12,10 @@ export class RoomController {
         const userId = req.user.userId;
         return this.roomService.decodeMeetLink(meetLink, userId);
     }
+
+    @Post('decodeRoom')
+    async decodeMeetLinkFromRoom(@Body('meetLink') meetLink: string) {
+        console.log("mee" , meetLink)
+        return this.roomService.decodeMeetLinkFromRoom(meetLink);
+    }
 }

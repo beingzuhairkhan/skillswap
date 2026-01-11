@@ -12,6 +12,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { userDataAPI } from "../../services/api";
 import { io, Socket } from "socket.io-client";
+import Image from "next/image";
 
 interface UserData {
   _id: string;
@@ -118,6 +119,7 @@ const Navigation = () => {
     <nav className="flex items-center gap-14 h-16 relative px-6 shadow-sm">
       {/* Navigation Links */}
       {navItems.map((item) => {
+         const Logo = item.logo;
         const isActive = pathname === item.href;
         const isNotification = item.title === "Notifications";
 
@@ -128,7 +130,7 @@ const Navigation = () => {
             className={`relative flex flex-col items-center justify-center h-full transition ${isActive ? "text-black" : "text-gray-600 hover:text-black"
               }`}
           >
-            {item.logo}
+            {Logo}
 
             {/* Notification badge */}
             {isNotification && notifications.length > 0 && (
@@ -157,7 +159,7 @@ const Navigation = () => {
               </div>
             ) : (
               <div className="flex flex-col items-center">
-                <img
+                <Image
                   src={userFetchData.imageUrl}
                   alt={userFetchData.name || "User Avatar"}
                   className="w-7 h-7 rounded-full object-cover"

@@ -1,8 +1,9 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
+import SessionTimer from "./LeaveSessionWithTimer";
 
-const SOCKET_URL = "http://localhost:4000";
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL!
 
 interface Message {
   senderId: string;
@@ -74,19 +75,7 @@ const RightChatBody = ({ roomId }: Props) => {
       {/* <div className="p-2 text-sm bg-gray-100 text-gray-700 border-b">
         Room ID: <strong>{currentRoomId.slice(6)}</strong>
       </div> */}
-      <div className="p-4 flex justify-center gap-6">
-        {["Hours", "Minutes", "Seconds"].map((label, i) => (
-          <div key={i} className="text-center bg-gray-100 rounded-lg p-2">
-            <p className="text-2xl font-bold">00</p>
-            <p className="text-xs text-gray-500 uppercase">{label}</p>
-          </div>
-        ))}
-      </div>
-      <div className="p-4">
-        <button className="w-full py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
-          Leave Session
-        </button>
-      </div>
+      <SessionTimer/>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, index) => {
