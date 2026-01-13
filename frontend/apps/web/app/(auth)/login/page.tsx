@@ -4,9 +4,6 @@ import React, { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import signupImage from "../../../public/signup-image.png"
-// import { Input } from '../../../../../packages/ui/src/input'
-import { Input } from "@repo/ui/src/input"
-import { Button } from '@repo/ui/src/button'
 import { useForm } from "react-hook-form"
 import { GithubIcon } from "../../../components/svgIcon/github"
 import { GoogleIcon } from "../../../components/svgIcon/google"
@@ -75,11 +72,15 @@ const LoginPage = () => {
       >
         {/* Email */}
         <div>
-          <Input
+          <input
+            id="email"
             type="email"
             {...register("email", { required: "Email is required" })}
-            placeholder="Email"
-            className="bg-gray-50 border border-gray-300 rounded-md p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-400 text-gray-800"
+            placeholder="Enter your email"
+            className={`w-full bg-gray-50 border rounded-md p-3 text-gray-800 
+            focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500
+            border-gray-300
+            ${errors.email ? "border-red-500" : ""}`}
           />
           {errors.email && (
             <p className="text-red-500 text-sm mt-1">
@@ -90,11 +91,15 @@ const LoginPage = () => {
 
         {/* Password */}
         <div>
-          <Input
+          <input
+            id="password"
             type="password"
             {...register("password", { required: "Password is required" })}
-            placeholder="Password"
-            className="bg-gray-50 border border-gray-300 rounded-md p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+            placeholder="Enter your password"
+            className={`w-full bg-gray-50 border rounded-md p-3 text-gray-800
+      focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500
+      border-gray-300
+      ${errors.password ? "border-red-500" : ""}`}
           />
           {errors.password && (
             <p className="text-red-500 text-sm mt-1">
@@ -122,7 +127,7 @@ const LoginPage = () => {
 
 
         {/* Submit 6Lc-3fcrAAAAAMbmVm1KRSpQwdzg9X2ZUM8Gp_uP */}
-        <Button
+        <button
           type="submit"
           disabled={isLoading}
           className={`w-full bg-neutral-900 text-white font-medium py-3 rounded-md transition duration-200
@@ -130,7 +135,7 @@ const LoginPage = () => {
   `}
         >
           {isLoading ? "Signing in..." : "Sign In"}
-        </Button>
+        </button>
 
         {/* Sign up link */}
         <p className="text-center text-sm text-gray-600 mt-3">
@@ -151,16 +156,16 @@ const LoginPage = () => {
       {/* OAuth Buttons */}
       <div className="max-w-xl mx-auto flex gap-3 flex-col sm:flex-row">
         {/* Google */}
-        <Button
+        <button
           type="button"
           className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 py-3 rounded-md transition duration-200"
         >
           <GoogleIcon />
           Google
-        </Button>
+        </button>
 
         {/* GitHub */}
-        <Button
+        <button
           type="button"
           className="flex-1 flex items-center justify-center gap-2 bg-gray-900/90 text-white hover:bg-gray-900 py-3 rounded-md transition duration-200"
           onClick={() => {
@@ -170,7 +175,7 @@ const LoginPage = () => {
         >
           <GithubIcon />
           GitHub
-        </Button>
+        </button>
 
       </div>
     </div>
