@@ -57,13 +57,7 @@ export class AuthController {
     @UseGuards(AuthGuard('github'))
     async githubCallback(@Req() req: import('express').Request & { user?: any }, @Res({ passthrough: true }) res: Response) {
         const { user, tokens } = await this.authService.githubCallback(req.user)
-        res.redirect(`http://localhost:3000/oauth?token=${tokens.accessToken}`);
+        res.redirect(`${process.env.FRONTEND_URL}/oauth?token=${tokens.accessToken}`);
 
     }
 }
-// github {
-//   githubId: '144715213',
-//   username: 'beingzuhairkhan',
-//   email: 'zuhairkhan5134@gmail.com',
-//   displayName: null
-// }

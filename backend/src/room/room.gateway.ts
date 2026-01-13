@@ -4,7 +4,7 @@ import { Server, Socket } from 'socket.io'
 
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    origin: ['https://skillswap-gilt.vercel.app', 'http://localhost:3000', 'http://localhost:3001'],
   },
   transports: ['websocket', 'polling'],
 })
@@ -16,7 +16,6 @@ export class RoomGateway implements OnModuleInit {
     console.log('[RoomGateway] WebSocket server initialized');
   }
 
-  // Track which room each client is in
   private clientRooms = new Map<string, string>();
 
   handleConnection(client: Socket) {
@@ -25,38 +24,32 @@ export class RoomGateway implements OnModuleInit {
 
   @SubscribeMessage('join-room')
   handleJoin(@ConnectedSocket() client: Socket, @MessageBody() roomId: string) {
-    // Check if client is already in a room, remove them first
-const oldRoom = this.clientRooms.get(client.id);
-if (oldRoom) {
-  client.leave(oldRoom);
-  this.clientRooms.delete(client.id);
-}
+
+    const oldRoom = this.clientRooms.get(client.id);
+    if (oldRoom) {
+      client.leave(oldRoom);
+      this.clientRooms.delete(client.id);
+    }
 
 
-    // Get current number of clients in room BEFORE joining
     const clients = this.server.sockets.adapter.rooms.get(roomId);
     const numClients = clients ? clients.size : 0;
 
-    // Limit to 2 users per room for peer-to-peer
     if (numClients >= 4) {
       client.emit('room-full', { message: 'This room is full. Maximum 2 participants allowed.' });
       console.log(`Client ${client.id} tried to join full room ${roomId}`);
       return;
     }
 
-    const isInitiator = numClients === 0; // First user is initiator
+    const isInitiator = numClients === 0; 
 
-    // Join the room
     client.join(roomId);
 
-    // Store room info for this client
     this.clientRooms.set(client.id, roomId);
 
-    // Get updated count AFTER joining
     const updatedClients = this.server.sockets.adapter.rooms.get(roomId);
     const userCount = updatedClients ? updatedClients.size : 1;
 
-    // Tell the client they joined
     client.emit('joined-room', { isInitiator, userCount });
 
     if (numClients > 0) {
@@ -79,7 +72,6 @@ if (oldRoom) {
       signal: any;
     }
   ) {
-    // Relay WebRTC signaling to other peers in the room
     client.to(data.roomId).emit('signal', {
       senderId: client.id,
       signal: data.signal,
@@ -93,7 +85,6 @@ if (oldRoom) {
   ) {
     console.log(`Client ${client.id} started screen sharing in room ${data.roomId}`);
 
-    // Notify other users in the room
     client.to(data.roomId).emit('screen-share-started', {
       userId: client.id,
     });
@@ -106,7 +97,6 @@ if (oldRoom) {
   ) {
     console.log(`Client ${client.id} stopped screen sharing in room ${data.roomId}`);
 
-    // Notify other users in the room
     client.to(data.roomId).emit('screen-share-stopped', {
       userId: client.id,
     });
@@ -122,14 +112,12 @@ if (oldRoom) {
       isAI?: boolean;
     }
   ) {
-    // Broadcast message to everyone in the room (including sender)
     this.server.to(data.roomId).emit('chat-message', {
       senderId: client.id,
       message: data.message,
       time: Date.now(),
     });
 
-    // Handle AI responses if message starts with @
     if (data.isAI && data.message.startsWith('@')) {
       const aiPrompt = data.message.replace('@', '').trim();
       const aiResponse = await this.getAIResponse(aiPrompt);
@@ -152,7 +140,6 @@ if (oldRoom) {
       enabled: boolean;
     }
   ) {
-    // Notify others about mic toggle
     client.to(data.roomId).emit('toggle-mic', {
       userId: client.id,
       enabled: data.enabled,
@@ -168,7 +155,6 @@ if (oldRoom) {
       enabled: boolean;
     }
   ) {
-    // Notify others about camera toggle
     client.to(data.roomId).emit('toggle-camera', {
       userId: client.id,
       enabled: data.enabled,
@@ -178,14 +164,11 @@ if (oldRoom) {
   handleDisconnect(client: Socket) {
     console.log('Client disconnected:', client.id);
 
-    // Get the room this client was in
     const roomId = this.clientRooms.get(client.id);
 
     if (roomId) {
-      // Force leave the room
       client.leave(roomId);
 
-      // Get updated user count after disconnect
       const clients = this.server.sockets.adapter.rooms.get(roomId);
       const userCount = clients ? clients.size : 0;
 
@@ -197,13 +180,11 @@ if (oldRoom) {
 
       console.log(`Client ${client.id} left room ${roomId}. Remaining users: ${userCount}`);
 
-      // Clean up
       this.clientRooms.delete(client.id);
     }
   }
 
   async getAIResponse(prompt: string): Promise<string> {
-    // Example placeholder - replace with actual AI integration
     return `🤖 AI says: You asked "${prompt}"`;
   }
 }

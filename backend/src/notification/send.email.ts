@@ -5,10 +5,8 @@ const transporter = nodemailer.createTransport({
     port: 587,
     secure: false,
     auth: {
-        // user: process.env.MAIL_USER,
-        // pass: process.env.MAIL_PASS,
-        user: 'zuhairkhan5134@gmail.com',
-        pass: 'tjsi alxt gbko xzfm',
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
     },
 });
 
@@ -23,13 +21,13 @@ export async function sendEmail({
 }) {
     try {
         await transporter.sendMail({
-            from: "zuhairkhan5134@gmail.com",
+            from: process.env.MAIL_USER,
             to,
             subject,
             html,
         });
     } catch (error) {
         console.error('Failed to send email', error);
-        throw error; // IMPORTANT for BullMQ retry
+        throw error;
     }
 }

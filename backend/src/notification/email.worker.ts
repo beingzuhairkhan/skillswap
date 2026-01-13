@@ -11,7 +11,7 @@ export class EmailWorkerService implements OnModuleInit {
     private worker: Worker;
 
     onModuleInit() {
-        console.log('📧 EmailWorkerService initializing...');
+        console.log(' EmailWorkerService initializing...');
 
         this.worker = new Worker(
             'email-queue',
@@ -30,26 +30,25 @@ export class EmailWorkerService implements OnModuleInit {
                 }
 
                 const ok = await this.notificationService.sendEmail(toEmail, subject, html );
-                console.log('✅ Email sent successfully to',  ok);
+                console.log(' Email sent successfully to',  ok);
             },
             {
                 connection: {
-                    // match BullMQ's expected ConnectionOptions
-                    host: "thankful-man-23367.upstash.io",
-                    port: 6379,
-                    password: "AVtHAAIncDIzMzIxYjIyMmU0NGM0MTdiYmEzZTVjMjRhMzNiYWI4N3AyMjMzNjc",
-                    tls: {} // required for rediss://
+                    host: process.env.REDIS_HOST,
+                    port:parseInt(process.env.REDIS_PORT || "6379"),
+                    password: process.env.REDIS_PASSWORD,
+                    tls: {} 
                 },
                 concurrency: 5,
             }
         );
 
         this.worker.on('completed', (job) => {
-            console.log('📌 Email job completed:', job.id);
+            console.log(' Email job completed:', job.id);
         });
 
         this.worker.on('failed', (job, err) => {
-            console.error('❌ Email job failed:', job?.id, err.message);
+            console.error(' Email job failed:', job?.id, err.message);
         });
     }
 }
