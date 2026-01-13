@@ -5,7 +5,7 @@ import Image from "next/image";
 import { IoSearchSharp } from "react-icons/io5";
 import Navigation from "./Navigation";
 import logo from "../../public/logo.png";
-import { Input } from '../../../../packages/ui/src/input'
+import { Input } from '@repo/ui/src/input'
 
 
 
