@@ -9,7 +9,7 @@ async function bootstrap() {
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
     app.enableCors({
-      origin: ['http://localhost:3000', 'http://localhost:3001'],
+      origin: ['https://skillswap-upmw.vercel.app' , 'https://skillswap-iota-three.vercel.app' , 'http://localhost:3000', 'http://localhost:3001'],
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
       credentials: true,
     });
