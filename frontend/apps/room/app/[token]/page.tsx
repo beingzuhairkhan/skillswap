@@ -19,7 +19,6 @@ export default function TokenPage() {
         });
 
         const data = await res.json();
-        console.log("res from rrom" , data)
 
         if (data.status && data.roomId) {
             localStorage.setItem("meet", JSON.stringify(data.roomId));

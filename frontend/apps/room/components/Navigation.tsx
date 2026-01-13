@@ -8,14 +8,12 @@ import Notes from './notes/leftnotesBody'
 import { usePathname } from 'next/navigation';
 
 const Navigation = () => {
-  // const pathName = usePathname()
-  // const [roomId, setRoomId] = useState<string | null>(null);
   const [selected, setSelected] = useState("Video");
   const options = ["Video", "Code Editor", "WhiteBoard", "Notes"];
-    const [roomId, setRoomId] = useState<string | null>(null);
+  const [roomId, setRoomId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-   useEffect(() => {
+  useEffect(() => {
     const id = localStorage.getItem("meet");
     const parsedId = id ? JSON.parse(id) : null;
 
