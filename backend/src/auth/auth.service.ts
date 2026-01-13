@@ -167,10 +167,3 @@ export class AuthService {
   }
 
 }
-
-// github {
-//   githubId: '144715213',
-//   username: 'beingzuhairkhan',
-//   email: 'zuhairkhan5134@gmail.com',
-//   displayName: null
-// }

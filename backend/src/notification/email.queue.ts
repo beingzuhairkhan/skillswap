@@ -3,11 +3,10 @@ import {redis} from './redis'
 
 export const emailQueue = new Queue("email-queue" , {
     connection: {
-    // match BullMQ's expected ConnectionOptions
-    host: "thankful-man-23367.upstash.io",
-    port: 6379,
-    password: "AVtHAAIncDIzMzIxYjIyMmU0NGM0MTdiYmEzZTVjMjRhMzNiYWI4N3AyMjMzNjc",
-    tls: {} // required for rediss://
+    host: process.env.REDIS_HOST,
+    port: parseInt(process.env.REDIS_PORT || "6379"),
+    password: process.env.REDIS_PASSWORD,
+    tls: process.env.REDIS_TLS === "true" ? {} : undefined,
   },
     defaultJobOptions:{
         attempts:3 ,

@@ -10,17 +10,15 @@ export class NotificationService {
         port: 587,
         secure: false,
         auth: {
-            //   user: process.env.MAIL_USER,
-            //   pass: process.env.MAIL_PASS,
-            user: 'zuhairk7890o@gmail.com',
-            pass: 'vyvc hrzb iwxl kghv',
+              user: process.env.MAIL_USER,
+              pass: process.env.MAIL_PASS,
         },
     });
 
     async sendEmail(to: string, subject: string, html: string) {
         try {
             await this.transporter.sendMail({
-                from: 'zuhairk7890o@gmail.com',
+                from: process.env.MAIL_USER,
                 to,
                 subject,
                 html

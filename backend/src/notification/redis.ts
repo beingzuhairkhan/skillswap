@@ -1,12 +1,12 @@
 import Redis from 'ioredis';
 
-export const redis = new Redis("rediss://default:AVtHAAIncDIzMzIxYjIyMmU0NGM0MTdiYmEzZTVjMjRhMzNiYWI4N3AyMjMzNjc@thankful-man-23367.upstash.io:6379");
+export const redis = new Redis(process.env.REDIS_URL!);
 
 redis.on("connect", () => {
-  console.log("✅ Redis connected");
+  console.log("Redis connected");
 });
 
 redis.on("error", (err) => {
-  console.error("❌ Redis error", err);
+  console.error("Redis error", err);
 });
 

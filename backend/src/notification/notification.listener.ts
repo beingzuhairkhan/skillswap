@@ -6,7 +6,7 @@ import { EVENTS } from './eventTypes';
 import { emailQueue } from './email.queue';
 import { User, UserDocument } from 'src/schemas/user.schema';
 import { Notification, NotificationDocument, NotificationRole } from 'src/schemas/notification.schema';
-import { Server } from 'socket.io'; // assuming you are using Socket.IO
+import { Server } from 'socket.io'; 
 import { RoomGateway  } from '../room/room.gateway'
 
 @Injectable()

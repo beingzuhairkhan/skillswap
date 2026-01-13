@@ -12,10 +12,6 @@ export class UploadService {
     });
   }
 
-  /**
-   * Upload file buffer to Cloudinary
-   * Returns both URL and public_id
-   */
   async uploadFile(file: Express.Multer.File): Promise<{ url: string; publicId: string }> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
@@ -33,13 +29,10 @@ export class UploadService {
     });
   }
 
-  /**
-   * Delete image from Cloudinary using its public_id
-   */
   async deleteImage(publicId: string): Promise<{ result: string }> {
     try {
       const res = await cloudinary.uploader.destroy(publicId);
-      return res; // { result: 'ok' } or { result: 'not found' }
+      return res; 
     } catch (error) {
       throw new Error(`Failed to delete image: ${error.message}`);
     }

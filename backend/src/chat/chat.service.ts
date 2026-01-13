@@ -10,7 +10,6 @@ export class ChatService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>
   ) { }
 
-  // Fetch all chats for a user (return latest message per chat)
   async getAllUserChats(userId: string): Promise<any> {
     try {
       if (!userId) {
@@ -19,7 +18,6 @@ export class ChatService {
 
       const objectUserId = new Types.ObjectId(userId);
 
-      // Find all chats where user is a participant
       const chats = await this.chatModel
         .find({
           $or: [
@@ -29,9 +27,8 @@ export class ChatService {
         })
         .populate('user1', 'name imageUrl collegeName domain -password')
         .populate('user2', 'name imageUrl collegeName domain -password')
-        .sort({ updatedAt: -1 }); // latest chat first
+        .sort({ updatedAt: -1 });
 
-      // Map to include "other user" and last message
       const formattedChats = chats.map(chat => {
         const otherUser = chat.user1._id.equals(objectUserId) ? chat.user2 : chat.user1;
         const lastMessage = chat.messages[chat.messages.length - 1] || null;
@@ -50,7 +47,6 @@ export class ChatService {
     }
   }
 
-  // Send a message (push to messages array)
   async sendMessage(senderId: string, receiverId: string, message: string) {
     if (!message?.trim()) {
       throw new InternalServerErrorException('Message cannot be empty');
@@ -88,41 +84,40 @@ export class ChatService {
   }
 
 
-  // Fetch all messages between two users
-async getMessagesBetweenUsers(userId1: string, userId2: string) {
-  try {
+  async getMessagesBetweenUsers(userId1: string, userId2: string) {
+    try {
 
-    const findUser = await this.userModel.findById(userId2).select('name domain imageUrl');
-    if (!findUser) {
-      throw new InternalServerErrorException('User does not exist');
+      const findUser = await this.userModel.findById(userId2).select('name domain imageUrl');
+      if (!findUser) {
+        throw new InternalServerErrorException('User does not exist');
+      }
+
+      const chat = await this.chatModel
+        .findOne({
+          $or: [
+            { user1: new Types.ObjectId(userId1), user2: new Types.ObjectId(userId2) },
+            { user1: new Types.ObjectId(userId2), user2: new Types.ObjectId(userId1) },
+          ],
+        })
+        .populate('messages.sender', 'name imageUrl')
+        .lean();
+
+      return {
+        user: {
+          _id: findUser._id,
+          name: findUser.name,
+          domain: findUser.domain,
+          imageUrl: findUser.imageUrl,
+        },
+        messages: chat?.messages
+          ? chat.messages.sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime())
+          : [],
+      };
+    } catch (error) {
+      console.error('Error fetching messages between users:', error);
+      throw new InternalServerErrorException('Failed to fetch messages');
     }
-
-    const chat = await this.chatModel
-      .findOne({
-        $or: [
-          { user1: new Types.ObjectId(userId1), user2: new Types.ObjectId(userId2) },
-          { user1: new Types.ObjectId(userId2), user2: new Types.ObjectId(userId1) },
-        ],
-      })
-      .populate('messages.sender', 'name imageUrl')
-      .lean();
-
-    return {
-      user: {
-        _id: findUser._id,
-        name: findUser.name,
-        domain: findUser.domain,
-        imageUrl: findUser.imageUrl,
-      },
-      messages: chat?.messages
-        ? chat.messages.sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime())
-        : [],
-    };
-  } catch (error) {
-    console.error('Error fetching messages between users:', error);
-    throw new InternalServerErrorException('Failed to fetch messages');
   }
-}
 
 
 }

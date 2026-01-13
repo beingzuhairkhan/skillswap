@@ -19,7 +19,6 @@ export class RoomService {
         try {
             if (!userId || !meetLink) throw new NotFoundException('User or meet link not found');
 
-            // Extract token from full link
             const token = meetLink.split('/').pop();
             if (!token) {
                 throw new NotFoundException('Invalid meet link');
