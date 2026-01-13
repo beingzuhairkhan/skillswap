@@ -4,7 +4,7 @@ import { Server, Socket } from 'socket.io'
 
 @WebSocketGateway({
   cors: {
-    origin: ['https://skillswap-gilt.vercel.app', 'http://localhost:3000', 'http://localhost:3001'],
+    origin: ['https://skillswap-gilt.vercel.app','https://skillswap-upmw.vercel.app', 'http://localhost:3000', 'http://localhost:3001'],
   },
   transports: ['websocket', 'polling'],
 })
