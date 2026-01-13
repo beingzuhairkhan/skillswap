@@ -2,8 +2,6 @@
 import React, { useState, ChangeEvent } from "react";
 import signupImage from "../../public/create-post.png";
 import Image from "next/image";
-import { Input } from '@repo/ui/src/input'
-import { Button } from '@repo/ui/src/button'
 import { useForm } from "react-hook-form";
 import { AiOutlinePaperClip } from "react-icons/ai";
 import { IoImageOutline } from "react-icons/io5";
@@ -38,21 +36,21 @@ const CreatePost = () => {
     setValue,
     formState: { errors },
   } = useForm<ICreatePost>();
-  
-  const {user} = useAuth()
+
+  const { user } = useAuth()
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [urlLink, setUrlLink] = useState<string>("");
-   const router = useRouter();
+  const router = useRouter();
   const onSubmit = async (data: ICreatePost) => {
-    console.log("res" , data)
+    console.log("res", data)
     const response = await userDataAPI.createPost(data);
     console.log("Post created:", response);
-    if(response.status == 201){
+    if (response.status == 201) {
       toast.success("Post Created Successfully")
-        router.push("/");
+      router.push("/");
     }
-   
+
     handleCancel();
   };
 
@@ -118,12 +116,15 @@ const CreatePost = () => {
           <label className="block mb-2 text-md font-semibold text-gray-700">
             I want to learn
           </label>
-          <Input
+          <input
             type="text"
             {...register("wantLearn", { required: "This field is required" })}
             placeholder="Add skills"
-            className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg text-gray-800
+             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+             transition"
           />
+
           {errors.wantLearn && (
             <p className="text-red-500 text-sm mt-1">{errors.wantLearn.message}</p>
           )}
@@ -134,12 +135,15 @@ const CreatePost = () => {
           <label className="block mb-2 text-md font-semibold text-gray-700">
             I can teach
           </label>
-          <Input
+          <input
             type="text"
             {...register("wantTeach", { required: "This field is required" })}
             placeholder="Add skills"
-            className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg text-gray-800
+             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+             transition"
           />
+
           {errors.wantTeach && (
             <p className="text-red-500 text-sm mt-1">{errors.wantTeach.message}</p>
           )}
@@ -260,19 +264,19 @@ const CreatePost = () => {
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-end mt-4">
-          <Button
+          <button
             type="submit"
             className="bg-black text-white hover:bg-gray-900 transition rounded-md py-3 px-6 w-full sm:w-auto"
           >
             Post
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
             onClick={handleCancel}
             className="bg-black text-white hover:bg-gray-900 transition rounded-md py-3 px-6 w-full sm:w-auto"
           >
             Reset
-          </Button>
+          </button>
         </div>
       </form>
     </div>

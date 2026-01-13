@@ -3,8 +3,6 @@
 import React, { useState } from "react"
 import signupImage from "../../../public/signup-image.png"
 import Image from "next/image"
-import { Input } from '@repo/ui/src/input'
-import { Button } from '@repo/ui/src/button'
 import { useForm } from "react-hook-form"
 import { GithubIcon } from "../../../components/svgIcon/github"
 import { GoogleIcon } from "../../../components/svgIcon/google"
@@ -32,7 +30,7 @@ const SignUp = () => {
     try {
       setIsLoading(true);
 
-      const response = await Register(data.name , data.email , data.password);
+      const response = await Register(data.name, data.email, data.password);
 
       if (response.success) {
         toast.success("User registered successfully");
@@ -69,12 +67,14 @@ const SignUp = () => {
       >
         {/* Username */}
         <div>
-          <Input
+          <input
             type="text"
             {...register("name", { required: "Username is required" })}
-            placeholder="Username"
-            className="bg-gray-50 border border-gray-300 rounded-md p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+            placeholder="Enter your username"
+            className="w-full bg-gray-50 border border-gray-300 rounded-md p-3 text-gray-800
+             focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500"
           />
+
           {errors.name && (
             <p className="text-red-500 text-sm mt-1">
               {errors.name.message}
@@ -84,11 +84,15 @@ const SignUp = () => {
 
         {/* Email */}
         <div>
-          <Input
+          <input
+            id="email"
             type="email"
             {...register("email", { required: "Email is required" })}
-            placeholder="Email"
-            className="bg-gray-50 border border-gray-300 rounded-md p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-400 text-gray-800"
+            placeholder="Enter your email"
+            className={`w-full bg-gray-50 border rounded-md p-3 text-gray-800
+      focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500
+      border-gray-300
+      ${errors.email ? "border-red-500" : ""}`}
           />
           {errors.email && (
             <p className="text-red-500 text-sm mt-1">
@@ -99,12 +103,14 @@ const SignUp = () => {
 
         {/* Password */}
         <div className="relative">
-          <Input
+          <input
             type="password"
             {...register("password", { required: "Password is required" })}
-            placeholder="Password"
-            className="bg-gray-50 border border-gray-300 rounded-md p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-400"
+            placeholder="Enter your password"
+            className="w-full bg-gray-50 border border-gray-300 rounded-md p-3 text-gray-800
+             focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500"
           />
+
           {errors.password && (
             <p className="text-red-500 text-sm mt-1">
               {errors.password.message}
@@ -113,7 +119,7 @@ const SignUp = () => {
         </div>
 
         {/* Submit */}
-        <Button
+        <button
           type="submit"
           disabled={isLoading}
           className={`w-full bg-neutral-900 text-white font-medium py-3 rounded-md transition duration-200
@@ -121,7 +127,7 @@ const SignUp = () => {
   `}
         >
           {isLoading ? "Signing up..." : "Sign Up"}
-        </Button>
+        </button>
 
 
         {/* Already have account */}
@@ -143,22 +149,22 @@ const SignUp = () => {
       {/* OAuth Buttons */}
       <div className="max-w-xl mx-auto py-6 flex gap-3 flex-col sm:flex-row">
         {/* Google */}
-        <Button
+        <button
           type="button"
           className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 py-3 rounded-md transition duration-200"
         >
           <GoogleIcon />
           Google
-        </Button>
+        </button>
 
         {/* GitHub */}
-        <Button
+        <button
           type="button"
           className="flex-1 flex items-center justify-center gap-2 bg-gray-900/90 text-white hover:bg-gray-900 py-3 rounded-md transition duration-200"
         >
           <GithubIcon />
           GitHub
-        </Button>
+        </button>
       </div>
     </div>
   )
