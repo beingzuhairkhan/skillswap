@@ -103,13 +103,21 @@ const createPeer = useCallback(() => {
 
   // Remote stream
   peer.ontrack = (event) => {
-    const [remoteStream] = event.streams;
-    if (remoteVideoRef.current) {
-      remoteVideoRef.current.srcObject = remoteStream ?? null;
-      remoteVideoRef.current.play().catch(console.error);
-    }
-    setParticipantCount(prev => Math.max(prev, 2));
+  const [remoteStream] = event.streams;
+  if (!remoteVideoRef.current || !remoteStream) return;
+
+  // Avoid resetting the same stream
+  if (remoteVideoRef.current.srcObject === remoteStream) return;
+
+  remoteVideoRef.current.srcObject = remoteStream;
+
+  remoteVideoRef.current.onloadedmetadata = () => {
+    remoteVideoRef.current
+      ?.play()
+      .catch(() => {}); // ⛔ ignore AbortError safely
   };
+};
+
 
   // Connection state
   peer.onconnectionstatechange = () => {
@@ -166,7 +174,14 @@ const registerSocketEvents = useCallback(() => {
     try {
       if (signal.sdp) {
         const desc = new RTCSessionDescription(signal.sdp);
-        await peer.setRemoteDescription(desc);
+          if (
+    (desc.type === 'offer' && peer.signalingState === 'stable') ||
+    (desc.type === 'answer' && peer.signalingState === 'have-local-offer')
+  ) {
+    await peer.setRemoteDescription(desc);
+  } else {
+    return; // ⛔ ignore invalid/duplicate SDP
+  }
 
         // Flush any queued ICE candidates
         for (const candidate of iceCandidateQueueRef.current) {
