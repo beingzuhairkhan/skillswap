@@ -80,144 +80,144 @@ const LeftVideoBody = ({ roomId }: { roomId: string }) => {
   };
 
   /* -------------------- PEER -------------------- */
- /* -------------------- CREATE PEER -------------------- */
-const iceCandidateQueueRef = useRef<RTCIceCandidateInit[]>([]);
+  /* -------------------- CREATE PEER -------------------- */
+  const iceCandidateQueueRef = useRef<RTCIceCandidateInit[]>([]);
 
-const createPeer = useCallback(() => {
-  // Prevent creating multiple peers
-  if (peerRef.current) return peerRef.current;
+  const createPeer = useCallback(() => {
+    // Prevent creating multiple peers
+    if (peerRef.current) return peerRef.current;
 
-  const peer = new RTCPeerConnection({
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' }
-    ]
-  });
+    const peer = new RTCPeerConnection({
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
+    });
 
-  // ICE candidates
-  peer.onicecandidate = (event) => {
-    if (event.candidate) {
-      socketRef.current?.emit('signal', { roomId, signal: { candidate: event.candidate } });
+    // ICE candidates
+    peer.onicecandidate = (event) => {
+      if (event.candidate) {
+        socketRef.current?.emit('signal', { roomId, signal: { candidate: event.candidate } });
+      }
+    };
+
+    // Remote stream
+    peer.ontrack = (event) => {
+      const [remoteStream] = event.streams;
+      if (!remoteVideoRef.current || !remoteStream) return;
+
+      // Avoid resetting the same stream
+      if (remoteVideoRef.current.srcObject === remoteStream) return;
+
+      remoteVideoRef.current.srcObject = remoteStream;
+
+      remoteVideoRef.current.onloadedmetadata = () => {
+        remoteVideoRef.current
+          ?.play()
+          .catch(() => { }); // ⛔ ignore AbortError safely
+      };
+    };
+
+
+    // Connection state
+    peer.onconnectionstatechange = () => {
+      if (peer.connectionState === 'disconnected' || peer.connectionState === 'failed') {
+        setParticipantCount(1);
+      }
+    };
+
+    // Add local tracks immediately
+    const localStream = localStreamRef.current;
+    if (localStream) {
+      localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
     }
-  };
 
-  // Remote stream
-  peer.ontrack = (event) => {
-  const [remoteStream] = event.streams;
-  if (!remoteVideoRef.current || !remoteStream) return;
+    peerRef.current = peer;
 
-  // Avoid resetting the same stream
-  if (remoteVideoRef.current.srcObject === remoteStream) return;
+    // Force negotiation immediately to ensure both sides send an offer
+    setTimeout(async () => {
+      try {
+        const offer = await peer.createOffer();
+        await peer.setLocalDescription(offer);
+        socketRef.current?.emit('signal', { roomId, signal: { sdp: offer } });
+      } catch (err) {
+        console.error('Offer creation failed:', err);
+      }
+    }, 0);
 
-  remoteVideoRef.current.srcObject = remoteStream;
+    return peer;
+  }, [roomId]);
 
-  remoteVideoRef.current.onloadedmetadata = () => {
-    remoteVideoRef.current
-      ?.play()
-      .catch(() => {}); // ⛔ ignore AbortError safely
-  };
-};
+  /* -------------------- SOCKET EVENTS -------------------- */
+  const registerSocketEvents = useCallback(() => {
+    if (!socketRef.current) return;
 
+    socketRef.current.on('room-full', ({ message }) => {
+      alert(message);
+      window.location.href = '/';
+    });
 
-  // Connection state
-  peer.onconnectionstatechange = () => {
-    if (peer.connectionState === 'disconnected' || peer.connectionState === 'failed') {
-      setParticipantCount(1);
-    }
-  };
+    // Always create peer on join
+    socketRef.current.on('joined-room', ({ userCount }) => {
+      setParticipantCount(userCount ?? 1);
+      createPeer();
+    });
 
-  // Add local tracks immediately
-  const localStream = localStreamRef.current;
-  if (localStream) {
-    localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
-  }
+    socketRef.current.on('user-joined', ({ userCount }) => {
+      setParticipantCount(userCount ?? 2);
+      createPeer();
+    });
 
-  peerRef.current = peer;
+    socketRef.current.on('signal', async ({ signal }) => {
+      const peer = peerRef.current || createPeer();
 
-  // Force negotiation immediately to ensure both sides send an offer
-  setTimeout(async () => {
-    try {
-      const offer = await peer.createOffer();
-      await peer.setLocalDescription(offer);
-      socketRef.current?.emit('signal', { roomId, signal: { sdp: offer } });
-    } catch (err) {
-      console.error('Offer creation failed:', err);
-    }
-  }, 0);
-
-  return peer;
-}, [roomId]);
-
-/* -------------------- SOCKET EVENTS -------------------- */
-const registerSocketEvents = useCallback(() => {
-  if (!socketRef.current) return;
-
-  socketRef.current.on('room-full', ({ message }) => {
-    alert(message);
-    window.location.href = '/';
-  });
-
-  // Always create peer on join
-  socketRef.current.on('joined-room', ({ userCount }) => {
-    setParticipantCount(userCount ?? 1);
-    createPeer();
-  });
-
-  socketRef.current.on('user-joined', ({ userCount }) => {
-    setParticipantCount(userCount ?? 2);
-    createPeer();
-  });
-
-  socketRef.current.on('signal', async ({ signal }) => {
-    const peer = peerRef.current || createPeer();
-
-    try {
-      if (signal.sdp) {
-        const desc = new RTCSessionDescription(signal.sdp);
+      try {
+        if (signal.sdp) {
+          const desc = new RTCSessionDescription(signal.sdp);
           if (
-    (desc.type === 'offer' && peer.signalingState === 'stable') ||
-    (desc.type === 'answer' && peer.signalingState === 'have-local-offer')
-  ) {
-    await peer.setRemoteDescription(desc);
-  } else {
-    return; // ⛔ ignore invalid/duplicate SDP
-  }
+            (desc.type === 'offer' && peer.signalingState === 'stable') ||
+            (desc.type === 'answer' && peer.signalingState === 'have-local-offer')
+          ) {
+            await peer.setRemoteDescription(desc);
+          } else {
+            return; // ⛔ ignore invalid/duplicate SDP
+          }
 
-        // Flush any queued ICE candidates
-        for (const candidate of iceCandidateQueueRef.current) {
-          await peer.addIceCandidate(new RTCIceCandidate(candidate));
-        }
-        iceCandidateQueueRef.current = [];
+          // Flush any queued ICE candidates
+          for (const candidate of iceCandidateQueueRef.current) {
+            await peer.addIceCandidate(new RTCIceCandidate(candidate));
+          }
+          iceCandidateQueueRef.current = [];
 
-        if (desc.type === 'offer') {
-          const answer = await peer.createAnswer();
-          await peer.setLocalDescription(answer);
-          socketRef.current?.emit('signal', { roomId, signal: { sdp: answer } });
+          if (desc.type === 'offer') {
+            const answer = await peer.createAnswer();
+            await peer.setLocalDescription(answer);
+            socketRef.current?.emit('signal', { roomId, signal: { sdp: answer } });
+          }
         }
+
+        if (signal.candidate) {
+          if (peer.remoteDescription) {
+            await peer.addIceCandidate(new RTCIceCandidate(signal.candidate));
+          } else {
+            iceCandidateQueueRef.current.push(signal.candidate);
+          }
+        }
+      } catch (err) {
+        console.error('Signal handling error:', err);
       }
+    });
 
-      if (signal.candidate) {
-        if (peer.remoteDescription) {
-          await peer.addIceCandidate(new RTCIceCandidate(signal.candidate));
-        } else {
-          iceCandidateQueueRef.current.push(signal.candidate);
-        }
-      }
-    } catch (err) {
-      console.error('Signal handling error:', err);
-    }
-  });
+    socketRef.current.on('user-left', ({ userCount }) => {
+      setParticipantCount(userCount ?? 1);
+      peerRef.current?.close();
+      peerRef.current = null;
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+    });
 
-  socketRef.current.on('user-left', ({ userCount }) => {
-    setParticipantCount(userCount ?? 1);
-    peerRef.current?.close();
-    peerRef.current = null;
-    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-  });
-
-  socketRef.current.on('screen-share-started', () => setRemoteScreenSharing(true));
-  socketRef.current.on('screen-share-stopped', () => setRemoteScreenSharing(false));
-}, [createPeer, roomId]);
+    socketRef.current.on('screen-share-started', () => setRemoteScreenSharing(true));
+    socketRef.current.on('screen-share-stopped', () => setRemoteScreenSharing(false));
+  }, [createPeer, roomId]);
 
 
   /* -------------------- CONTROLS -------------------- */
@@ -246,13 +246,13 @@ const registerSocketEvents = useCallback(() => {
       if (localVideoRef.current) localVideoRef.current.srcObject = screenStream;
 
       const videoTrack = screenStream.getVideoTracks()[0];
-      if(!videoTrack){
-        return ;
+      if (!videoTrack) {
+        return;
       }
       const sender = peerRef.current?.getSenders().find(s => s.track?.kind === 'video');
       if (sender && videoTrack) await sender.replaceTrack(videoTrack);
 
-      videoTrack.onended = stopScreenShare ;
+      videoTrack.onended = stopScreenShare;
       setIsScreenSharing(true);
       socketRef.current?.emit('screen-share-started', { roomId });
     } catch (err) {
