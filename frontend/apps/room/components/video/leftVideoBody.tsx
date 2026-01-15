@@ -300,6 +300,7 @@ const LeftVideoBody = ({ roomId }: { roomId: string }) => {
       }
 
       const videoTrack = screenStream.getVideoTracks()[0];
+        if (videoTrack) {
       if (videoTrack && peerRef.current) {
         const sender = peerRef.current.getSenders().find(s => s.track?.kind === 'video');
         if (sender && videoTrack) {
@@ -307,7 +308,8 @@ const LeftVideoBody = ({ roomId }: { roomId: string }) => {
         }
       }
 
-      videoTrack.onended = stopScreenShare;
+      videoTrack.onended = stopScreenShare ;
+    }
       setIsScreenSharing(true);
       socketRef.current?.emit('screen-share-started', { roomId });
     } catch (err) {
