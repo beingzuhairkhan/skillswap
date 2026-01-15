@@ -4,7 +4,7 @@ import { Server, Socket } from 'socket.io'
 
 @WebSocketGateway({
   cors: {
-     origin: ['https://skillswap-gilt.vercel.app','https://skillswap-upmw.vercel.app', 'http://localhost:3000', 'http://localhost:3001'],
+    origin: ['https://skillswap-gilt.vercel.app', 'https://skillswap-upmw.vercel.app', 'http://localhost:3000', 'http://localhost:3001'],
   },
   transports: ['websocket', 'polling'],
 })
@@ -41,7 +41,7 @@ export class RoomGateway implements OnModuleInit {
       return;
     }
 
-    const isInitiator = numClients === 0; 
+    const isInitiator = numClients === 0;
 
     client.join(roomId);
 
@@ -53,10 +53,7 @@ export class RoomGateway implements OnModuleInit {
     client.emit('joined-room', { isInitiator, userCount });
 
     if (numClients > 0) {
-      client.to(roomId).emit('user-joined', {
-        userId: client.id,
-        userCount,
-      });
+      client.to(roomId).emit('user-joined', { userCount });
     }
 
 
@@ -85,9 +82,7 @@ export class RoomGateway implements OnModuleInit {
   ) {
     console.log(`Client ${client.id} started screen sharing in room ${data.roomId}`);
 
-    client.to(data.roomId).emit('screen-share-started', {
-      userId: client.id,
-    });
+      this.server.to(data.roomId).emit('screen-share-started');
   }
 
   @SubscribeMessage('screen-share-stopped')
@@ -97,9 +92,7 @@ export class RoomGateway implements OnModuleInit {
   ) {
     console.log(`Client ${client.id} stopped screen sharing in room ${data.roomId}`);
 
-    client.to(data.roomId).emit('screen-share-stopped', {
-      userId: client.id,
-    });
+   this.server.to(data.roomId).emit('screen-share-stopped');
   }
 
   @SubscribeMessage('chat-message')
