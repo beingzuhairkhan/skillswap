@@ -50,10 +50,13 @@ export class RoomGateway implements OnModuleInit {
     const updatedClients = this.server.sockets.adapter.rooms.get(roomId);
     const userCount = updatedClients ? updatedClients.size : 1;
 
-    client.emit('joined-room', { userCount });
+    client.emit('joined-room', { isInitiator, userCount });
 
     if (numClients > 0) {
-     client.to(roomId).emit('user-joined', { userCount }); 
+      client.to(roomId).emit('user-joined', {
+        userId: client.id,
+        userCount,
+      });
     }
 
 
@@ -69,7 +72,10 @@ export class RoomGateway implements OnModuleInit {
       signal: any;
     }
   ) {
-     client.to(data.roomId).emit('signal', { signal: data.signal });
+    client.to(data.roomId).emit('signal', {
+      senderId: client.id,
+      signal: data.signal,
+    });
   }
 
   @SubscribeMessage('screen-share-started')
@@ -79,7 +85,9 @@ export class RoomGateway implements OnModuleInit {
   ) {
     console.log(`Client ${client.id} started screen sharing in room ${data.roomId}`);
 
-    client.to(data.roomId).emit('screen-share-started'); 
+    client.to(data.roomId).emit('screen-share-started', {
+      userId: client.id,
+    });
   }
 
   @SubscribeMessage('screen-share-stopped')
@@ -89,7 +97,9 @@ export class RoomGateway implements OnModuleInit {
   ) {
     console.log(`Client ${client.id} stopped screen sharing in room ${data.roomId}`);
 
-   client.to(data.roomId).emit('screen-share-stopped'); 
+    client.to(data.roomId).emit('screen-share-stopped', {
+      userId: client.id,
+    });
   }
 
   @SubscribeMessage('chat-message')
