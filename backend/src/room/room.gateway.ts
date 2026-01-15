@@ -21,22 +21,24 @@ export class RoomGateway implements OnModuleInit {
   handleConnection(client: Socket) {
     console.log('Client connected:', client.id);
   }
-
   @SubscribeMessage('join-room')
-  handleJoin(@ConnectedSocket() client: Socket, @MessageBody() roomId: string) {
+  handleJoin(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() roomId: string
+  ) {
 
     const oldRoom = this.clientRooms.get(client.id);
     if (oldRoom) {
       client.leave(oldRoom);
       this.clientRooms.delete(client.id);
+      console.log(`Client ${client.id} left previous room ${oldRoom}`);
     }
 
-
-    const clients = this.server.sockets.adapter.rooms.get(roomId);
-    const numClients = clients ? clients.size : 0;
+    const clientsInRoom = this.server.sockets.adapter.rooms.get(roomId);
+    const numClients = clientsInRoom ? clientsInRoom.size : 0;
 
     if (numClients >= 4) {
-      client.emit('room-full', { message: 'This room is full. Maximum 2 participants allowed.' });
+      client.emit('room-full', { message: 'This room is full. Maximum 4 participants allowed.' });
       console.log(`Client ${client.id} tried to join full room ${roomId}`);
       return;
     }
@@ -44,7 +46,6 @@ export class RoomGateway implements OnModuleInit {
     const isInitiator = numClients === 0;
 
     client.join(roomId);
-
     this.clientRooms.set(client.id, roomId);
 
     const updatedClients = this.server.sockets.adapter.rooms.get(roomId);
@@ -53,12 +54,18 @@ export class RoomGateway implements OnModuleInit {
     client.emit('joined-room', { isInitiator, userCount });
 
     if (numClients > 0) {
-      client.to(roomId).emit('user-joined', { userCount });
+      client.to(roomId).emit('user-joined', {
+        userId: client.id,
+        userCount,
+      });
     }
 
-
-    console.log(`Client ${client.id} joined room ${roomId}. Is initiator: ${isInitiator}, Total users: ${userCount}`);
+    console.log(
+      `Client ${client.id} joined room ${roomId}. ` +
+      `Is initiator: ${isInitiator}, Total users: ${userCount}`
+    );
   }
+
 
   @SubscribeMessage('signal')
   handleSignal(
@@ -82,7 +89,9 @@ export class RoomGateway implements OnModuleInit {
   ) {
     console.log(`Client ${client.id} started screen sharing in room ${data.roomId}`);
 
-      this.server.to(data.roomId).emit('screen-share-started');
+    client.to(data.roomId).emit('screen-share-started', {
+      userId: client.id,
+    });
   }
 
   @SubscribeMessage('screen-share-stopped')
@@ -92,7 +101,9 @@ export class RoomGateway implements OnModuleInit {
   ) {
     console.log(`Client ${client.id} stopped screen sharing in room ${data.roomId}`);
 
-   this.server.to(data.roomId).emit('screen-share-stopped');
+    client.to(data.roomId).emit('screen-share-stopped', {
+      userId: client.id,
+    });
   }
 
   @SubscribeMessage('chat-message')
