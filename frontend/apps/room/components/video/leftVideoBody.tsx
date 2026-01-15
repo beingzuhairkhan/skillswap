@@ -4,18 +4,19 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { MdOutlineMicNone, MdOutlineMicOff, MdOutlineScreenShare, MdCallEnd } from "react-icons/md";
 import { BsCameraVideo, BsCameraVideoOff } from "react-icons/bs";
-import { Users, Maximize2 } from "lucide-react";
+import { Users } from "lucide-react";
 
 const LeftVideoBody = ({ roomId }: { roomId: string }) => {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
   const localStreamRef = useRef<MediaStream | null>(null);
+  const screenStreamRef = useRef<MediaStream | null>(null);
   const peerRef = useRef<RTCPeerConnection | null>(null);
   const socketRef = useRef<Socket | null>(null);
+  const iceCandidateQueueRef = useRef<RTCIceCandidateInit[]>([]);
 
   const isInitiatorRef = useRef(false);
-  const screenStreamRef = useRef<MediaStream | null>(null);
 
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
@@ -35,58 +36,67 @@ const LeftVideoBody = ({ roomId }: { roomId: string }) => {
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      console.log('Socket connected');
+      console.log('✅ Socket connected');
       setIsConnected(true);
       socket.emit('join-room', roomId);
     });
 
     socket.on('disconnect', () => {
-      console.log('Socket disconnected');
+      console.log('❌ Socket disconnected');
       setIsConnected(false);
     });
 
-    initLocalMedia();
-    registerSocketEvents();
+    const init = async () => {
+      await initLocalMedia();
+      registerSocketEvents();
+    };
+    init();
 
-    return () => cleanup();
+    return () => {
+      cleanup();
+    };
   }, [roomId]);
 
   const cleanup = useCallback(() => {
+    console.log('🧹 Cleaning up...');
     socketRef.current?.disconnect();
     peerRef.current?.close();
     peerRef.current = null;
     localStreamRef.current?.getTracks().forEach(track => track.stop());
     screenStreamRef.current?.getTracks().forEach(track => track.stop());
+    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+    if (localVideoRef.current) localVideoRef.current.srcObject = null;
   }, []);
 
   /* -------------------- LOCAL MEDIA -------------------- */
   const initLocalMedia = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1280, height: 720 },
+        video: { width: 1280, height: 720, facingMode: 'user' },
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
       });
 
       localStreamRef.current = stream;
+      console.log('✅ Local media initialized');
 
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
-        localVideoRef.current.muted = true; // prevent echo
-        await localVideoRef.current.play();
+        localVideoRef.current.muted = true;
+        localVideoRef.current.play().catch(console.error);
       }
     } catch (err) {
-      console.error('Error accessing camera/mic', err);
+      console.error('❌ Error accessing camera/mic:', err);
     }
   };
 
-  /* -------------------- PEER -------------------- */
   /* -------------------- CREATE PEER -------------------- */
-  const iceCandidateQueueRef = useRef<RTCIceCandidateInit[]>([]);
-
   const createPeer = useCallback(() => {
-    // Prevent creating multiple peers
-    if (peerRef.current) return peerRef.current;
+    if (peerRef.current) {
+      console.log('ℹ️ Peer already exists');
+      return peerRef.current;
+    }
 
+    console.log('🔨 Creating new peer connection');
     const peer = new RTCPeerConnection({
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -94,56 +104,64 @@ const LeftVideoBody = ({ roomId }: { roomId: string }) => {
       ]
     });
 
+    peerRef.current = peer;
+
     // ICE candidates
     peer.onicecandidate = (event) => {
       if (event.candidate) {
-        socketRef.current?.emit('signal', { roomId, signal: { candidate: event.candidate } });
+        console.log('🧊 Sending ICE candidate');
+        socketRef.current?.emit('signal', { 
+          roomId, 
+          signal: { candidate: event.candidate } 
+        });
       }
     };
 
     // Remote stream
     peer.ontrack = (event) => {
       const [remoteStream] = event.streams;
-      if (!remoteVideoRef.current || !remoteStream) return;
-
-      // Avoid resetting the same stream
-      if (remoteVideoRef.current.srcObject === remoteStream) return;
-
-      remoteVideoRef.current.srcObject = remoteStream;
-
-      remoteVideoRef.current.onloadedmetadata = () => {
-        remoteVideoRef.current
-          ?.play()
-          .catch(() => { }); // ⛔ ignore AbortError safely
-      };
+      console.log('📹 Remote stream received');
+      
+      if (remoteVideoRef.current && remoteStream) {
+        if (remoteVideoRef.current.srcObject !== remoteStream) {
+          remoteVideoRef.current.srcObject = remoteStream;
+          remoteVideoRef.current.play().catch(console.error);
+        }
+      }
     };
-
 
     // Connection state
     peer.onconnectionstatechange = () => {
+      console.log('📶 Peer connection state:', peer.connectionState);
       if (peer.connectionState === 'disconnected' || peer.connectionState === 'failed') {
         setParticipantCount(1);
       }
     };
 
-    // Add local tracks immediately
+    // Add local tracks
     const localStream = localStreamRef.current;
     if (localStream) {
-      localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
+      localStream.getTracks().forEach(track => {
+        console.log(`➕ Adding ${track.kind} track`);
+        peer.addTrack(track, localStream);
+      });
     }
 
-    peerRef.current = peer;
-
-    // Force negotiation immediately to ensure both sides send an offer
-    setTimeout(async () => {
+    // Negotiation
+    peer.onnegotiationneeded = async () => {
+      console.log('🤝 Negotiation needed');
       try {
         const offer = await peer.createOffer();
         await peer.setLocalDescription(offer);
-        socketRef.current?.emit('signal', { roomId, signal: { sdp: offer } });
+        console.log('📤 Sending offer');
+        socketRef.current?.emit('signal', { 
+          roomId, 
+          signal: { sdp: peer.localDescription } 
+        });
       } catch (err) {
-        console.error('Offer creation failed:', err);
+        console.error('❌ Negotiation failed:', err);
       }
-    }, 0);
+    };
 
     return peer;
   }, [roomId]);
@@ -152,73 +170,97 @@ const LeftVideoBody = ({ roomId }: { roomId: string }) => {
   const registerSocketEvents = useCallback(() => {
     if (!socketRef.current) return;
 
-    socketRef.current.on('room-full', ({ message }) => {
+    const socket = socketRef.current;
+
+    socket.on('room-full', ({ message }) => {
+      console.log('🚫 Room full:', message);
       alert(message);
       window.location.href = '/';
     });
 
-    // Always create peer on join
-    socketRef.current.on('joined-room', ({ userCount }) => {
+    socket.on('joined-room', ({ userCount }) => {
+      console.log('🏠 Joined room, userCount:', userCount);
       setParticipantCount(userCount ?? 1);
+      isInitiatorRef.current = true;
       createPeer();
     });
 
-    socketRef.current.on('user-joined', ({ userCount }) => {
+    socket.on('user-joined', ({ userCount }) => {
+      console.log('👤 New user joined, userCount:', userCount);
       setParticipantCount(userCount ?? 2);
+      isInitiatorRef.current = false;
       createPeer();
     });
 
-    socketRef.current.on('signal', async ({ signal }) => {
+    socket.on('signal', async ({ signal }) => {
+      console.log('📨 Received signal:', signal);
       const peer = peerRef.current || createPeer();
 
       try {
         if (signal.sdp) {
           const desc = new RTCSessionDescription(signal.sdp);
+          console.log('📥 Setting remote description:', desc.type);
+          
           if (
             (desc.type === 'offer' && peer.signalingState === 'stable') ||
             (desc.type === 'answer' && peer.signalingState === 'have-local-offer')
           ) {
             await peer.setRemoteDescription(desc);
-          } else {
-            return; // ⛔ ignore invalid/duplicate SDP
-          }
 
-          // Flush any queued ICE candidates
-          for (const candidate of iceCandidateQueueRef.current) {
-            await peer.addIceCandidate(new RTCIceCandidate(candidate));
-          }
-          iceCandidateQueueRef.current = [];
+            // Flush queued ICE candidates
+            for (const candidate of iceCandidateQueueRef.current) {
+              await peer.addIceCandidate(new RTCIceCandidate(candidate));
+            }
+            iceCandidateQueueRef.current = [];
 
-          if (desc.type === 'offer') {
-            const answer = await peer.createAnswer();
-            await peer.setLocalDescription(answer);
-            socketRef.current?.emit('signal', { roomId, signal: { sdp: answer } });
+            if (desc.type === 'offer') {
+              console.log('📤 Creating and sending answer');
+              const answer = await peer.createAnswer();
+              await peer.setLocalDescription(answer);
+              socketRef.current?.emit('signal', { 
+                roomId, 
+                signal: { sdp: peer.localDescription } 
+              });
+            }
           }
         }
 
         if (signal.candidate) {
           if (peer.remoteDescription) {
+            console.log('🧊 Adding received ICE candidate');
             await peer.addIceCandidate(new RTCIceCandidate(signal.candidate));
           } else {
+            console.log('⏳ Queueing ICE candidate');
             iceCandidateQueueRef.current.push(signal.candidate);
           }
         }
       } catch (err) {
-        console.error('Signal handling error:', err);
+        console.error('❌ Signal handling error:', err);
       }
     });
 
-    socketRef.current.on('user-left', ({ userCount }) => {
+    socket.on('user-left', ({ userCount }) => {
+      console.log('👋 User left, userCount:', userCount);
       setParticipantCount(userCount ?? 1);
-      peerRef.current?.close();
-      peerRef.current = null;
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+      if (peerRef.current) {
+        peerRef.current.close();
+        peerRef.current = null;
+      }
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = null;
+      }
     });
 
-    socketRef.current.on('screen-share-started', () => setRemoteScreenSharing(true));
-    socketRef.current.on('screen-share-stopped', () => setRemoteScreenSharing(false));
-  }, [createPeer, roomId]);
+    socket.on('screen-share-started', () => {
+      console.log('🖥️ Remote screen sharing started');
+      setRemoteScreenSharing(true);
+    });
 
+    socket.on('screen-share-stopped', () => {
+      console.log('🖥️ Remote screen sharing stopped');
+      setRemoteScreenSharing(false);
+    });
+  }, [createPeer, roomId]);
 
   /* -------------------- CONTROLS -------------------- */
   const toggleMic = () => {
@@ -226,6 +268,7 @@ const LeftVideoBody = ({ roomId }: { roomId: string }) => {
     if (track) {
       track.enabled = !track.enabled;
       setMicOn(track.enabled);
+      console.log('🔊 Mic:', track.enabled ? 'ON' : 'OFF');
     }
   };
 
@@ -234,191 +277,172 @@ const LeftVideoBody = ({ roomId }: { roomId: string }) => {
     if (track) {
       track.enabled = !track.enabled;
       setCameraOn(track.enabled);
+      console.log('📹 Camera:', track.enabled ? 'ON' : 'OFF');
     }
   };
 
   const shareScreen = async () => {
-    if (isScreenSharing) return stopScreenShare();
+    if (isScreenSharing) {
+      stopScreenShare();
+      return;
+    }
 
     try {
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      console.log('🖥️ Starting screen share');
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({ 
+        video: true, 
+        audio: false 
+      });
+      
       screenStreamRef.current = screenStream;
-      if (localVideoRef.current) localVideoRef.current.srcObject = screenStream;
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = screenStream;
+      }
 
       const videoTrack = screenStream.getVideoTracks()[0];
-      if (!videoTrack) {
-        return;
+      if (videoTrack && peerRef.current) {
+        const sender = peerRef.current.getSenders().find(s => s.track?.kind === 'video');
+        if (sender && videoTrack) {
+          await sender.replaceTrack(videoTrack);
+        }
       }
-      const sender = peerRef.current?.getSenders().find(s => s.track?.kind === 'video');
-      if (sender && videoTrack) await sender.replaceTrack(videoTrack);
 
       videoTrack.onended = stopScreenShare;
       setIsScreenSharing(true);
       socketRef.current?.emit('screen-share-started', { roomId });
     } catch (err) {
-      console.error('Screen share error:', err);
+      console.error('❌ Screen share error:', err);
     }
   };
 
   const stopScreenShare = () => {
+    console.log('🖥️ Stopping screen share');
     if (screenStreamRef.current) {
-      screenStreamRef.current.getTracks().forEach(t => t.stop());
+      screenStreamRef.current.getTracks().forEach(track => track.stop());
       screenStreamRef.current = null;
     }
-    if (localVideoRef.current && localStreamRef.current) localVideoRef.current.srcObject = localStreamRef.current;
+
+    if (localVideoRef.current && localStreamRef.current) {
+      localVideoRef.current.srcObject = localStreamRef.current;
+    }
 
     const videoTrack = localStreamRef.current?.getVideoTracks()[0];
-    const sender = peerRef.current?.getSenders().find(s => s.track?.kind === 'video');
-    if (sender && videoTrack) sender.replaceTrack(videoTrack);
+    if (peerRef.current) {
+      const sender = peerRef.current.getSenders().find(s => s.track?.kind === 'video');
+      if (sender && videoTrack) {
+        sender.replaceTrack(videoTrack);
+      }
+    }
 
     setIsScreenSharing(false);
     socketRef.current?.emit('screen-share-stopped', { roomId });
   };
 
   const endCall = () => {
+    console.log('📞 Ending call');
     cleanup();
     window.location.href = '/';
   };
 
-  /* -------------------- UI -------------------- */
+  /* -------------------- RENDER -------------------- */
   return (
-    <div className="w-full h-[90vh] flex flex-col relative rounded-xl overflow-hidden shadow-2xl">
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/50 to-transparent">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-slate-800/80 backdrop-blur-sm px-4 py-2 rounded-full">
-              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="text-white text-sm font-medium">
-                {isConnected ? 'Connected' : 'Connecting...'}
-              </span>
-            </div>
-
+    <div className="w-full h-full bg-black rounded-lg flex flex-col relative">
+      {/* Remote Video */}
+      <div className="flex-1 relative bg-gray-900 rounded-t-lg overflow-hidden">
+        <video
+          ref={remoteVideoRef}
+          autoPlay
+          playsInline
+          className="w-full h-full object-cover"
+        />
+        {remoteScreenSharing && (
+          <div className="absolute top-3 right-3 bg-blue-600/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium border border-blue-500/50">
+            🖥️ Screen Sharing
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Main Video Area */}
-      <div className="flex-1 relative flex items-center justify-center ">
-        {/* Remote Video */}
-        <div className="w-full h-full max-w-none rounded-2xl overflow-hidden shadow-2xl  relative">
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            className={`w-full h-full ${remoteScreenSharing || isScreenSharing
-              ? 'object-contain bg-black'  // Fit entire screen/tab without cropping
-              : 'object-cover'             // Fill frame for camera
-              }`}
-          />
-
-          {participantCount === 1 && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900/90 to-slate-800/90">
-              <div className="text-center">
-                <Users className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-                <p className="text-slate-300 text-xl font-medium">Waiting for others to join...</p>
-                <p className="text-slate-500 text-sm mt-2">Share room code: <span className="font-mono bg-slate-700 px-2 py-1 rounded text-xs">{roomId}</span></p>
-              </div>
-            </div>
-          )}
-
-          {/* {remoteScreenSharing && (
-            <div className="absolute top-4 left-4 bg-blue-600/90 backdrop-blur-sm text-white text-sm px-3 py-2 rounded-lg flex items-center gap-2 shadow-lg">
-              <MdOutlineScreenShare className="w-4 h-4" />
-              <span>Screen sharing</span>
-            </div>
-          )} */}
-        </div>
-
-        {/* Local Video PiP */}
-        <div className="absolute bottom-5 right-4 w-52 h-34 rounded-2xl overflow-hidden bg-slate-900/90 shadow-2xl border-2 border-slate-700/50 group hover:scale-105 transition-all duration-200 hover:border-blue-500">
+      {/* Local Video & Controls */}
+      <div className="h-28 relative bg-gradient-to-t from-black/80 to-transparent rounded-b-lg p-3">
+        {/* Local Video Preview */}
+        <div className="absolute top-2 left-3 w-20 h-20 rounded-2xl overflow-hidden border-4 border-white/30 shadow-2xl">
           <video
             ref={localVideoRef}
             autoPlay
             muted
             playsInline
-            className={`w-full h-full ${isScreenSharing ? 'object-contain bg-black' : 'object-cover'}`}
+            className="w-full h-full object-cover"
           />
-
-          {!cameraOn && !isScreenSharing && (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80">
-              <BsCameraVideoOff className="text-slate-400 text-3xl" />
-            </div>
-          )}
-
-          {isScreenSharing && (
-            <div className="absolute top-2 left-2 bg-blue-600/90 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1 shadow-md">
-              <MdOutlineScreenShare className="w-3 h-3" />
-              <span>Sharing</span>
-            </div>
-          )}
-
-          <button
-            className="absolute top-2 right-2 bg-slate-900/80 hover:bg-slate-800 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-md hover:shadow-lg"
-            title="Maximize"
-            onClick={() => { /* Add maximize logic */ }}
-          >
-            <Maximize2 className="w-4 h-4 text-white" />
-          </button>
-
-          <div className="absolute bottom-2 left-2 text-white text-xs font-medium bg-slate-900/90 px-2 py-1 rounded-lg backdrop-blur-sm">
-            You
-          </div>
         </div>
-      </div>
 
-      {/* Controls */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 p-2 pb-4 bg-gradient-to-t from-black/80 to-transparent">
-        <div className="flex justify-center items-center gap-4">
+        {/* Controls */}
+        <div className="absolute bottom-3 right-3 flex space-x-2 bg-black/60 backdrop-blur-md rounded-2xl p-2 border border-white/20">
           <button
             onClick={toggleMic}
-            className={`p-4 rounded-2xl transition-all duration-200 shadow-2xl backdrop-blur-sm ${micOn
-              ? 'bg-slate-700/80 hover:bg-slate-600/80 border-2 border-slate-600/50 hover:border-slate-500/70'
-              : 'bg-red-600/90 hover:bg-red-700/90 border-2 border-red-500/70 hover:border-red-400/80'
-              } hover:scale-105 active:scale-95`}
-            title={micOn ? 'Mute mic' : 'Unmute mic'}
+            className={`p-3 rounded-xl transition-all shadow-lg ${
+              micOn 
+                ? 'bg-emerald-500 hover:bg-emerald-600 text-white' 
+                : 'bg-red-500 hover:bg-red-600 text-white'
+            }`}
+            title={micOn ? 'Mute microphone' : 'Unmute microphone'}
           >
-            {micOn ? (
-              <MdOutlineMicNone className="text-white text-2xl" />
-            ) : (
-              <MdOutlineMicOff className="text-white text-2xl" />
-            )}
+            {micOn ? <MdOutlineMicNone size={20} /> : <MdOutlineMicOff size={20} />}
           </button>
 
           <button
             onClick={toggleCamera}
-            className={`p-4 rounded-2xl transition-all duration-200 shadow-2xl backdrop-blur-sm ${cameraOn
-              ? 'bg-slate-700/80 hover:bg-slate-600/80 border-2 border-slate-600/50 hover:border-slate-500/70'
-              : 'bg-red-600/90 hover:bg-red-700/90 border-2 border-red-500/70 hover:border-red-400/80'
-              } hover:scale-105 active:scale-95`}
+            className={`p-3 rounded-xl transition-all shadow-lg ${
+              cameraOn 
+                ? 'bg-emerald-500 hover:bg-emerald-600 text-white' 
+                : 'bg-red-500 hover:bg-red-600 text-white'
+            }`}
             title={cameraOn ? 'Turn off camera' : 'Turn on camera'}
           >
-            {cameraOn ? (
-              <BsCameraVideo className="text-white text-2xl" />
-            ) : (
-              <BsCameraVideoOff className="text-white text-2xl" />
-            )}
+            {cameraOn ? <BsCameraVideo size={20} /> : <BsCameraVideoOff size={20} />}
           </button>
 
           <button
             onClick={shareScreen}
-            className={`p-4 rounded-2xl transition-all duration-200 shadow-2xl backdrop-blur-sm ${isScreenSharing
-              ? 'bg-blue-600/90 hover:bg-blue-700/90 border-2 border-blue-500/70 hover:border-blue-400/80'
-              : 'bg-slate-700/80 hover:bg-slate-600/80 border-2 border-slate-600/50 hover:border-slate-500/70'
-              } hover:scale-105 active:scale-95`}
-            title={isScreenSharing ? 'Stop sharing' : 'Share screen'}
+            className={`p-3 rounded-xl transition-all shadow-lg ${
+              isScreenSharing
+                ? 'bg-red-500 hover:bg-red-600 text-white'
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+            title={isScreenSharing ? 'Stop screen sharing' : 'Share screen'}
           >
-            <MdOutlineScreenShare className="text-white text-2xl" />
+            <MdOutlineScreenShare size={20} />
           </button>
 
           <button
             onClick={endCall}
-            className="p-4 rounded-2xl bg-red-600/90 hover:bg-red-700/90 transition-all duration-200 shadow-2xl border-2 border-red-500/70 hover:border-red-400/80 hover:scale-105 active:scale-95 backdrop-blur-sm"
+            className="p-3 rounded-xl bg-red-500 hover:bg-red-600 text-white shadow-lg transition-all"
             title="End call"
           >
-            <MdCallEnd className="text-white text-2xl" />
+            <MdCallEnd size={20} />
           </button>
         </div>
+
+        {/* Status Indicators */}
+        <div className="absolute top-3 right-3 flex flex-col space-y-1">
+          <div className="flex items-center space-x-1 bg-black/70 px-2 py-1 rounded-lg text-xs">
+            <Users size={14} />
+            <span>{participantCount}</span>
+          </div>
+          <div className={`px-2 py-1 rounded-lg text-xs font-medium ${
+            isConnected 
+              ? 'bg-emerald-500/90 text-white' 
+              : 'bg-red-500/90 text-white'
+          }`}>
+            {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+          </div>
+        </div>
+
+        {/* Screen Share Status */}
+        {isScreenSharing && (
+          <div className="absolute bottom-3 left-3 bg-yellow-500/90 backdrop-blur-sm text-black px-3 py-1 rounded-full text-sm font-semibold">
+            📱 You are screen sharing
+          </div>
+        )}
       </div>
     </div>
   );
