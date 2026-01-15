@@ -3,6 +3,10 @@ import { Document, Types } from "mongoose";
 import { User } from "./user.schema";
 
 export type PostDocument = Post & Document;
+export enum PostStatus {
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+}
 
 @Schema({ timestamps: true })
 export class Post {
@@ -19,14 +23,18 @@ export class Post {
     @Prop({ default: '' })
     specificTopic: string;
 
+    @Prop({
+  type: String,
+  enum: PostStatus,
+  default: PostStatus.PENDING,
+})
+postStatus: PostStatus;
 
     @Prop({ default: '' })
     postImageUrl: string;
     
     @Prop({ default: '' })
     postImagePublicId: string;
-
-
 
     @Prop({ default: '' })
     postUrl: string;

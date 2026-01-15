@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { UserPlus, TrendingUp, Users } from "lucide-react";
 import { userDataAPI } from "../../services/api";
 import Image from "next/image";
+import SuggestedUserSkeleton from "../Loading/SuggestedUserSkeleton";
 
 interface ISuggestedUser {
   _id: string;
@@ -15,7 +16,7 @@ interface ISuggestedUser {
 const RightBody = () => {
   const [suggestedUsers, setSuggestedUsers] = useState<ISuggestedUser[]>([]);
   const [followingStates, setFollowingStates] = useState<{ [key: string]: boolean }>({});
-  
+  const [loading, setLoading] = useState<boolean>(true);
   const skills = [
     "React.js",
     "Next.js",
@@ -46,10 +47,14 @@ const RightBody = () => {
   useEffect(() => {
     const fetchSuggestedUsers = async () => {
       try {
+        setLoading(true);
         const response = await userDataAPI.suggestedUser();
-        setSuggestedUsers(response.data); 
+        setSuggestedUsers(response.data);
       } catch (error) {
         console.error("Failed to fetch suggested users", error);
+      }
+      finally {
+        setLoading(false);
       }
     };
 
@@ -86,8 +91,14 @@ const RightBody = () => {
           </div>
           <h2 className="font-bold text-lg">Suggested Users</h2>
         </div>
-        <div className="space-y-3 overflow-y-auto hide-scrollbar max-h-[350px]">
-          {suggestedUsers.map((user) => (
+        <div className="space-y-3 overflow-y-auto hide-scrollbar max-h-[250px]">
+          {loading ? (
+            <>
+              <SuggestedUserSkeleton />
+              <SuggestedUserSkeleton />
+              <SuggestedUserSkeleton />
+            </>
+          ) : suggestedUsers.map((user) => (
             <div
               key={user._id}
               className="group flex items-center justify-between bg-gray-50 p-3.5 rounded-xl hover:bg-gray-100 transition-all duration-200 border border-transparent hover:border-gray-200"
@@ -115,33 +126,31 @@ const RightBody = () => {
                     <div className="w-2.5 h-2.5 bg-gray-400 rounded-full"></div>
                   </div>
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm text-gray-900 truncate">
                     {user.name}
                   </h3>
                   <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
-                    <span className="font-medium">{user.followerCount}</span> 
+                    <span className="font-medium">{user.followerCount}</span>
                     <span>followers</span>
                     <span className="text-gray-300">·</span>
                     <span className="text-gray-600 font-medium">Node.js</span>
                   </p>
                 </div>
               </div>
-              
-              <button 
+
+              <button
                 onClick={() => handleFollow(user._id)}
-                className={`flex-shrink-0 p-2.5 rounded-xl transition-all duration-200 ${
-                  followingStates[user._id]
-                    ? 'bg-gray-200 text-gray-700'
-                    : 'hover:bg-gray-200 group-hover:scale-110'
-                }`}
-              >
-                <UserPlus 
-                  size={18} 
-                  className={`transition-colors duration-200 ${
-                    followingStates[user._id] ? 'text-gray-600' : 'text-gray-700'
+                className={`flex-shrink-0 p-2.5 rounded-xl transition-all duration-200 ${followingStates[user._id]
+                  ? 'bg-gray-200 text-gray-700'
+                  : 'hover:bg-gray-200 group-hover:scale-110'
                   }`}
+              >
+                <UserPlus
+                  size={18}
+                  className={`transition-colors duration-200 ${followingStates[user._id] ? 'text-gray-600' : 'text-gray-700'
+                    }`}
                 />
               </button>
             </div>
