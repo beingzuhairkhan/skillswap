@@ -21,16 +21,14 @@ const Navigation = () => {
     setLoading(false);
   }, []);
 
-  // 🔄 Loading state
-  if (loading) {
+   if (loading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center">
-        <p className="text-lg font-semibold">Loading...</p>
+      <div className="flex justify-center items-center h-64">
+        <div className="w-10 h-10 border-4 border-gray-900 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  // ❌ No roomId found
   if (!roomId) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
@@ -40,9 +38,7 @@ const Navigation = () => {
   }
   return (
     <div className="flex h-screen w-screen overflow-hidden">
-      {/* Left Side (70%) */}
       <div className="flex flex-col w-[75%] h-full">
-        {/* Navigation Bar */}
         <div className="flex justify-center mt-2 px-2">
           <div className="relative flex flex-row bg-gray-200 rounded-lg p-2 max-w-full w-[400px] justify-between items-center overflow-hidden">
             <div
@@ -88,7 +84,6 @@ const Navigation = () => {
 
       </div>
 
-      {/* Right Side Chat (30%) */}
       <div className="w-[25%] h-full border-l bg-white overflow-auto">
         <RightChatBody roomId={roomId} />
       </div>

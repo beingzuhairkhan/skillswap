@@ -9,6 +9,7 @@ import Countdown from "../Countdown";
 const AcceptSessions = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [selectedSession, setSelectedSession] = useState<any | null>(null);
+   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAcceptSession = async () => {
@@ -18,6 +19,8 @@ const AcceptSessions = () => {
         if (res.data.length > 0) setSelectedSession(res.data[0]);
       } catch (error) {
         console.log("Error fetching accepted sessions:", error);
+      }finally{
+          setLoading(false);
       }
     };
     fetchAcceptSession();
@@ -32,6 +35,13 @@ const AcceptSessions = () => {
       ? new Date(`${selectedSession.date}T${selectedSession.time}`)
       : new Date();
 
+ if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="w-10 h-10 border-4 border-gray-900 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex gap-6 bg-white">

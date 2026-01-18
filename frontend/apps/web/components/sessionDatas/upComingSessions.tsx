@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 const UpComingSessions = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [selectedSession, setSelectedSession] = useState<any | null>(null);
-
+   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const fetchAllBookSession = async () => {
       try {
@@ -18,11 +18,21 @@ const UpComingSessions = () => {
         if (response.data.length > 0) setSelectedSession(response.data[0]); // select first by default
       } catch (error) {
         console.error("Error fetching sessions:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchAllBookSession();
   }, []);
+
+    if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="w-10 h-10 border-4 border-gray-900 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const handleAccept = async (requesterId: string, sessionId: string) => {
     try {
