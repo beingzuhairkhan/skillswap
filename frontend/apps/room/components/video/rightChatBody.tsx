@@ -84,7 +84,6 @@ const RightChatBody = ({ roomId }: Props) => {
           <ChatMessage key={index} msg={msg} myId={myId} />
         ))}
 
-        {/* Dummy div to scroll into view */}
         <div ref={messagesEndRef} />
       </div>
 

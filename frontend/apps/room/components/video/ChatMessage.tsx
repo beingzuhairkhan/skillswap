@@ -4,7 +4,7 @@ interface ChatMessageProps {
   msg: {
     message: string;
     senderId: string;
-    isAI: boolean;
+    isAI?: boolean | undefined;
   };
   myId: string;
 }
