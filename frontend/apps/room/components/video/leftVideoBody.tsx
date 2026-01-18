@@ -27,10 +27,8 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
   const [cameraOn, setCameraOn] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
 
-  // THIS now means REAL peer connected
   const [isConnected, setIsConnected] = useState(false);
 
-  /* ---------------- INIT ---------------- */
 
   useEffect(() => {
     const socket = io(SOCKET_URL);
@@ -58,7 +56,6 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
         peer.addTrack(track, stream)
       );
 
-      /* -------- REMOTE TRACK -------- */
 
       peer.ontrack = e => {
         setIsConnected(true);
@@ -68,7 +65,6 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
         }
       };
 
-      /* -------- ICE -------- */
 
       peer.onicecandidate = e => {
         if (e.candidate) {
@@ -79,7 +75,6 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
         }
       };
 
-      /* -------- REAL CONNECTION STATE -------- */
 
       peer.onconnectionstatechange = () => {
         const state = peer.connectionState;
@@ -156,7 +151,6 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
     };
   }, [ROOM_ID]);
 
-  /* ---------------- CONTROLS ---------------- */
 
   const toggleMic = () => {
     localStreamRef.current?.getAudioTracks().forEach(track => {
@@ -222,11 +216,8 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
 
   const showContain = isScreenSharing;
 
-  /* ---------------- UI (UNCHANGED) ---------------- */
-
   return (
     <div className="w-full h-[89vh] relative bg-black rounded-2xl overflow-hidden">
-      {/* STATUS */}
       <div className="absolute top-4 left-4 z-10 bg-black/70 px-4 py-2 rounded-full text-white text-sm flex items-center gap-2">
         <div
           className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'
@@ -236,7 +227,6 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
         {isConnected ? 'Connected' : 'Connecting'}
       </div>
 
-      {/* REMOTE VIDEO */}
       <div className="w-full h-full max-w-none rounded-2xl overflow-hidden shadow-2xl  relative">
         <video
           ref={remoteVideoRef}
@@ -267,7 +257,6 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
         )}
       </div>
 
-      {/* LOCAL PiP */}
       <div className="absolute bottom-5 right-4 w-52 h-34 rounded-2xl overflow-hidden bg-slate-900/90 shadow-2xl border-2 border-slate-700/50 group hover:scale-105 transition-all duration-200 hover:border-blue-500">
         <video
           ref={localVideoRef}
@@ -284,7 +273,6 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
         )}
       </div>
 
-      {/* CONTROLS */}
       <div className="absolute bottom-0 left-0 right-0 z-20 p-2 pb-4 bg-gradient-to-t from-black/80 to-transparent">
         <div className="flex justify-center items-center gap-4">
           <button

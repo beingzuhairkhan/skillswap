@@ -7,15 +7,25 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import Groq from "groq-sdk";
+import { ConfigService } from '@nestjs/config';
 
 @WebSocketGateway({
-  cors: { 
- origin: ['https://skillswap-gilt.vercel.app', 'https://skillswap-upmw.vercel.app', 'http://localhost:3000', 'http://localhost:3001'],
+  cors: {
+    origin: ['https://skillswap-gilt.vercel.app', 'https://skillswap-upmw.vercel.app', 'http://localhost:3000', 'http://localhost:3001'],
   },
 })
+
 export class RoomGateway implements OnModuleInit {
+  private groq: Groq;
   @WebSocketServer()
   server: Server;
+
+  constructor(private readonly configService: ConfigService) {
+    this.groq = new Groq({
+      apiKey: this.configService.get<string>('GROQ_API_KEY'),
+    });
+  }
 
   private clientRooms = new Map<string, string>();
 
@@ -138,21 +148,101 @@ export class RoomGateway implements OnModuleInit {
       time: Date.now(),
     });
 
-    if (data.isAI && data.message.startsWith('@')) {
-      const aiPrompt = data.message.replace('@', '').trim();
-      const aiResponse = await this.getAIResponse(aiPrompt);
+    if (!data.isAI) return;
 
-      this.server.to(data.roomId).emit('chat-message', {
-        senderId: 'AI',
-        message: aiResponse,
-        time: Date.now(),
-        isAI: true,
-      });
+    const text = data.message.trim();
+    let aiResponse:any ;
+
+    // TEXT AI (@)
+    if (text.startsWith('@')) {
+      const prompt = text.slice(1).trim();
+      if (!prompt) return;
+
+      aiResponse = await this.getAIResponse(prompt);
     }
+
+    // IMAGE AI (#)
+    else if (text.startsWith('#')) {
+      const prompt = text.slice(1).trim();
+      if (!prompt) return;
+
+      aiResponse = await this.getAIImageResponse(prompt);
+    }
+
+    else {
+      return;
+    }
+
+    // Send AI response
+    this.server.to(data.roomId).emit('chat-message', {
+      senderId: 'AI',
+      message: aiResponse,
+      time: Date.now(),
+      isAI: true,
+    });
+
   }
 
 
   async getAIResponse(prompt: string): Promise<string> {
-    return `🤖 AI says: You asked "${prompt}"`;
+    return this.getChatCompletion(prompt)
   }
+
+  async getChatCompletion(prompt: string): Promise<string> {
+    const completion = await this.groq.chat.completions.create({
+      model: 'openai/gpt-oss-120b',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a helpful assistant. Answer in one or two short sentences only, concisely, and remove markdown symbols.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ]
+    });
+    let response = completion.choices[0]?.message?.content ?? '';
+
+    response = response.replace(/[#\-\*\>`_~]/g, '').trim();
+    return response;
+  }
+
+
+async getAIImageResponse(prompt: string): Promise<string> {
+  if (!prompt) {
+    console.error("No prompt provided");
+    throw new Error("Prompt is required");
+  }
+
+  try {
+    const url = process.env.REQUEST_URL!;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.API_KEY}`,
+      },
+      body: JSON.stringify({ prompt }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`AI API request failed: ${response.status} - ${text}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+
+    const base64 = Buffer.from(arrayBuffer).toString("base64");
+    const dataURI = `data:image/jpeg;base64,${base64}`;
+    return dataURI;
+
+  } catch (err: any) {
+    console.error("Failed to generate image:", err.message);
+    throw new Error("Image generation failed");
+  }
+}
+
+
+
 }
