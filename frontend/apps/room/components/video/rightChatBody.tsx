@@ -2,8 +2,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import SessionTimer from "./LeaveSessionWithTimer";
+import ChatMessage from "./ChatMessage";
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL!
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL!;
 
 interface Message {
   senderId: string;
@@ -22,9 +23,9 @@ const RightChatBody = ({ roomId }: Props) => {
   const [text, setText] = useState("");
   const [myId, setMyId] = useState("");
   const [currentRoomId, setCurrentRoomId] = useState(roomId || "");
+  const messagesEndRef = useRef<HTMLDivElement | null>(null); // ✅ ref for scrolling
 
   useEffect(() => {
-    // Generate a room ID if none provided
     if (!currentRoomId) {
       const generatedId = "room-" + Math.floor(Math.random() * 10000);
       setCurrentRoomId(generatedId);
@@ -33,8 +34,7 @@ const RightChatBody = ({ roomId }: Props) => {
 
   useEffect(() => {
     if (!currentRoomId) return;
-
-    if (socketRef.current) return; // prevent double connect in Strict Mode
+    if (socketRef.current) return;
 
     socketRef.current = io(SOCKET_URL);
 
@@ -47,7 +47,7 @@ const RightChatBody = ({ roomId }: Props) => {
     });
 
     socketRef.current.on("chat-message", (msg: Message) => {
-      setMessages(prev => [...prev, msg]);
+      setMessages((prev) => [...prev, msg]);
     });
 
     return () => {
@@ -59,7 +59,7 @@ const RightChatBody = ({ roomId }: Props) => {
   const sendMessage = () => {
     if (!text.trim() || !socketRef.current) return;
 
-    const isAI = text.startsWith('@');
+    const isAI = text.startsWith("@") || text.startsWith("#");
 
     socketRef.current.emit("chat-message", {
       roomId: currentRoomId,
@@ -70,51 +70,37 @@ const RightChatBody = ({ roomId }: Props) => {
     setText("");
   };
 
+  // ✅ Auto-scroll when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   return (
     <div className="flex flex-col h-full w-full bg-white border rounded-lg">
-      {/* <div className="p-2 text-sm bg-gray-100 text-gray-700 border-b">
-        Room ID: <strong>{currentRoomId.slice(6)}</strong>
-      </div> */}
-      <SessionTimer/>
+      <SessionTimer />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg, index) => {
-          const isMe = msg.senderId === myId;
-          const isAI = msg.isAI;
+        {messages.map((msg, index) => (
+          <ChatMessage key={index} msg={msg} myId={myId} />
+        ))}
 
-          return (
-            <div
-              key={index}
-              className={`flex ${isAI ? "justify-center" : isMe ? "justify-end" : "justify-start"
-                }`}
-            >
-              <div
-                className={`px-3 py-2 rounded-lg ${isAI
-                  ? "bg-green-100 text-green-800"
-                  : isMe
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 text-gray-800"
-                  }`}
-              >
-                {isAI && "🤖 "}
-                {msg.message}
-              </div>
-            </div>
-          );
-        })}
-
+        {/* Dummy div to scroll into view */}
+        <div ref={messagesEndRef} />
       </div>
 
       <div className="p-3 flex items-center gap-2 border-t">
         <input
           type="text"
           value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && sendMessage()}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           placeholder="Type a message..."
           className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
         />
-        <button className="px-4 py-2 bg-black text-white rounded-lg" onClick={sendMessage}>
+        <button
+          className="px-4 py-2 bg-black text-white rounded-lg"
+          onClick={sendMessage}
+        >
           Send
         </button>
       </div>
