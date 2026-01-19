@@ -135,7 +135,7 @@ const RightBody = () => {
                     <span className="font-medium">{user.followerCount}</span>
                     <span>followers</span>
                     <span className="text-gray-300">·</span>
-                    <span className="text-gray-600 font-medium">Node.js</span>
+                    <span className="text-gray-600 font-medium">{user?.firstSkillToLearn || 'NA'}</span>
                   </p>
                 </div>
               </div>

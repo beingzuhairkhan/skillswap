@@ -21,7 +21,7 @@ const Navigation = () => {
     setLoading(false);
   }, []);
 
-   if (loading) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="w-10 h-10 border-4 border-gray-900 border-t-transparent rounded-full animate-spin" />
@@ -29,13 +29,68 @@ const Navigation = () => {
     );
   }
 
-  if (!roomId) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center">
-        <p className="text-lg text-red-500">Room not found</p>
+if (!roomId) {
+  return (
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-black rounded-full mb-4">
+            <svg
+              className="w-7 h-7 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-black mb-2">
+            Room Not Found
+          </h1>
+          <p className="text-gray-600 text-sm">
+            The room you're looking for doesn't exist.
+          </p>
+        </div>
+
+        <div className="bg-black/5 rounded-xl border border-black/10 p-5">
+          <div className="space-y-3">
+            <button
+              onClick={() => (window.location.href = "https://skillswap-iota-three.vercel.app")}
+              className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 group"
+            >
+              <svg
+                className="w-4 h-4 group-hover:-translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Return to Home
+            </button>
+            
+            <button
+              onClick={() => window.history.back()}
+              className="w-full bg-transparent hover:bg-black/5 text-black font-medium py-3 px-4 rounded-lg border border-black/20 transition-all duration-200"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="flex flex-col w-[75%] h-full">

@@ -7,12 +7,15 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { UploadModule } from 'src/upload/upload.module';
 import {Post, PostSchema } from 'src/schemas/post.schema';
+import { Feedback, FeedbackSchema } from 'src/schemas/feedback.schema';
 
 @Module({
   imports:[
   UploadModule,
-    MongooseModule.forFeature([{name:User.name , schema:UserSchema}]),
-    MongooseModule.forFeature([{name:Post.name , schema:PostSchema}]),
+    MongooseModule.forFeature([{name:User.name , schema:UserSchema},
+      {name:Post.name , schema:PostSchema},
+      {name:Feedback.name, schema:FeedbackSchema },
+    ]),
     PassportModule.register({defaultStrategy:'jwt'}),
     JwtModule.register({}),
 
