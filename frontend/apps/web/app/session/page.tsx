@@ -4,6 +4,7 @@ import { Button } from '../../../../packages/ui/src/button';
 import UpComingSessions from "../../components/sessionDatas/upComingSessions";
 import AcceptSessions from "../../components/sessionDatas/acceptSessions";
 import RejectSessions from "../../components/sessionDatas/rejectSessions";
+import CompletedSessions from "@/components/sessionDatas/CompletedSessions";
 
 const Sessions = () => {
   // ✅ Set default selected tab to "request"
@@ -17,7 +18,7 @@ const Sessions = () => {
         {selected === "request" && <UpComingSessions />}
         {selected === "accepted" && <AcceptSessions />}
         {selected === "rejected" && <RejectSessions />}
-        {/* Add completed component later */}
+         {selected === "completed" && <CompletedSessions />}
       </div>
 
       {/* Right Vertical Buttons */}

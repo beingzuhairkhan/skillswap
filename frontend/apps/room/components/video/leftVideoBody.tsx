@@ -313,6 +313,7 @@ const handleFeedbackSubmit = async (feedbackData: any) => {
   try {
     await sendMeetingStatus({
       ...feedbackData,
+      roomId:ROOM_ID,
       feedbackProvided: true,
     });
   } finally {
@@ -323,13 +324,13 @@ const handleFeedbackSubmit = async (feedbackData: any) => {
 const handleSkipFeedback = async () => {
   try {
     await sendMeetingStatus({
+      roomId:ROOM_ID,
       feedbackProvided: false,
     });
   } finally {
     await endMeetingCleanup();
   }
 };
-
 
   return (
     <div className="w-full h-[89vh] relative bg-black rounded-2xl overflow-hidden">
