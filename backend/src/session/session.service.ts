@@ -8,8 +8,9 @@ import { UploadService } from 'src/upload/upload.service';
 import { BookSessionDto } from './dto/book-session.dto';
 import { JwtService } from '@nestjs/jwt';
 import { Chat, ChatDocument } from 'src/schemas/chat.schema';
-import {EVENTS} from '../notification/eventTypes'
+import { EVENTS } from '../notification/eventTypes'
 import eventBus from 'src/notification/eventBus';
+import { Feedback, FeedbackDocument } from 'src/schemas/feedback.schema';
 
 @Injectable()
 export class SessionService {
@@ -17,6 +18,7 @@ export class SessionService {
     @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
     @InjectModel(Session.name) private readonly sessionModel: Model<SessionDocument>,
     @InjectModel(Chat.name) private readonly chatModel: Model<ChatDocument>,
+    @InjectModel(Feedback.name) private readonly feedbackModel: Model<FeedbackDocument>,
     private readonly cloudinary: UploadService,
     private jwtService: JwtService
   ) { }
@@ -69,14 +71,14 @@ export class SessionService {
       const savedSession = await newSession.save();
       console.log("event bus hitting")
 
-      eventBus.emit(EVENTS.SESSION_CREATED , {
-        sessionId:savedSession._id, 
-        requesterId:savedSession.requesterId,
-        receiverId:savedSession.receiverId,
-        postId:savedSession.postId,
-        date:savedSession.date,
-        time:savedSession.time,
-        sessionData:savedSession
+      eventBus.emit(EVENTS.SESSION_CREATED, {
+        sessionId: savedSession._id,
+        requesterId: savedSession.requesterId,
+        receiverId: savedSession.receiverId,
+        postId: savedSession.postId,
+        date: savedSession.date,
+        time: savedSession.time,
+        sessionData: savedSession
       })
 
       return savedSession;
@@ -184,6 +186,34 @@ export class SessionService {
     }
   }
 
+  async getAllCompletedSessions(userId: string): Promise<any[]> {
+    try {
+      if (!userId) throw new NotFoundException('User not found');
+
+      const sessions = await this.sessionModel
+        .find({
+          receiverId: new Types.ObjectId(userId),
+          status: SessionStatus.COMPLETE,
+        })
+        .populate({
+          path: 'requesterId',
+          select: '_id name imageUrl collegeName domain -password',
+        })
+        .populate({
+          path: 'postId',
+          select: 'wantToLearn specificTopic',
+        })
+        .select('-studentNotes') 
+        .sort({ createdAt: -1 });
+
+      return sessions || [];
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        'Failed to fetch accepted session requests'
+      );
+    }
+  }
 
   async getMyRequestSessions(userId: string, status: SessionStatus) {
     try {

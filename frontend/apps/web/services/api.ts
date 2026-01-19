@@ -103,6 +103,10 @@ export const SessionAPI = {
     return authAPI.get('/session/accept-session')
   },
 
+  getAllCompleteSession: async() => {
+     return authAPI.get('/session/complete-session')
+  },
+
   getMyPendingSessions: async (params: { status: SessionStatusType }) => {
     console.log("P" , params)
     return authAPI.get("/session/my-request-session", {

@@ -58,6 +58,13 @@ export class SessionController {
     }
 
     @UseGuards(JwtAuthGuard)
+    @Get('complete-session')
+    async getAllCompleteSession(@Req() req: any) {
+        const userId = req.user.userId;
+        return this.sessionService.getAllCompletedSessions(userId);
+    }
+
+    @UseGuards(JwtAuthGuard)
     @Get('my-request-session')
     async getMyRequestSession(
         @Req() req: any,

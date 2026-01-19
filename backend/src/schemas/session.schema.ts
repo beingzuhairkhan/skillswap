@@ -6,7 +6,8 @@ import { Post } from "@nestjs/common";
 export enum SessionStatus {
     ACCEPT = 'accept',
     PENDING = 'pending',
-    REJECT = 'reject'
+    REJECT = 'reject',
+    COMPLETE = 'complete'
 }
 
 export enum SessionType {

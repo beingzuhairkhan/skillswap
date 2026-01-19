@@ -44,7 +44,7 @@ export class User {
     portfolioUrl?: string;
 
     @Prop({ default: '' })
-    resume?: string; // store URL or path
+    resume?: string; 
 
     @Prop({ type: [Types.ObjectId], ref: 'User', default: [] })
     follower: Types.ObjectId[];
