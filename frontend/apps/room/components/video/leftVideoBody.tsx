@@ -10,6 +10,7 @@ import {
 } from 'react-icons/md';
 import { BsCameraVideo, BsCameraVideoOff } from 'react-icons/bs';
 import { Users } from 'lucide-react';
+import FeedbackModal from '../Feedback';
 
 const SOCKET_URL =
   process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4000';
@@ -28,6 +29,15 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
 
   const [isConnected, setIsConnected] = useState(false);
+  const [userA, userB] = ROOM_ID.split('-');
+
+  const [showFeedback, setShowFeedback] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+
+  const CURRENT_USER_ID = userA;
+
+  const speaker =
+    CURRENT_USER_ID === userA ? userA : userB;
 
 
   useEffect(() => {
@@ -39,6 +49,55 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
         video: true,
         audio: true,
       });
+
+      const audioStream = new MediaStream(
+        stream.getAudioTracks()
+      );
+      const options = {
+        mimeType: 'audio/webm;codecs=opus',
+        audioBitsPerSecond: 24000
+      };
+
+      const mediaRecorder = new MediaRecorder(audioStream, options)
+      mediaRecorderRef.current = mediaRecorder;
+
+      // const TEN_MINUTES = 10 * 60 * 1000;
+      const TEN_MINUTES = 5 * 60 * 1000;
+
+      mediaRecorder.ondataavailable = async (e) => {
+        if (e.data.size === 0) return;
+
+        const audioBlob = new Blob([e.data], { type: 'audio/webm' });
+
+        const audioFile = new File([audioBlob], 'audio.webm', {
+          type: 'audio/webm',
+          lastModified: Date.now(),
+        });
+
+        const formData = new FormData();
+        formData.append('file', audioFile);
+        formData.append('roomId', ROOM_ID || '');
+        formData.append('speakerId', CURRENT_USER_ID || '');
+        formData.append('speakerRole', speaker || '');
+
+        try {
+          await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/room/audioSummary`,
+            {
+              method: 'POST',
+              body: formData,
+            }
+          );
+        } catch (error) {
+          console.error('Failed to upload audio', error);
+        }
+      };
+
+      mediaRecorder.start(TEN_MINUTES);
+
+      // setTimeout(() => {
+      //   mediaRecorder.stop();
+      // }, 8000); // 8 seconds
 
       localStreamRef.current = stream;
 
@@ -146,10 +205,16 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
     init();
 
     return () => {
+      if (mediaRecorderRef.current?.state !== 'inactive') {
+        mediaRecorderRef.current?.stop();
+      }
+
       peerRef.current?.close();
-      socket.disconnect();
+      socketRef.current?.disconnect();
     };
   }, [ROOM_ID]);
+
+
 
 
   const toggleMic = () => {
@@ -207,14 +272,64 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
 
     setIsScreenSharing(false);
   };
-
+  const showContain = isScreenSharing;
   const endCall = () => {
-    peerRef.current?.close();
-    socketRef.current?.disconnect();
-    window.location.reload();
+    setShowFeedback(true);
   };
 
-  const showContain = isScreenSharing;
+  const isFinalChunkRef = useRef(false);
+
+ const endMeetingCleanup = async () => {
+  isFinalChunkRef.current = true;
+
+  if (mediaRecorderRef.current?.state !== 'inactive') {
+    mediaRecorderRef.current?.stop();
+  }
+
+  await new Promise(res => setTimeout(res, 300));
+
+  peerRef.current?.close();
+  socketRef.current?.disconnect();
+  localStorage.removeItem("meet");
+  window.location.href = '/';
+};
+
+const sendMeetingStatus = async (payload: any) => {
+  try {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/room/feedback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...payload,
+        status: 'completed',
+      }),
+    });
+  } catch (error) {
+    console.error('Error sending meeting status:', error);
+  }
+};
+
+const handleFeedbackSubmit = async (feedbackData: any) => {
+  try {
+    await sendMeetingStatus({
+      ...feedbackData,
+      feedbackProvided: true,
+    });
+  } finally {
+    await endMeetingCleanup();
+  }
+};
+
+const handleSkipFeedback = async () => {
+  try {
+    await sendMeetingStatus({
+      feedbackProvided: false,
+    });
+  } finally {
+    await endMeetingCleanup();
+  }
+};
+
 
   return (
     <div className="w-full h-[89vh] relative bg-black rounded-2xl overflow-hidden">
@@ -323,6 +438,16 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
           >
             <MdCallEnd className="text-white text-2xl" />
           </button>
+
+          {showFeedback && (
+            <FeedbackModal
+              roomId={ROOM_ID}
+              currentUserId={CURRENT_USER_ID || ''}
+              otherUserId={speaker || ''}
+              onSubmit={handleFeedbackSubmit}
+              onSkip={handleSkipFeedback}
+            />
+          )}
         </div>
 
       </div>

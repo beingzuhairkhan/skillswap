@@ -8,11 +8,13 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UploadService } from 'src/upload/upload.service';
 import { CodingProfileDto } from './dto/create-codingProfile.dto';
 import axios from 'axios';
+import { Feedback, FeedbackDocument } from 'src/schemas/feedback.schema';
 
 @Injectable()
 export class UserService {
     constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>,
         @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
+        @InjectModel(Feedback.name) private readonly feedbackModel: Model<FeedbackDocument>,
         private readonly cloudinary: UploadService
     ) { }
 
@@ -20,10 +22,22 @@ export class UserService {
     async getMyProfile(userId: string): Promise<any> {
         try {
             const profileData = await this.userModel.findById(userId).select('-password');
+
+            const ratingAggregation = await this.feedbackModel.aggregate([
+                { $match: { otherUserId: new Types.ObjectId(userId) } },
+                { $group: { _id: '$otherUserId', avgRating: { $avg: '$rating' }, count: { $sum: 1 } } },
+            ]);
+
+            const avgRating = ratingAggregation.length ? Number(ratingAggregation[0].avgRating.toFixed(1)) : 0;
+            const ratingCount = ratingAggregation.length ? ratingAggregation[0].count : 0;
             if (!profileData) {
                 throw new NotFoundException('User not found');
             }
-            return profileData;
+            return {
+                ...profileData.toObject(),
+                ratings: avgRating,
+                ratingCount,
+            };
         } catch (error) {
             throw new InternalServerErrorException('Failed to update user profile');
         }
@@ -238,7 +252,7 @@ export class UserService {
             }
 
             const newPost = new this.postModel({
-                user:  new Types.ObjectId(userId),
+                user: new Types.ObjectId(userId),
                 ...createPostDto,
                 postImageUrl: imageUrl,
                 postImagePublicId: publicId
@@ -404,22 +418,41 @@ export class UserService {
         }
     }
 
-    async getUserProfileData(profileId: string): Promise<User> {
+    async getUserProfileData(profileId: string): Promise<any> {
         try {
             if (!profileId) {
                 throw new ConflictException('User ID not provided');
             }
 
             const userProfileData = await this.userModel.findById(profileId).select('-password');
+
+             const ratingAggregation = await this.feedbackModel.aggregate([
+                { $match: { otherUserId: new Types.ObjectId(profileId) } }, 
+                {
+                    $group: {
+                        _id: '$otherUserId',
+                        avgRating: { $avg: '$rating' },
+                        ratingCount: { $sum: 1 }
+                    }
+                },
+            ]);
+
+            const avgRating = ratingAggregation.length ? Number(ratingAggregation[0].avgRating.toFixed(1)) : 0;
+            const ratingCount = ratingAggregation.length ? ratingAggregation[0].ratingCount : 0;
             if (!userProfileData) {
                 throw new NotFoundException('User not found');
             }
 
-            return userProfileData;
+            return {
+                ...userProfileData.toObject(),
+                ratings: avgRating,
+                ratingCount,
+            };
         } catch (error) {
             throw new InternalServerErrorException('Failed to fetch user profile: ' + error.message);
         }
     }
+
 
     async followUser(userId: string, followId: string): Promise<any> {
         try {

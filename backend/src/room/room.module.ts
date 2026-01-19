@@ -8,6 +8,8 @@ import { Session, SessionSchema } from 'src/schemas/session.schema';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { RoomGateway } from './room.gateway';
+import { Transcript, TranscriptSchema } from 'src/schemas/transcript.schema';
+import { Feedback, FeedbackSchema } from 'src/schemas/feedback.schema';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { RoomGateway } from './room.gateway';
       { name: User.name, schema: UserSchema },
       { name: Post.name, schema: PostSchema },
       { name: Session.name, schema: SessionSchema },
+      {name: Transcript.name , schema:TranscriptSchema},
+      { name: Feedback.name, schema: FeedbackSchema },
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({}),

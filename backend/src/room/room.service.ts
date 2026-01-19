@@ -6,13 +6,19 @@ import { Chat, ChatDocument } from 'src/schemas/chat.schema';
 import { Post, PostDocument } from 'src/schemas/post.schema';
 import { Session, SessionDocument } from 'src/schemas/session.schema';
 import { User, UserDocument } from 'src/schemas/user.schema';
-
+import fs from 'fs'
+import { RoomGateway } from './room.gateway';
+import { Transcript, TranscriptDocument } from 'src/schemas/transcript.schema';
+import { Feedback, FeedbackDocument } from 'src/schemas/feedback.schema';
 @Injectable()
 export class RoomService {
     constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>,
         @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
         @InjectModel(Session.name) private readonly sessionModel: Model<SessionDocument>,
-        private jwtService: JwtService
+        @InjectModel(Transcript.name) private readonly transcriptModel: Model<TranscriptDocument>,
+        @InjectModel(Feedback.name) private readonly feedbackModel: Model<FeedbackDocument>,
+        private jwtService: JwtService,
+        private readonly roomGateway: RoomGateway
     ) { }
 
     async decodeMeetLink(meetLink: string, userId: string): Promise<any> {
@@ -23,18 +29,15 @@ export class RoomService {
             if (!token) {
                 throw new NotFoundException('Invalid meet link');
             }
-            console.log("T", token)
-
             const decoded = this.jwtService.verify(token, {
                 secret: process.env.JWT_ACCESS_SECRET as string,
             });
-            console.log("d", decoded, userId)
 
             // if (decoded.requesterId !== userId || decoded.receiverId !== userId) {
             //     return { status: false, message: 'This link does not belong to you' };
             // }
 
-            return { status: true , token };
+            return { status: true, token };
         } catch (error) {
             throw new InternalServerErrorException(error.message || 'Failed to decode meet link');
         }
@@ -45,18 +48,15 @@ export class RoomService {
         try {
             if (!meetLink) throw new NotFoundException('Meet link not provided');
 
-            // Extract token from the URL
             const token = meetLink.split('/').pop();
             if (!token) throw new NotFoundException('Invalid meet link');
-             console.log("url hit from  room")
-            // Decode JWT token
+
             const decoded: any = this.jwtService.verify(token, {
                 secret: process.env.JWT_ACCESS_SECRET,
             });
 
             const { receiverId, requesterId } = decoded;
 
-            // Find users in DB
             const receiver = await this.userModel.findById(receiverId).select('-password'); // exclude password
             const requester = await this.userModel.findById(requesterId).select('-password');
 
@@ -64,46 +64,57 @@ export class RoomService {
                 throw new NotFoundException('User(s) not found');
             }
 
-            // Generate a room ID (or use your existing logic)
             const roomId = `${receiverId}-${requesterId}`;
 
             return {
                 status: true,
-                roomId,
-                users: [
-                    {
-                        _id: receiver._id,
-                        name: receiver.name,
-                        imageUrl: receiver.imageUrl,
-                        email: receiver.email,
-                        collegeName: receiver.collegeName,
-                        domain: receiver.domain,
-                        bio: receiver.bio,
-                        leetcodeUsername: receiver.leetcodeUsername,
-                        githubUsername: receiver.githubUsername,
-                        portfolioUrl: receiver.portfolioUrl,
-                        resume: receiver.resume,
-                        role: receiver.role,
-                    },
-                    {
-                        _id: requester._id,
-                        name: requester.name,
-                        imageUrl: requester.imageUrl,
-                        email: requester.email,
-                        collegeName: requester.collegeName,
-                        domain: requester.domain,
-                        bio: requester.bio,
-                        leetcodeUsername: requester.leetcodeUsername,
-                        githubUsername: requester.githubUsername,
-                        portfolioUrl: requester.portfolioUrl,
-                        resume: requester.resume,
-                        role: requester.role,
-                    }
-                ],
+                roomId
             };
         } catch (error) {
             throw new InternalServerErrorException(error.message || 'Failed to decode meet link');
         }
     }
 
+
+    async convertAudioToText(file: Express.Multer.File, roomId, speakerId, speakerRole) {
+        try {
+            if (!file) {
+                throw new Error('No file provided');
+            }
+
+            const groqRes = await this.roomGateway.transcribeGenerate(file);
+            const transcriptText = groqRes.text;
+
+            const transcript = await this.transcriptModel.create({
+                roomId,
+                speakerId,
+                speakerRole,
+                language: 'hi',
+                audioFilePath: file.originalname,
+                transcription: transcriptText,
+                summary: await this.roomGateway.transcribeSummarize(transcriptText)
+            });
+            console.log("final ", transcript)
+
+            return transcript;
+
+
+        } catch (error) {
+            throw new InternalServerErrorException(error.message || "failed to covert audio into text")
+        }
+    }
+
+    async saveFeedback(data: any) {
+        try {
+            if (data.timestamp) {
+                data.timestamp = new Date(data.timestamp);
+            }
+            return await this.feedbackModel.create(data);
+        } catch (error) {
+            console.error('Failed to save feedback:', error);
+            throw new Error('Could not save feedback'); 
+        }
+    }
+
 }
+
