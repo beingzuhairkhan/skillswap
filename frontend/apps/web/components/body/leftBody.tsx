@@ -69,7 +69,8 @@ const LeftBody = () => {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-600">Sessions Completed</span>
-            <span className="text-sm font-bold text-gray-900">{user?.sessionsCompleted || 0}</span>
+            {/* <span className="text-sm font-bold text-gray-900">{user?.sessionsCompleted || 0}</span> */}
+             <span className="text-sm font-bold text-gray-900">{0}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-600">Rating</span>

@@ -13,29 +13,17 @@ interface ISuggestedUser {
   firstSkillToLearn?: string;
 }
 
+interface ITrendingSkill {
+  skill: string;
+  count: number;
+}
+
 const RightBody = () => {
   const [suggestedUsers, setSuggestedUsers] = useState<ISuggestedUser[]>([]);
+  const [trendingSkills, setTrendingSkills] = useState<ITrendingSkill[]>([]);
   const [followingStates, setFollowingStates] = useState<{ [key: string]: boolean }>({});
   const [loading, setLoading] = useState<boolean>(true);
-  const skills = [
-    "React.js",
-    "Next.js",
-    "Node.js",
-    "Python",
-    "AI/ML",
-    "TailwindCSS",
-    "MongoDB",
-    "TypeScript",
-    "OOPs",
-    "DBMS",
-    "OS",
-    "TailwindCSS",
-    "MongoDB",
-    "TypeScript",
-    "OOPs",
-    "DBMS",
-    "OS",
-  ];
+
 
   const handleFollow = (userId: string) => {
     setFollowingStates(prev => ({
@@ -45,42 +33,54 @@ const RightBody = () => {
   };
 
   useEffect(() => {
-    const fetchSuggestedUsers = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await userDataAPI.suggestedUser();
-        setSuggestedUsers(response.data);
+        const [usersResponse, skillsResponse] = await Promise.all([
+          userDataAPI.suggestedUser(),
+          userDataAPI.trendingSkills()
+        ]);
+
+        setSuggestedUsers(usersResponse.data);
+        setTrendingSkills(skillsResponse.data);
       } catch (error) {
-        console.error("Failed to fetch suggested users", error);
-      }
-      finally {
+        console.error("Failed to fetch data:", error);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchSuggestedUsers();
+    fetchData();
   }, []);
 
   return (
     <div className="hidden sm:block text-black mt-20 w-72 space-y-5">
       {/* Trending Skills */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow duration-300">
+      <div className="bg-gray-100 rounded-2xl border border-gray-200 p-5 hover:shadow-md transition-shadow duration-300">
         <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 bg-gray-50 rounded-lg">
+          <div className="p-2 bg-gray-200 rounded-lg">
             <TrendingUp size={18} className="text-gray-700" />
           </div>
           <h2 className="font-bold text-lg">Trending Skills</h2>
         </div>
-        <div className="flex flex-wrap gap-2 overflow-y-auto hide-scrollbar max-h-[180px]">
-          {skills.map((skill, i) => (
-            <span
-              key={i}
-              className="px-3 py-2 bg-gray-50 rounded-full text-sm text-gray-700 cursor-pointer hover:bg-gray-100 hover:scale-105 transition-all duration-200 font-medium border border-gray-100"
-            >
-              {skill}
-            </span>
-          ))}
-        </div>
+
+        {loading ? (
+          <p className="text-gray-500 text-sm">Loading...</p>
+        ) : trendingSkills.length === 0 ? (
+          <p className="text-gray-500 text-sm">No trending skills yet</p>
+        ) : (
+          <div className="flex flex-wrap gap-2 max-h-[180px] overflow-y-auto hide-scrollbar">
+            {trendingSkills.map((skillObj, i) => (
+              <span
+                key={i}
+                className="flex items-center gap-1 px-3 py-2 bg-white rounded-full text-sm text-gray-700 cursor-pointer hover:bg-gray-200 hover:scale-105 transition-all duration-200 font-medium border border-gray-200"
+              >
+                {skillObj.skill}
+                <span className="text-xs text-gray-500">({skillObj.count})</span>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Suggested Users */}
@@ -121,7 +121,6 @@ const RightBody = () => {
                       </span>
                     )}
                   </div>
-                  {/* Online indicator */}
                   <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center">
                     <div className="w-2.5 h-2.5 bg-gray-400 rounded-full"></div>
                   </div>
