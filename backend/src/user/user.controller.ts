@@ -16,6 +16,14 @@ interface FileUpload {
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
+
+   
+  @Get('allTrendingSkill')
+  async getTrendingSkills() {
+    return await this.userService.getTrendingSkills()
+  }
+
+
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getProfile(@Req() req: any) {
@@ -179,12 +187,6 @@ export class UserController {
     const currentUserId = req.user.userId;
     return this.userService.followUser(currentUserId, followId);
   }
-
-  @Get('allTrendingSkill')
-  async getTrendingSkills() {
-    return await this.userService.getTrendingSkills()
-  }
-
 
 
 

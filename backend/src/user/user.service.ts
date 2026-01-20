@@ -182,9 +182,9 @@ export class UserService {
         }
     }
 
-    async getAllPosts(): Promise<{ posts: any[]; skills: any[] }> {
+    async getAllPosts(): Promise<any> {
         const trendingSkills = await this.getTrendingSkills(5)
-        const posts = await this.postModel.aggregate([
+        const Allpost = await this.postModel.aggregate([
 
             {
                 $addFields: {
@@ -226,10 +226,12 @@ export class UserService {
             },
             { $sort: { createdAt: -1 } }
         ]);
-        return {
-            posts,
-            skills: trendingSkills
-        }
+
+        const posts = Allpost.map(post => ({
+            ...post,
+            trendingSkills
+        }));
+        return posts
     }
 
     async createPost(userId: string, createPostDto: CreatePostDto, imageBuffer?: Buffer, filename?: string): Promise<any> {
@@ -600,9 +602,12 @@ export class UserService {
                 return [];
             }
 
-            const sortedSkills = doc.skills.sort((a, b) => b.count - a.count);
+            const sortedSkills = doc.skills
+                .sort((a, b) => b.count - a.count)
+                .slice(0, limit ?? doc.skills.length)
+                .map(skillObj => skillObj.skill);
 
-            return limit ? sortedSkills.slice(0, limit) : sortedSkills;
+            return sortedSkills;
         } catch (error) {
             console.error('Error fetching trending skills:', error);
             return [];
