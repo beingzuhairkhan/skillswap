@@ -1,4 +1,4 @@
-'use client'; // if using app directory
+'use client';
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { FaStar } from 'react-icons/fa';
@@ -47,55 +47,61 @@ const ProfileReviews = () => {
 
 
     return (
-        <div className="max-w-3xl mx-auto px-4 py-6">
-            {reviews.length === 0 && <p className="text-center text-gray-500">No reviews yet.</p>}
+        <div className="min-h-screen  py-4">
+            <div className="max-w-4xl mx-auto px-4 space-y-4">
+                {reviews.length === 0 && (
+                    <p className="text-center text-gray-500">No reviews yet.</p>
+                )}
 
-            {reviews.map((review) => (
-                <div
-                    key={review._id}
-                    className="flex gap-4 mb-6 border-b pb-4 last:border-b-0 last:pb-0"
-                >
-                    <div className="relative w-12 h-12 flex-shrink-0">
-                        <Image
-                            src={review.currentUser.imageUrl || '/default-avatar.png'}
-                            alt={review.currentUser.name}
-                            fill
-                            className="rounded-full object-cover"
-                            sizes="48px"
-                        />
-                    </div>
-
-                    <div className="flex-1">
-                        {/* Reviewer name and date */}
-                        <div className="flex items-center justify-between">
-                            <h4 className="font-semibold text-gray-800">
-                                {review.currentUser.name}
-                            </h4>
-                            <span className="text-sm text-gray-500">
-                                {new Date(review.timestamp).toLocaleDateString(undefined, {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric',
-                                })}
-                            </span>
+                {reviews.map((review) => (
+                    <div
+                        key={review._id}
+                        className="flex gap-4 p-4 rounded-xl shadow-md bg-white hover:shadow-lg transition-shadow duration-200"
+                    >
+                        {/* Reviewer Avatar */}
+                        <div className="relative w-14 h-14 flex-shrink-0">
+                            <Image
+                                src={review.currentUser.imageUrl || '/default-avatar.png'}
+                                alt={review.currentUser.name}
+                                fill
+                                className="rounded-full object-cover"
+                                sizes="56px"
+                            />
                         </div>
 
-                        <div className="flex mt-1">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                                <FaStar
-                                    key={i}
-                                    size={16}
-                                    className={i < review.rating ? 'text-yellow-400' : 'text-gray-300'}
-                                />
-                            ))}
+                        <div className="flex-1 flex flex-col">
+                            {/* Name and Date */}
+                            <div className="flex items-center justify-between">
+                                <h4 className="font-semibold text-gray-800">
+                                    {review.currentUser.name}
+                                </h4>
+                                <span className="text-sm text-gray-500">
+                                    {new Date(review.timestamp).toLocaleDateString(undefined, {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        year: 'numeric',
+                                    })}
+                                </span>
+                            </div>
+
+                            {/* Star Rating */}
+                            <div className="flex mt-1">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                    <FaStar
+                                        key={i}
+                                        size={18}
+                                        className={i < review.rating ? 'text-yellow-400' : 'text-gray-300'}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Review Message */}
+                            <p className="mt-2 text-gray-700">{review.message}</p>
+
                         </div>
-
-                        <p className="mt-2 text-gray-700">{review.message}</p>
-
-
                     </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     );
 };
