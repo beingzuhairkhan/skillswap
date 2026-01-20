@@ -180,7 +180,6 @@ export class UserController {
     return this.userService.followUser(currentUserId, followId);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('allTrendingSkill')
   async getTrendingSkills() {
     return await this.userService.getTrendingSkills()

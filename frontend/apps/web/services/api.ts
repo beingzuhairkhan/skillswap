@@ -83,6 +83,9 @@ export const userDataAPI = {
   },
   myPosts: async () => {
     return authAPI.get('/user/myPosts')
+  },
+  trendingSkills: async() =>{
+      return authAPI.get('/user/allTrendingSkill')
   }
 };
 
