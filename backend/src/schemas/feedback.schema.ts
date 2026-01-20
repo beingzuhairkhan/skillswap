@@ -6,6 +6,7 @@ export type FeedbackDocument = Feedback & Document;
 export enum MeetingStatus {
     COMPLETED = 'completed',
     SKIPPED = 'skipped',
+    PENDING = 'pending'
 }
 
 @Schema({ timestamps: true })
@@ -19,6 +20,9 @@ export class Feedback {
     @Prop({ type: Types.ObjectId, ref: 'User' })
     otherUserId: Types.ObjectId;
 
+    @Prop({ type: Types.ObjectId, ref: 'Session' })
+    postId: Types.ObjectId;
+
     @Prop({ required: false, min: 1, max: 5 })
     rating: number;
 
@@ -28,15 +32,17 @@ export class Feedback {
     @Prop({ default: '' })
     message: string;
 
-    @Prop({ required: true })
+    @Prop({ required: false })
     timestamp: Date;
 
     @Prop({
         type: String,
         enum: Object.values(MeetingStatus),
-        default: MeetingStatus.COMPLETED,
+        default: MeetingStatus.PENDING,
     })
     status: MeetingStatus;
+
+    
 }
 
 export const FeedbackSchema = SchemaFactory.createForClass(Feedback);

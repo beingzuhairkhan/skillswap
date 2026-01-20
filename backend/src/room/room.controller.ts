@@ -57,5 +57,12 @@ export class RoomController {
       return this.roomService.saveFeedback(body)
     }
 
+    @UseGuards(JwtAuthGuard)
+    @Get('myReview')
+    async getAllMyReviews(@Req() req){
+      const userId = req.user.userId;
+      return this.roomService.getUserReviews(userId)
+
+    }
  
 }

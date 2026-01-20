@@ -24,10 +24,10 @@ export class SessionService {
   ) { }
 
 
-  generateMeetToken(receiverId: string, requesterId: string): string {
-    if (!receiverId || !requesterId) throw new Error('Missing IDs');
+  generateMeetToken(receiverId: string, requesterId: string , sessionId:string): string {
+    if (!receiverId || !requesterId || !sessionId) throw new Error('Missing IDs');
     const payload = {
-      receiverId, requesterId
+      receiverId, requesterId , sessionId
     }
     const meetToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_ACCESS_SECRET,
@@ -139,7 +139,7 @@ export class SessionService {
       if (session.status !== SessionStatus.PENDING) {
         throw new Error('Session is not in a pending state');
       }
-      const token = this.generateMeetToken(receiverId, requesterId);
+      const token = this.generateMeetToken(receiverId, requesterId , sessionId);
       if (!token) {
         throw new Error('Token is required ');
       }

@@ -12,6 +12,7 @@ import ProfileRequestSessio from "../../../components/ProfileData/ProfileRequest
 import ProfileAcceptSession from "../../../components/ProfileData/ProfileAcceptSession";
 import ProfileCancelSession from "../../../components/ProfileData/ProfileCancelSession";
 import { SessionStatus } from '../../../components/constants/sessionStatus'
+import ProfileReviews from "@/components/ProfileData/ProfileReviews";
 
 
 // export const SessionStatus = {
@@ -73,7 +74,7 @@ const Profile = () => {
       case "Posts":
         return <ProfilePosts/>;
       case "Reviews":
-        return <div>Here are your reviews...</div>;
+        return <ProfileReviews/>;
       case "Upcoming Sessions":
         return <ProfileAcceptSession status={SessionStatus.ACCEPT} />;
       case "Request Sessions":

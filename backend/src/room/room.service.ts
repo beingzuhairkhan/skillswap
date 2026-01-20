@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Chat, ChatDocument } from 'src/schemas/chat.schema';
 import { Post, PostDocument } from 'src/schemas/post.schema';
 import { Session, SessionDocument } from 'src/schemas/session.schema';
@@ -9,7 +9,7 @@ import { User, UserDocument } from 'src/schemas/user.schema';
 import fs from 'fs'
 import { RoomGateway } from './room.gateway';
 import { Transcript, TranscriptDocument } from 'src/schemas/transcript.schema';
-import { Feedback, FeedbackDocument } from 'src/schemas/feedback.schema';
+import { Feedback, FeedbackDocument, MeetingStatus } from 'src/schemas/feedback.schema';
 @Injectable()
 export class RoomService {
     constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>,
@@ -55,16 +55,17 @@ export class RoomService {
                 secret: process.env.JWT_ACCESS_SECRET,
             });
 
-            const { receiverId, requesterId } = decoded;
+            const { receiverId, requesterId, sessionId } = decoded;
 
             const receiver = await this.userModel.findById(receiverId).select('-password'); // exclude password
             const requester = await this.userModel.findById(requesterId).select('-password');
+            const postId = await this.sessionModel.findById(sessionId);
 
-            if (!receiver || !requester) {
-                throw new NotFoundException('User(s) not found');
+            if (!receiver || !requester || !postId) {
+                throw new NotFoundException('User(s) or post not found');
             }
 
-            const roomId = `${receiverId}-${requesterId}`;
+            const roomId = `${receiverId}-${requesterId}-${postId}`;
 
             return {
                 status: true,
@@ -106,15 +107,68 @@ export class RoomService {
 
     async saveFeedback(data: any) {
         try {
-            if (data.timestamp) {
-                data.timestamp = new Date(data.timestamp);
-            }
-            return await this.feedbackModel.create(data);
+            const [receiverId, requesterId, postId] = data.roomId.split('-');
+
+            const feedback = new this.feedbackModel({
+                roomId: data.roomId,
+                currentUserId: data.currentUserId ? new Types.ObjectId(data.currentUserId) : new Types.ObjectId(requesterId),
+                otherUserId: data.otherUserId ? new Types.ObjectId(data.otherUserId) : new Types.ObjectId(receiverId),
+                postId: data.postId ? new Types.ObjectId(data.postId) : new Types.ObjectId(postId),
+                rating: data.rating,
+                category: data.category,
+                message: data.message || '',
+                status: data.status || MeetingStatus.COMPLETED,
+                timestamp: new Date(),
+            });
+
+            return await feedback.save();
         } catch (error) {
             console.error('Failed to save feedback:', error);
-            throw new Error('Could not save feedback'); 
+            throw new Error('Could not save feedback');
         }
     }
+
+    async getUserReviews(otherUserId: string) {
+        const reviews = await this.feedbackModel.aggregate([
+            {
+                $match: { otherUserId: new Types.ObjectId(otherUserId) }
+            },
+
+            {
+                $lookup: {
+                    from: 'users', 
+                    localField: 'currentUserId',
+                    foreignField: '_id',
+                    as: 'currentUserInfo',
+                },
+            },
+
+            { $unwind: '$currentUserInfo' },
+
+            {
+                $project: {
+                    _id: 1,
+                    roomId: 1,
+                    rating: 1,
+                    category: 1,
+                    message: 1,
+                    timestamp: 1,
+                    currentUser: {
+                        _id: '$currentUserInfo._id',
+                        name: '$currentUserInfo.name',
+                        imageUrl: '$currentUserInfo.imageUrl',
+                    },
+                },
+            },
+
+            { $sort: { timestamp: -1 } },
+        ]);
+
+        return reviews;
+    } catch(error) {
+        throw new Error('Failed to fetch reviews', error);
+    }
+
 
 }
 

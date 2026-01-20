@@ -29,15 +29,13 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
 
   const [isConnected, setIsConnected] = useState(false);
-  const [userA, userB] = ROOM_ID.split('-');
 
   const [showFeedback, setShowFeedback] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
+  const [userA, userB, postId] = ROOM_ID.split('-');
   const CURRENT_USER_ID = userA;
-
-  const speaker =
-    CURRENT_USER_ID === userA ? userA : userB;
+  const speaker = CURRENT_USER_ID === userA ? userB : userA;
 
 
   useEffect(() => {
@@ -279,58 +277,58 @@ const LeftVideoBody = ({ ROOM_ID }: { ROOM_ID: string }) => {
 
   const isFinalChunkRef = useRef(false);
 
- const endMeetingCleanup = async () => {
-  isFinalChunkRef.current = true;
+  const endMeetingCleanup = async () => {
+    isFinalChunkRef.current = true;
 
-  if (mediaRecorderRef.current?.state !== 'inactive') {
-    mediaRecorderRef.current?.stop();
-  }
+    if (mediaRecorderRef.current?.state !== 'inactive') {
+      mediaRecorderRef.current?.stop();
+    }
 
-  await new Promise(res => setTimeout(res, 300));
+    await new Promise(res => setTimeout(res, 300));
 
-  peerRef.current?.close();
-  socketRef.current?.disconnect();
-  localStorage.removeItem("meet");
-  window.location.href = '/';
-};
+    peerRef.current?.close();
+    socketRef.current?.disconnect();
+    localStorage.removeItem("meet");
+    window.location.href = `${process.env.NEXT_PUBLIC_FRONTEND_URL}`;
+  };
 
-const sendMeetingStatus = async (payload: any) => {
-  try {
-    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/room/feedback`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...payload,
-        status: 'completed',
-      }),
-    });
-  } catch (error) {
-    console.error('Error sending meeting status:', error);
-  }
-};
+  const sendMeetingStatus = async (payload: any) => {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/room/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...payload,
+          status: 'completed',
+        }),
+      });
+    } catch (error) {
+      console.error('Error sending meeting status:', error);
+    }
+  };
 
-const handleFeedbackSubmit = async (feedbackData: any) => {
-  try {
-    await sendMeetingStatus({
-      ...feedbackData,
-      roomId:ROOM_ID,
-      feedbackProvided: true,
-    });
-  } finally {
-    await endMeetingCleanup();
-  }
-};
+  const handleFeedbackSubmit = async (feedbackData: any) => {
+    try {
+      await sendMeetingStatus({
+        ...feedbackData,
+        roomId: ROOM_ID,
+        feedbackProvided: true,
+      });
+    } finally {
+      await endMeetingCleanup();
+    }
+  };
 
-const handleSkipFeedback = async () => {
-  try {
-    await sendMeetingStatus({
-      roomId:ROOM_ID,
-      feedbackProvided: false,
-    });
-  } finally {
-    await endMeetingCleanup();
-  }
-};
+  const handleSkipFeedback = async () => {
+    try {
+      await sendMeetingStatus({
+        roomId: ROOM_ID,
+        feedbackProvided: false,
+      });
+    } finally {
+      await endMeetingCleanup();
+    }
+  };
 
   return (
     <div className="w-full h-[89vh] relative bg-black rounded-2xl overflow-hidden">

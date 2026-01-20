@@ -26,14 +26,11 @@ const ProfileAcceptSession = ({ status }: { status: SessionStatusType }) => {
 
     fetchSessions();
   }, [status]);
-
-  if (loading) {
+  
+   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="relative">
-          <div className="w-12 h-12 border-3 border-gray-200 rounded-full"></div>
-          <div className="w-12 h-12 border-3 border-gray-900 border-t-transparent rounded-full animate-spin absolute top-0"></div>
-        </div>
+        <div className="w-10 h-10 border-4 border-gray-900 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
