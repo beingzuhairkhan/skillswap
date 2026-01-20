@@ -16,6 +16,7 @@ const CompletedSessions = () => {
     const fetchCompletedSessions = async () => {
       try {
         const res = await SessionAPI.getAllCompleteSession();
+        console.log("data" , res.data)
         setSessions(res.data);
         if (res.data.length > 0) setSelectedSession(res.data[0]);
       } catch (error) {
@@ -27,14 +28,13 @@ const CompletedSessions = () => {
     fetchCompletedSessions();
   }, []);
 
-  if (loading) {
+if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-gray-900 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
-
   return (
     <div className="flex gap-6 bg-white">
       {/* Sidebar */}
@@ -54,10 +54,11 @@ const CompletedSessions = () => {
                   onClick={() => setSelectedSession(session)}
                   className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition ${
                     selectedSession?._id === session._id
-                      ? "bg-green-100"
-                      : "hover:bg-green-50"
+                       ? "bg-gray-200"
+                    : "hover:bg-gray-100"
                   }`}
                 >
+                  <div className="relative">
                   <Image
                     src={session.requesterId?.imageUrl || sessionImage}
                     alt={session.requesterId?.name || "User"}
@@ -65,7 +66,8 @@ const CompletedSessions = () => {
                     height={40}
                     className="rounded-full"
                   />
-
+                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border border-white"></span>
+                  </div>
                   <div>
                     <p className="font-medium">
                       {session.requesterId?.name || "Unknown"}
@@ -85,7 +87,7 @@ const CompletedSessions = () => {
       <div className="flex-1">
         {selectedSession ? (
           <div className="border rounded-lg shadow-sm p-6 bg-white">
-            <h2 className="text-xl font-semibold text-green-600 mb-4">
+            <h2 className="text-xl font-semibold text-black flex items-center gap-2 mb-4">
               Session Completed Successfully
             </h2>
 
@@ -123,13 +125,14 @@ const CompletedSessions = () => {
             </div>
 
             <div className="flex justify-center gap-4">
-              <Link href="/messaging">
-                <button className="px-4 py-2 bg-green-600 text-white rounded-md">
-                  Chat with Student
+               <Link
+                  href={`/messaging/${selectedSession.requesterId._id}`}
+                >
+                  <button className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800">  Chat with Student
                 </button>
               </Link>
 
-              <Link href="/session">
+              <Link href="/">
                 <button className="px-4 py-2 bg-gray-100 rounded-md">
                   View Other Sessions
                 </button>

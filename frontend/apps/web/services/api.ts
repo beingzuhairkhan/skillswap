@@ -108,7 +108,6 @@ export const SessionAPI = {
   },
 
   getMyPendingSessions: async (params: { status: SessionStatusType }) => {
-    console.log("P" , params)
     return authAPI.get("/session/my-request-session", {
       params,
     });
@@ -138,6 +137,10 @@ export const RoomAPI = {
   getDecodeRoomId: (meetLink: string) => {
     return authAPI.post('/room/decode', { meetLink });
   },
+    getAllReviews:async() =>{
+    return authAPI.get('/room/myReview')
+  }
+
 };
 
 export const notificationAPI = {

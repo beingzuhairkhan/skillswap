@@ -4,10 +4,9 @@ import { Button } from '../../../../packages/ui/src/button';
 import UpComingSessions from "../../components/sessionDatas/upComingSessions";
 import AcceptSessions from "../../components/sessionDatas/acceptSessions";
 import RejectSessions from "../../components/sessionDatas/rejectSessions";
-import CompletedSessions from "@/components/sessionDatas/CompletedSessions";
+import CompletedSessions from "../../components/sessionDatas/CompletedSessions";
 
 const Sessions = () => {
-  // ✅ Set default selected tab to "request"
   const [selected, setSelected] = useState("request");
   const options = ["request", "accepted", "rejected", "completed"];
 
@@ -18,7 +17,7 @@ const Sessions = () => {
         {selected === "request" && <UpComingSessions />}
         {selected === "accepted" && <AcceptSessions />}
         {selected === "rejected" && <RejectSessions />}
-         {selected === "completed" && <CompletedSessions />}
+        {selected === "completed" && <CompletedSessions />}
       </div>
 
       {/* Right Vertical Buttons */}
