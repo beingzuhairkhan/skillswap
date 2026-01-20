@@ -118,11 +118,11 @@ export class UserController {
     }
   }
 
-    @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('myPosts')
-  async myPosts(@Req() req:any){
-     const currentUserId = req.user.userId;
-     return this.userService.myPostsData(currentUserId)
+  async myPosts(@Req() req: any) {
+    const currentUserId = req.user.userId;
+    return this.userService.myPostsData(currentUserId)
   }
 
 
@@ -180,7 +180,15 @@ export class UserController {
     return this.userService.followUser(currentUserId, followId);
   }
 
- 
+  @UseGuards(JwtAuthGuard)
+  @Get('allTrendingSkill')
+  async getTrendingSkills() {
+    return await this.userService.getTrendingSkills()
+  }
+
+
+
+
 
 
 

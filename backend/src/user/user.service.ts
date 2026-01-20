@@ -9,12 +9,14 @@ import { UploadService } from 'src/upload/upload.service';
 import { CodingProfileDto } from './dto/create-codingProfile.dto';
 import axios from 'axios';
 import { Feedback, FeedbackDocument } from 'src/schemas/feedback.schema';
+import { TrendingSkills, TrendingSkillsDocument } from 'src/schemas/trending-skills.schema';
 
 @Injectable()
 export class UserService {
     constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>,
         @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
         @InjectModel(Feedback.name) private readonly feedbackModel: Model<FeedbackDocument>,
+        @InjectModel(TrendingSkills.name) private readonly trendingSkillsModel: Model<TrendingSkillsDocument>,
         private readonly cloudinary: UploadService
     ) { }
 
@@ -180,7 +182,8 @@ export class UserService {
         }
     }
 
-    async getAllPosts(): Promise<Post[]> {
+    async getAllPosts(): Promise<{ posts: any[]; skills: any[] }> {
+        const trendingSkills = await this.getTrendingSkills(5)
         const posts = await this.postModel.aggregate([
 
             {
@@ -223,7 +226,10 @@ export class UserService {
             },
             { $sort: { createdAt: -1 } }
         ]);
-        return posts;
+        return {
+            posts,
+            skills: trendingSkills
+        }
     }
 
     async createPost(userId: string, createPostDto: CreatePostDto, imageBuffer?: Buffer, filename?: string): Promise<any> {
@@ -258,13 +264,17 @@ export class UserService {
                 postImagePublicId: publicId
             })
 
-            await newPost.save();
-
             const savedPost = await newPost.save();
 
             if (!savedPost) {
                 throw new InternalServerErrorException('Failed to create post');
             }
+
+            await this.updateTrendingSkills([
+                createPostDto.wantToLearn,
+                createPostDto.wantToTeach
+            ]);
+
 
             return savedPost;
 
@@ -426,8 +436,8 @@ export class UserService {
 
             const userProfileData = await this.userModel.findById(profileId).select('-password');
 
-             const ratingAggregation = await this.feedbackModel.aggregate([
-                { $match: { otherUserId: new Types.ObjectId(profileId) } }, 
+            const ratingAggregation = await this.feedbackModel.aggregate([
+                { $match: { otherUserId: new Types.ObjectId(profileId) } },
                 {
                     $group: {
                         _id: '$otherUserId',
@@ -542,6 +552,59 @@ export class UserService {
 
         } catch (error) {
             console.error("Error fetching suggested users:", error);
+            return [];
+        }
+    }
+
+    private normalizeSkill(skill: string): string {
+        return skill
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, ' ');
+    }
+
+    async updateTrendingSkills(skills: string[]) {
+        const normalizedSkills = [...new Set(
+            skills
+                .filter(Boolean)
+                .map(skill => this.normalizeSkill(skill))
+        )];
+
+        for (const skill of normalizedSkills) {
+            const regex = new RegExp(`^${skill}$`, 'i');
+
+            const updateResult = await this.trendingSkillsModel.updateOne(
+                { "skills.skill": { $regex: regex } },
+                { $inc: { "skills.$.count": 1 } }
+            );
+
+            if (updateResult.matchedCount === 0) {
+                await this.trendingSkillsModel.updateOne(
+                    {},
+                    {
+                        $push: {
+                            skills: { skill, count: 1 }
+                        }
+                    },
+                    { upsert: true }
+                );
+            }
+        }
+    }
+
+    async getTrendingSkills(limit?: number) {
+        try {
+            const doc = await this.trendingSkillsModel.findOne();
+
+            if (!doc || !doc.skills?.length) {
+                return [];
+            }
+
+            const sortedSkills = doc.skills.sort((a, b) => b.count - a.count);
+
+            return limit ? sortedSkills.slice(0, limit) : sortedSkills;
+        } catch (error) {
+            console.error('Error fetching trending skills:', error);
             return [];
         }
     }

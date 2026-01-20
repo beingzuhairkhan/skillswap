@@ -1,6 +1,6 @@
 'use client'
 import React from "react";
-import { MdGroups, MdEventAvailable, MdOutlineNewspaper, MdSaveAlt, MdTrendingUp } from "react-icons/md";
+import { MdGroups, MdEventAvailable, MdOutlineNewspaper, MdSaveAlt, MdTrendingUp, MdMessage, MdAddCircleOutline } from "react-icons/md";
 import { useAuth } from "../../contexts/AuthContext";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,17 +9,13 @@ const LeftBody = () => {
   const { user } = useAuth()
 
   return (
-    <div className="mt-20 hidden sm:block w-[260px] space-y-3">
+    <div className="mt-20 hidden sm:block w-[260px] space-y-4">
       {/* Profile Card */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
-        {/* Banner with gradient */}
         <div className="h-20 bg-gradient-to-r from-gray-100 via-slate-100 to-gray-100 relative">
           <div className="absolute inset-0 bg-black/5"></div>
         </div>
 
-
-
-        {/* Avatar & Info */}
         <div className="flex flex-col items-center -mt-12 px-5 pb-5">
           <div className="relative group">
             <Link href={`/profile/${user?._id}`} className="block">
@@ -40,8 +36,6 @@ const LeftBody = () => {
                       </span>
                     </div>
                   )}
-
-                  {/* Subtle Hover Overlay */}
                   <div className="absolute inset-0 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                     <span className="text-gray-700 text-xs font-medium">
                       View Profile
@@ -55,60 +49,58 @@ const LeftBody = () => {
           <h2 className="mt-4 font-bold text-base text-gray-900">{user?.name}</h2>
           <p className="text-sm text-gray-600 mt-1 text-center">{user?.collegeName}</p>
           <p className="text-xs text-gray-400 mt-0.5">@{user?.domain}</p>
-
         </div>
       </div>
 
-      {/* Stats Card */}
+      {/* Skill/Session Stats */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 hover:shadow-lg transition-shadow duration-300">
         <div className="flex items-center gap-2 mb-3">
           <MdTrendingUp className="text-blue-500" size={20} />
-          <h3 className="text-sm font-semibold text-gray-900">Your Stats</h3>
+          <h3 className="text-sm font-semibold text-gray-900">Your Skill Stats</h3>
         </div>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600">Profile views</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-gray-900">247</span>
-              <span className="text-xs text-green-500 font-medium">+12%</span>
-            </div>
+            <span className="text-xs text-gray-600">Skills to Teach</span>
+            <span className="text-sm font-bold text-gray-900">{user?.skillsToTeach?.length || 0}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600">Post impressions</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-gray-900">1.2K</span>
-              <span className="text-xs text-green-500 font-medium">+8%</span>
-            </div>
+            <span className="text-xs text-gray-600">Skills to Learn</span>
+            <span className="text-sm font-bold text-gray-900">{user?.skillsToLearn?.length || 0}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600">Connections</span>
-            <span className="text-sm font-bold text-gray-900">156</span>
+            <span className="text-xs text-gray-600">Sessions Completed</span>
+            <span className="text-sm font-bold text-gray-900">{user?.sessionsCompleted || 0}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-600">Rating</span>
+            <span className="text-sm font-bold text-gray-900">{user?.ratings || 0} ⭐</span>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-3 hover:shadow-lg transition-shadow duration-300">
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { icon: <MdSaveAlt size={20} />, text: "Saved", color: "blue" },
-            { icon: <MdGroups size={20} />, text: "Groups", color: "purple" },
-            { icon: <MdOutlineNewspaper size={20} />, text: "News", color: "pink" },
-            { icon: <MdEventAvailable size={20} />, text: "Events", color: "indigo" },
-          ].map((item, idx) => (
-            <div
-              key={idx}
-              className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 group"
-            >
-              <div className={`text-${item.color}-500 group-hover:text-${item.color}-600 transition-colors`}>
-                {item.icon}
+      {/* AI LLM Features */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 hover:shadow-lg transition-shadow duration-300">
+    
+        {/* Minimal AI LLM Features */}
+        <div className="bg-white transition-shadow duration-300">
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { icon: <MdTrendingUp size={24} />, text: "Skill Gap Analysis" },
+             { icon: <MdSaveAlt size={20} />, text: "Saved", color: "blue" },
+            ].map((item, idx) => (
+              <div
+                key={idx}
+                className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95"
+              >
+                <div className="text-blue-500">{item.icon}</div>
+                <span className="text-xs font-medium text-gray-700">{item.text}</span>
               </div>
-              <span className="text-xs font-medium text-gray-700 group-hover:text-gray-900">{item.text}</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
 
+      </div>
     </div>
   );
 };
