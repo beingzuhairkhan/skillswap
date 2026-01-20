@@ -13,17 +13,16 @@ interface ISuggestedUser {
   firstSkillToLearn?: string;
 }
 
-interface ITrendingSkill {
-  skill: string;
-  count: number;
-}
+
 
 const RightBody = () => {
   const [suggestedUsers, setSuggestedUsers] = useState<ISuggestedUser[]>([]);
-  const [trendingSkills, setTrendingSkills] = useState<ITrendingSkill[]>([]);
+  const [trendingSkills, setTrendingSkills] = useState<[]>([]);
   const [followingStates, setFollowingStates] = useState<{ [key: string]: boolean }>({});
-  const [loading, setLoading] = useState<boolean>(true);
-
+  const [loadingUsers, setLoadingUsers] = useState<boolean>(true);
+  const [loadingSkills, setLoadingSkills] = useState<boolean>(true);
+  const [usersError, setUsersError] = useState<string | null>(null);
+  const [skillsError, setSkillsError] = useState<string | null>(null);
 
   const handleFollow = (userId: string) => {
     setFollowingStates(prev => ({
@@ -33,39 +32,59 @@ const RightBody = () => {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    // Fetch suggested users
+    const fetchSuggestedUsers = async () => {
       try {
-        setLoading(true);
-        const [usersResponse, skillsResponse] = await Promise.all([
-          userDataAPI.suggestedUser(),
-          userDataAPI.trendingSkills()
-        ]);
-
-        setSuggestedUsers(usersResponse.data);
-        setTrendingSkills(skillsResponse.data);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
+        setLoadingUsers(true);
+        const response = await userDataAPI.suggestedUser();
+        setSuggestedUsers(response.data);
+      } catch (error: any) {
+        console.error("Failed to fetch suggested users:", error);
+        setUsersError(error.message || "Failed to fetch suggested users");
       } finally {
-        setLoading(false);
+        setLoadingUsers(false);
       }
     };
 
-    fetchData();
+    // Fetch trending skills
+    const fetchTrendingSkills = async () => {
+      try {
+        setLoadingSkills(true);
+        const response = await userDataAPI.trendingSkills();
+        console.log("t" , response.data)
+        setTrendingSkills(response.data);
+      } catch (error: any) {
+        console.error("Failed to fetch trending skills:", error);
+        setSkillsError(error.message || "Failed to fetch trending skills");
+      } finally {
+        setLoadingSkills(false);
+      }
+    };
+
+    fetchSuggestedUsers();
+    fetchTrendingSkills();
   }, []);
 
   return (
     <div className="hidden sm:block text-black mt-20 w-72 space-y-5">
       {/* Trending Skills */}
-      <div className="bg-gray-100 rounded-2xl border border-gray-200 p-5 hover:shadow-md transition-shadow duration-300">
+      <div className=" rounded-2xl border border-gray-200 p-5 hover:shadow-md transition-shadow duration-300">
         <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 bg-gray-200 rounded-lg">
+          <div className="p-2 bg-gray-100 rounded-lg">
             <TrendingUp size={18} className="text-gray-700" />
           </div>
           <h2 className="font-bold text-lg">Trending Skills</h2>
         </div>
 
-        {loading ? (
-          <p className="text-gray-500 text-sm">Loading...</p>
+        {loadingSkills ? (
+          <div className="flex flex-wrap gap-2 max-h-[180px] overflow-y-auto hide-scrollbar animate-pulse">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-6 w-20 bg-gray-300 rounded-full"
+              ></div>
+            ))}
+          </div>
         ) : trendingSkills.length === 0 ? (
           <p className="text-gray-500 text-sm">No trending skills yet</p>
         ) : (
@@ -75,13 +94,13 @@ const RightBody = () => {
                 key={i}
                 className="flex items-center gap-1 px-3 py-2 bg-white rounded-full text-sm text-gray-700 cursor-pointer hover:bg-gray-200 hover:scale-105 transition-all duration-200 font-medium border border-gray-200"
               >
-                {skillObj.skill}
-                <span className="text-xs text-gray-500">({skillObj.count})</span>
+                {skillObj}
               </span>
             ))}
           </div>
         )}
       </div>
+
 
       {/* Suggested Users */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow duration-300">
@@ -92,7 +111,7 @@ const RightBody = () => {
           <h2 className="font-bold text-lg">Suggested Users</h2>
         </div>
         <div className="space-y-3 overflow-y-auto hide-scrollbar max-h-[250px]">
-          {loading ? (
+          {loadingUsers ? (
             <>
               <SuggestedUserSkeleton />
               <SuggestedUserSkeleton />

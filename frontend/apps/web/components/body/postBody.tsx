@@ -196,7 +196,7 @@ const PostBody = () => {
                   key={i}
                   className="bg-gray-100 text-blue-600 text-xs px-3 py-1 rounded-full cursor-pointer hover:bg-blue-100"
                 >
-                  {tag}
+                  #{tag}
                 </span>
               ))}
             </div>
