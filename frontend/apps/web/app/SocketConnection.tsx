@@ -13,8 +13,7 @@ export const useSocket = () => {
     if (!user?._id) return;
 
     socket = io(process.env.NEXT_PUBLIC_BACKEND_URL as string, {
-      query: { userId: user._id },
-      transports: ["websocket"],
+      query: { userId: user._id }
     });
 
     socket.on("update-user-status", ({ userId, isOnline }) => {
