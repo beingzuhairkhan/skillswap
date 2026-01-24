@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { FaStar } from 'react-icons/fa';
-import { RoomAPI } from '@/services/api';
+import { RoomAPI } from '../../services/api'
 
 interface Review {
     _id: string;
