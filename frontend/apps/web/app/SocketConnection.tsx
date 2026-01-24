@@ -12,7 +12,7 @@ export const useSocket = () => {
   useEffect(() => {
     if (!user?._id) return;
 
-    socket = io(process.env.NEXT_PUBLIC_BACKEND_URL as string, {
+    socket = io(process.env.NEXT_PUBLIC_SOCKET_URL as string, {
       query: { userId: user._id }
     });
 
