@@ -15,7 +15,7 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 @WebSocketGateway({
   cors: {
-    origin: ['https://skillswap-gilt.vercel.app', 'https://skillswap-upmw.vercel.app', 'http://localhost:3000', 'http://localhost:3001'],
+    origin: ['https://skillswap-iota-three.vercel.app', 'https://skillswap-upmw.vercel.app', 'http://localhost:3000', 'http://localhost:3001'],
   },
 })
 
