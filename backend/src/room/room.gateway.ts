@@ -10,6 +10,9 @@ import { Server, Socket } from 'socket.io';
 import Groq from "groq-sdk";
 import { ConfigService } from '@nestjs/config';
 import fs from 'fs'
+import { User, UserDocument } from 'src/schemas/user.schema';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
 @WebSocketGateway({
   cors: {
     origin: ['https://skillswap-gilt.vercel.app', 'https://skillswap-upmw.vercel.app', 'http://localhost:3000', 'http://localhost:3001'],
@@ -21,7 +24,9 @@ export class RoomGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(private readonly configService: ConfigService,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+  ) {
     this.groq = new Groq({
       apiKey: this.configService.get<string>('GROQ_API_KEY'),
     });
@@ -34,7 +39,11 @@ export class RoomGateway implements OnModuleInit {
   }
 
   handleConnection(client: Socket) {
-    console.log('Client connected:', client.id);
+    const userId = client.handshake.query.userId as string;
+    if (userId) {
+      this.userModel.findByIdAndUpdate(userId, { isOnline: true }).exec();
+      this.server.emit("update-user-status", { userId, isOnline: true });
+    }
   }
 
   @SubscribeMessage('join-room')
@@ -119,6 +128,11 @@ export class RoomGateway implements OnModuleInit {
 
   handleDisconnect(client: Socket) {
     const roomId = this.clientRooms.get(client.id);
+    const userId = client.handshake.query.userId as string;
+    if (userId) {
+      this.userModel.findByIdAndUpdate(userId, { isOnline: false }).exec();
+      this.server.emit("update-user-status", { userId, isOnline: false });
+    }
 
     if (roomId) {
       client.leave(roomId);
@@ -294,7 +308,8 @@ export class RoomGateway implements OnModuleInit {
            2. Convert all speech into English, preserving the meaning (not word-for-word translation).
            3. Summarize the discussion per speaker.
            4. Include only the important points discussed by each participant.
-           Output format example:
+           Output format examplimport { InjectModel } from '@nestjs/mongoose';
+e:
 
            Speaker 1:
            - Key point 1

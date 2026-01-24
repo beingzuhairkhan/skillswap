@@ -11,11 +11,14 @@ interface ISuggestedUser {
   imageUrl?: string;
   followerCount: number;
   firstSkillToLearn?: string;
+  isOnline?:boolean
 }
 
+interface RightBodyProps {
+  onSkillClick: (skill: string) => void;
+}
 
-
-const RightBody = () => {
+const RightBody: React.FC<RightBodyProps> = ({ onSkillClick }) => {
   const [suggestedUsers, setSuggestedUsers] = useState<ISuggestedUser[]>([]);
   const [trendingSkills, setTrendingSkills] = useState<[]>([]);
   const [followingStates, setFollowingStates] = useState<{ [key: string]: boolean }>({});
@@ -51,7 +54,6 @@ const RightBody = () => {
       try {
         setLoadingSkills(true);
         const response = await userDataAPI.trendingSkills();
-        console.log("t" , response.data)
         setTrendingSkills(response.data);
       } catch (error: any) {
         console.error("Failed to fetch trending skills:", error);
@@ -89,13 +91,14 @@ const RightBody = () => {
           <p className="text-gray-500 text-sm">No trending skills yet</p>
         ) : (
           <div className="flex flex-wrap gap-2 max-h-[180px] overflow-y-auto hide-scrollbar">
-            {trendingSkills.map((skillObj, i) => (
-              <span
+            {trendingSkills.map((skill, i) => (
+              <button
                 key={i}
+                onClick={() => onSkillClick(skill)}
                 className="flex items-center gap-1 px-3 py-2 bg-white rounded-full text-sm text-gray-700 cursor-pointer hover:bg-gray-200 hover:scale-105 transition-all duration-200 font-medium border border-gray-200"
               >
-                {skillObj}
-              </span>
+                {skill}
+              </button>
             ))}
           </div>
         )}
@@ -141,7 +144,10 @@ const RightBody = () => {
                     )}
                   </div>
                   <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center">
-                    <div className="w-2.5 h-2.5 bg-gray-400 rounded-full"></div>
+                    <div
+                      className={`w-2.5 h-2.5 rounded-full ${user?.isOnline ? "bg-green-500" : "bg-gray-400"
+                        }`}
+                    ></div>
                   </div>
                 </div>
 

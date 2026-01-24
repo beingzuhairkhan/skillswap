@@ -3,19 +3,23 @@
 import React, { useEffect, useState } from "react";
 import { ThumbsUp, MessageSquare, Share2, Send, Bookmark } from "lucide-react";
 import Image from "next/image";
-import { Button } from '../../../../packages/ui/src/button'
+import { Button } from "../../../../packages/ui/src/button";
 import Link from "next/link";
-import { authAPI, userDataAPI } from "../../services/api";
+import { userDataAPI } from "../../services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../contexts/AuthContext";
 import PostLoader from "../Loading/Loader";
 
-const PostBody = () => {
+interface PostBodyProps {
+  selectedSkill: string | null;
+}
+
+const PostBody: React.FC<PostBodyProps> = ({ selectedSkill }) => {
   const { user } = useAuth();
   const [postsData, setPostsData] = useState<any[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Fetch all posts once
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -28,12 +32,13 @@ const PostBody = () => {
         setLoading(false);
       }
     };
+
     fetchPosts();
   }, []);
 
+  // Share post
   const handleShare = async (postId: string) => {
     const shareUrl = `${window.location.origin}/post/${postId}`;
-
     if (navigator.share) {
       await navigator.share({
         title: "Check out this post",
@@ -45,18 +50,32 @@ const PostBody = () => {
     }
   };
 
-
+  // Follow user (optional, unused currently)
   const followUser = async (id: string) => {
     try {
       const res = await userDataAPI.userFollow(id);
       console.log("Follow response:", res.data);
-      // setIsConnected(true);
       toast.success("User followed successfully!");
     } catch (err) {
       console.error("Follow error:", err);
       toast.error("Failed to follow user");
     }
   };
+
+  // Filter posts based on selectedSkill
+  const filteredPosts = selectedSkill
+    ? postsData.filter((post) => {
+      const teach = post.wantToTeach;
+      const learn = post.wantToLearn;
+      const trending = post.trendingSkills;
+
+      return (
+        teach === selectedSkill ||
+        learn === selectedSkill ||
+        (Array.isArray(trending) && trending.includes(selectedSkill))
+      );
+    })
+    : postsData;
 
   return (
     <div className="text-black mt-20 w-[600px] h-[89vh] overflow-y-scroll space-y-6 px-3 hide-scrollbar">
@@ -88,11 +107,17 @@ const PostBody = () => {
 
       {/* Feed Posts */}
       {loading ? (
-         <div className="max-w-[560px] mx-auto">
+        <div className="max-w-[560px] mx-auto">
           <PostLoader />
         </div>
-      ) :
-        postsData?.map((post) => (
+      ) : filteredPosts.length === 0 ? (
+        <p className="flex flex-col items-center justify-center text-gray-400 mt-20 text-lg sm:text-xl font-medium">
+          <span className="text-gray-500 mb-2">No posts found for</span>
+          <span className="text-blue-600 font-bold text-2xl sm:text-3xl">#{selectedSkill}</span>
+        </p>
+
+      ) : (
+        filteredPosts.map((post) => (
           <div
             key={post._id}
             className="bg-white rounded-2xl shadow-md border p-4 space-y-4 hover:shadow-lg transition"
@@ -121,26 +146,17 @@ const PostBody = () => {
                     <p className="text-xs text-gray-500">
                       {post?.userPostDetails?.collegeName || "User"}
                     </p>
-                    <div className="flex gap-2" >
+                    <div className="flex gap-2">
                       <p className="text-xs text-gray-500 italic">
                         @{post?.userPostDetails?.domain || "@GenAI"}
                       </p>
-                      <span className="text-xs m text-gray-400">
+                      <span className="text-xs text-gray-400">
                         {new Date(post.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
-
-
                 </div>
               </Link>
-              {/* <button
-              className="font-semibold text-sm px-3 py-1 rounded"
-              onClick={() => followUser(post.user)}
-            > */}
-              {/* {isConnected ? "Connected" : "+ Connect"} */}
-              {/* + Connect */}
-              {/* </button> */}
             </div>
 
             {/* Teach & Learn Skills */}
@@ -159,38 +175,32 @@ const PostBody = () => {
               </div>
             </div>
 
-            {/* Specific Topic */}
+            {/* Specific Topic & URL */}
             <div className="flex flex-wrap gap-3 mt-2">
-              {/* Specific Topic */}
               {post?.specificTopic && (
                 <div className="flex-1 min-w-[120px] px-3 py-2 border-l-4 border-blue-400 bg-blue-50 text-sm text-gray-700 rounded">
                   <span className="font-semibold">Topic:</span> {post.specificTopic}
                 </div>
               )}
-
-              {/* Post URL */}
               {post?.postUrl && (
                 <div className="flex-1 min-w-[120px] px-3 py-2 border-l-4 border-blue-400 bg-blue-50 text-sm text-gray-700 rounded">
                   <Link
                     href={post.postUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 min-w-[140px] px-4 py-2  text-blue-700 text-sm font-semibold  text-center"
+                    className="flex-1 min-w-[140px] px-4 py-2 text-blue-700 text-sm font-semibold text-center"
                   >
                     View Resource / Link
                   </Link>
                 </div>
               )}
-
-
             </div>
-
 
             {/* Trending Skills */}
             <div className="flex flex-wrap gap-2">
               {(post?.trendingSkills && post.trendingSkills.length > 0
                 ? post.trendingSkills
-                : ['React', 'Node.js', 'MongoDB', 'TypeScript', 'GraphQL']
+                : ["React", "Node.js", "MongoDB", "TypeScript", "GraphQL"]
               ).map((tag: string, i: number) => (
                 <span
                   key={i}
@@ -200,7 +210,6 @@ const PostBody = () => {
                 </span>
               ))}
             </div>
-
 
             {/* Post Image */}
             {post?.postImageUrl && (
@@ -215,25 +224,14 @@ const PostBody = () => {
 
             {/* Actions */}
             <div className="flex justify-around text-gray-600 text-sm pt-2 border-t border-gray-200">
-              {/* Like */}
-              <Button
-                variant="ghost"
-                className="flex items-center gap-1 hover:text-blue-600"
-              >
+              <Button variant="ghost" className="flex items-center gap-1 hover:text-blue-600">
                 <ThumbsUp size={16} />
                 <span>Like</span>
               </Button>
-
-              {/* Save */}
-              <Button
-                variant="ghost"
-                className="flex items-center gap-1 hover:text-blue-600"
-              >
+              <Button variant="ghost" className="flex items-center gap-1 hover:text-blue-600">
                 <Bookmark size={16} />
                 <span>Save</span>
               </Button>
-
-              {/* Share */}
               <Button
                 variant="ghost"
                 onClick={() => handleShare(post._id)}
@@ -242,20 +240,16 @@ const PostBody = () => {
                 <Share2 size={16} />
                 <span>Share</span>
               </Button>
-
-              {/* Book Session */}
               <Link href={`/book-session/${post._id}`}>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-1 hover:text-blue-600"
-                >
+                <Button variant="ghost" className="flex items-center gap-1 hover:text-blue-600">
                   <Send size={16} />
                   <span>Book Session</span>
                 </Button>
               </Link>
             </div>
           </div>
-        ))}
+        ))
+      )}
     </div>
   );
 };

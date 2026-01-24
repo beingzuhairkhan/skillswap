@@ -120,6 +120,13 @@ const UserProfile = () => {
             <span className="font-medium text-gray-800">Connect</span>
           </div>
         )}
+         {/* <button
+              className="font-semibold text-sm px-3 py-1 rounded"
+              onClick={() => followUser(post.user)}
+            > */}
+              {/* {isConnected ? "Connected" : "+ Connect"} */}
+              {/* + Connect */}
+              {/* </button> */}
       </div>
 
       {/* Skills Section */}
