@@ -60,7 +60,7 @@ const Navigation = () => {
         setUserFetchData(userData);
 
         // Connect to socket.io
-        socketRef.current = io("http://localhost:4000", {
+        socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
           query: { userId: userData._id },
           transports: ["websocket"],
         });
