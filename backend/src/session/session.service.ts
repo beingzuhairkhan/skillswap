@@ -168,7 +168,7 @@ export class SessionService {
         })
         .populate({
           path: 'requesterId',
-          select: '_id name imageUrl collegeName domain -password',
+          select: '_id name imageUrl collegeName domain -password isOnline',
         })
         .populate({
           path: 'postId',
@@ -197,7 +197,7 @@ export class SessionService {
         })
         .populate({
           path: 'requesterId',
-          select: '_id name imageUrl collegeName domain -password',
+          select: '_id name imageUrl collegeName domain -password isOnline',
         })
         .populate({
           path: 'postId',

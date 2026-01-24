@@ -529,6 +529,7 @@ export class UserService {
                 imageUrl: u.imageUrl || null,
                 followerCount: u.follower.length,
                 firstSkillToLearn: u.skillsToLearn[0] || null,
+                isOnline:u.isOnline
             }));
 
             return formatted.slice(0, 5);

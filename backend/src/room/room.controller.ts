@@ -5,9 +5,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('room')
 export class RoomController {
-    constructor(private readonly roomService: RoomService) { }
+  constructor(private readonly roomService: RoomService) { }
 
-       @Post('audioSummary')
+  @Post('audioSummary')
   @UseInterceptors(FileInterceptor('file'))
   async speechToText(
     @UploadedFile() file: Express.Multer.File,
@@ -23,10 +23,10 @@ export class RoomController {
     //   throw new NotFoundException('Missing required metadata');
     // }
 
-    console.log("data from frontend" , file , roomId , speakerId , speakerRole)
+    console.log("data from frontend", file, roomId, speakerId, speakerRole)
 
     try {
-      const transcription = await this.roomService.convertAudioToText(file , roomId , speakerId , speakerRole);
+      const transcription = await this.roomService.convertAudioToText(file, roomId, speakerId, speakerRole);
       return {
         text: transcription,
         roomId,
@@ -40,29 +40,29 @@ export class RoomController {
     }
   }
 
-    @UseGuards(JwtAuthGuard)
-    @Post('decode')
-    async decodeMeetLink(@Body('meetLink') meetLink: string, @Req() req) {
-        const userId = req.user.userId;
-        return this.roomService.decodeMeetLink(meetLink, userId);
-    }
+  @UseGuards(JwtAuthGuard)
+  @Post('decode')
+  async decodeMeetLink(@Body('meetLink') meetLink: string, @Req() req) {
+    const userId = req.user.userId;
+    return this.roomService.decodeMeetLink(meetLink, userId);
+  }
 
-    @Post('decodeRoom')
-    async decodeMeetLinkFromRoom(@Body('meetLink') meetLink: string) {
-        return this.roomService.decodeMeetLinkFromRoom(meetLink);
-    }
+  @Post('decodeRoom')
+  async decodeMeetLinkFromRoom(@Body('meetLink') meetLink: string) {
+    return this.roomService.decodeMeetLinkFromRoom(meetLink);
+  }
 
-    @Post('feedback')
-    async createFeedback(@Body() body: any) {
-      return this.roomService.saveFeedback(body)
-    }
+  @Post('feedback')
+  async createFeedback(@Body() body: any) {
+    return this.roomService.saveFeedback(body)
+  }
 
-    @UseGuards(JwtAuthGuard)
-    @Get('myReview')
-    async getAllMyReviews(@Req() req){
-      const userId = req.user.userId;
-      return this.roomService.getUserReviews(userId)
+  @UseGuards(JwtAuthGuard)
+  @Get('myReview')
+  async getAllMyReviews(@Req() req) {
+    const userId = req.user.userId;
+    return this.roomService.getUserReviews(userId)
 
-    }
- 
+  }
+
 }
