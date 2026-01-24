@@ -65,7 +65,7 @@ export class RoomService {
                 throw new NotFoundException('User(s) or post not found');
             }
 
-            const roomId = `${receiverId}-${requesterId}-${postId}`;
+            const roomId = `${receiverId}-${requesterId}-${postId._id}`;
 
             return {
                 status: true,
