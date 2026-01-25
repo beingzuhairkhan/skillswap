@@ -16,7 +16,7 @@ const CompletedSessions = () => {
     const fetchCompletedSessions = async () => {
       try {
         const res = await SessionAPI.getAllCompleteSession();
-        console.log("data" , res.data)
+        console.log("data", res.data)
         setSessions(res.data);
         if (res.data.length > 0) setSelectedSession(res.data[0]);
       } catch (error) {
@@ -28,7 +28,7 @@ const CompletedSessions = () => {
     fetchCompletedSessions();
   }, []);
 
-if (loading) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="w-10 h-10 border-4 border-gray-900 border-t-transparent rounded-full animate-spin" />
@@ -52,21 +52,25 @@ if (loading) {
                 <div
                   key={session._id}
                   onClick={() => setSelectedSession(session)}
-                  className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition ${
-                    selectedSession?._id === session._id
-                       ? "bg-gray-200"
-                    : "hover:bg-gray-100"
-                  }`}
+                  className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition ${selectedSession?._id === session._id
+                      ? "bg-gray-200"
+                      : "hover:bg-gray-100"
+                    }`}
                 >
                   <div className="relative">
-                  <Image
-                    src={session.requesterId?.imageUrl || sessionImage}
-                    alt={session.requesterId?.name || "User"}
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border border-white"></span>
+                    <Image
+                      src={session.requesterId?.imageUrl || sessionImage}
+                      alt={session.requesterId?.name || "User"}
+                      width={40}
+                      height={40}
+                      className="rounded-full"
+                    />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center">
+                      <div
+                        className={`w-2.5 h-2.5 rounded-full ${session.requesterId?.isOnline ? "bg-green-500" : "bg-gray-400"
+                          }`}
+                      ></div>
+                    </div>
                   </div>
                   <div>
                     <p className="font-medium">
@@ -125,10 +129,10 @@ if (loading) {
             </div>
 
             <div className="flex justify-center gap-4">
-               <Link
-                  href={`/messaging/${selectedSession.requesterId._id}`}
-                >
-                  <button className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800">  Chat with Student
+              <Link
+                href={`/messaging/${selectedSession.requesterId._id}`}
+              >
+                <button className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800">  Chat with Student
                 </button>
               </Link>
 

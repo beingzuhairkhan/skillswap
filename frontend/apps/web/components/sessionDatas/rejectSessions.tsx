@@ -73,6 +73,12 @@ const RejectSessions = () => {
                       @{session.requesterId?.domain || "N/A"}
                     </p>
                   </div>
+                   <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center">
+                    <div
+                      className={`w-2.5 h-2.5 rounded-full ${session.requesterId?.isOnline ? "bg-green-500" : "bg-gray-400"
+                        }`}
+                    ></div>
+                  </div>
                 </div>
               ))
             )}

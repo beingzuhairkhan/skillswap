@@ -4,7 +4,7 @@ import { Document, Types } from 'mongoose';
 export type FeedbackDocument = Feedback & Document;
 
 export enum MeetingStatus {
-    COMPLETED = 'completed',
+    COMPLETE = 'complete',
     SKIPPED = 'skipped',
     PENDING = 'pending'
 }

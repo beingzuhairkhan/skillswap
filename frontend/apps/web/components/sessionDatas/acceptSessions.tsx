@@ -65,7 +65,12 @@ const AcceptSessions = () => {
                       height={40}
                       className="rounded-full"
                     />
-                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border border-white"></span>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center">
+                    <div
+                      className={`w-2.5 h-2.5 rounded-full ${session.requesterId?.isOnline ? "bg-green-500" : "bg-gray-400"
+                        }`}
+                    ></div>
+                  </div>
                   </div>
                   <div>
                     <p className="font-medium">{session.requesterId?.name || "N/A"}</p>
