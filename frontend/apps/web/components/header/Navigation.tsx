@@ -54,7 +54,7 @@ const Navigation = () => {
         const response = await userDataAPI.getProfile();
         const userData = {
           ...response.data,
-          imageUrl: user?.imageUrl ,
+          imageUrl: response.data.imageUrl ,
         };
         console.log("[Navigation] User data fetched:", userData);
         setUserFetchData(userData);
