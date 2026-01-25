@@ -11,7 +11,7 @@ interface User {
   topic: string;
   imageUrl: string;
   collegeName?: string;
-  online?: boolean;
+  isOnline?: boolean;
 }
 
 interface ChatMessage {
@@ -44,7 +44,7 @@ const Message = () => {
           topic: user.domain || "No domain",
           imageUrl: user.imageUrl ,
           collegeName: user.collegeName,
-          online: false, // backend doesn't send online status here
+           isOnline:chat.isOnline,
           lastMessage: chat.lastMessage, // optional
           lastMessageAt: chat.lastMessageAt, // optional
         };
@@ -138,9 +138,12 @@ const Message = () => {
                       height={50}
                       className="rounded-full object-cover border-2 border-gray-200"
                     />
-                    {user.online && (
-                      <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border border-white"></span>
-                    )}
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center">
+                    <div
+                      className={`w-2.5 h-2.5 rounded-full ${user?.isOnline ? "bg-green-500" : "bg-gray-400"
+                        }`}
+                    ></div>
+                  </div>
                   </div>
 
                   {/* User info */}

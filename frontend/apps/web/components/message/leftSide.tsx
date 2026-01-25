@@ -25,7 +25,7 @@ const LeftSideMessage = () => {
           {users.map((user) => (
             <Link
               key={user.id}
-              href={`/messaging/${user.id}`} // ✅ dynamic route
+              href={`/messaging/${user.id}`} 
               className="flex items-center gap-3 p-2 rounded-md cursor-pointer hover:bg-gray-100 transition"
             >
               <div className="relative">

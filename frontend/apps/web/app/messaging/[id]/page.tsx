@@ -3,7 +3,7 @@
 import LeftSideMessage from "../../../components/message/leftSide";
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { ChatAPI } from "../../../services/api"; // your API service
+import { ChatAPI } from "../../../services/api";
 import toast from "react-hot-toast";
 import Image from "next/image";
 
@@ -14,12 +14,13 @@ interface ChatMessage {
 }
 
 interface User {
-  id:string;
+  id: string;
   _id: string;
   name: string;
   imageUrl?: string;
   domain?: string;
-  createdAt?:any
+  createdAt?: any;
+  isOnline?: boolean
 }
 
 const UserMessagePage = () => {
@@ -52,6 +53,7 @@ const UserMessagePage = () => {
             collegeName: user.collegeName,
             lastMessage: chat.lastMessage,
             lastMessageAt: chat.lastMessageAt,
+            isOnline: chat.isOnline
           };
         });
 
@@ -132,24 +134,24 @@ const UserMessagePage = () => {
     }
   };
 
-    const handleSelectUser = async (user: User) => {
-      setSelectedUser(user);
-      try {
-        const res = await ChatAPI.getMessages(user.id); // GET /chat/messages/:userId
-        const chatMessages = res.data.messages || []; // backend returns { messages: [...], user: {...} }
-  
-        const formattedMessages: ChatMessage[] = chatMessages.map((msg: any) => ({
-          text: msg.message,
-          sender: msg.sender._id === user.id ? "other" : "me",
-          time: new Date(msg.sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        }));
-  
-        setMessages(formattedMessages);
-      } catch (err) {
-        console.error("Error fetching messages:", err);
-        setMessages([]);
-      }
-    };
+  const handleSelectUser = async (user: User) => {
+    setSelectedUser(user);
+    try {
+      const res = await ChatAPI.getMessages(user.id); // GET /chat/messages/:userId
+      const chatMessages = res.data.messages || []; // backend returns { messages: [...], user: {...} }
+
+      const formattedMessages: ChatMessage[] = chatMessages.map((msg: any) => ({
+        text: msg.message,
+        sender: msg.sender._id === user.id ? "other" : "me",
+        time: new Date(msg.sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      }));
+
+      setMessages(formattedMessages);
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+      setMessages([]);
+    }
+  };
 
   const handleGenerateSession = () => {
     if (!userId) return;
@@ -184,6 +186,12 @@ const UserMessagePage = () => {
                         className="rounded-full object-cover border-2 border-gray-200"
                       />
                     )}
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center">
+                      <div
+                        className={`w-2.5 h-2.5 rounded-full ${user?.isOnline ? "bg-green-500" : "bg-gray-400"
+                          }`}
+                      ></div>
+                    </div>
                   </div>
 
                   {/* User info */}

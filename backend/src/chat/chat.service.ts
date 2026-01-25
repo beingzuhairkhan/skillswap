@@ -25,8 +25,8 @@ export class ChatService {
             { user2: objectUserId },
           ],
         })
-        .populate('user1', 'name imageUrl collegeName domain -password')
-        .populate('user2', 'name imageUrl collegeName domain -password')
+        .populate('user1', 'name imageUrl collegeName domain -password isOnline')
+        .populate('user2', 'name imageUrl collegeName domain -password isOnline')
         .sort({ updatedAt: -1 });
 
       const formattedChats = chats.map(chat => {
