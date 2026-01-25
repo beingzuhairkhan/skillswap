@@ -16,6 +16,7 @@ const RejectSessions = () => {
     const fetchRejectSessions = async () => {
       try {
         const res = await SessionAPI.getAllCancelSession();
+        console.log("res"  ,res.data)
         setSessions(res.data);
         if (res.data.length > 0) setSelectedSession(res.data[0]);
       } catch (error) {
@@ -57,6 +58,7 @@ const RejectSessions = () => {
                     : "hover:bg-gray-100"
                     }`}
                 >
+                  <div className="relative">
                   <Image
                     src={session.requesterId?.imageUrl || sessionImage}
                     alt={session.requesterId?.name || "User"}
@@ -64,6 +66,13 @@ const RejectSessions = () => {
                     height={40}
                     className="rounded-full"
                   />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center">
+                    <div
+                      className={`w-2.5 h-2.5 rounded-full ${session.requesterId?.isOnline ? "bg-green-500" : "bg-gray-400"
+                        }`}
+                    ></div>
+                  </div>
+                  </div>
 
                   <div>
                     <p className="font-medium">
@@ -73,12 +82,7 @@ const RejectSessions = () => {
                       @{session.requesterId?.domain || "N/A"}
                     </p>
                   </div>
-                   <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center">
-                    <div
-                      className={`w-2.5 h-2.5 rounded-full ${session.requesterId?.isOnline ? "bg-green-500" : "bg-gray-400"
-                        }`}
-                    ></div>
-                  </div>
+
                 </div>
               ))
             )}
@@ -88,7 +92,7 @@ const RejectSessions = () => {
 
       {/* Details */}
       <div className="flex-1">
-        
+
         {selectedSession ? (
           <div className="border rounded-lg shadow-sm p-6 bg-white ">
             <h2 className="text-xl font-semibold text-red-600 mb-4">
