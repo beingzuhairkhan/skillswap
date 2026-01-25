@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors , Query} from '@nestjs/common';
 import { UserService } from './user.service';
 import { AddProfileDto } from './dto/add-profile.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-http.guard';
@@ -64,8 +64,10 @@ export class UserController {
 
 
   @Get('posts')
-  async getAllPost() {
-    return this.userService.getAllPosts();
+  async getAllPost(
+    @Query('search') search?: string,
+  ) {
+    return this.userService.getAllPosts(search);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -187,8 +189,6 @@ export class UserController {
     const currentUserId = req.user.userId;
     return this.userService.followUser(currentUserId, followId);
   }
-
-
 
 
 

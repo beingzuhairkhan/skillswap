@@ -182,8 +182,22 @@ export class UserService {
         }
     }
 
-    async getAllPosts(): Promise<any> {
-        const trendingSkills = await this.getTrendingSkills(5)
+    async getAllPosts(search?:string): Promise<any> {
+        const trendingSkills = await this.getTrendingSkills(5);
+          const matchStage: any = {};
+           if (search) {  
+        const regex = new RegExp(search, "i");
+
+        matchStage.$or = [
+            { "userPostDetails.name": regex },
+            { "userPostDetails.email": regex },
+            { "userPostDetails.domain": regex },
+            { wantToTeach: regex },
+            { wantToLearn: regex },
+            { specificTopic: regex },
+            { trendingSkills: regex }
+        ];
+    }
         const Allpost = await this.postModel.aggregate([
 
             {
@@ -201,6 +215,7 @@ export class UserService {
                 }
             },
             { $unwind: "$userPostDetails" },
+            ...(search ? [{ $match: matchStage }] : []),
             {
                 $project: {
                     _id: 1,
