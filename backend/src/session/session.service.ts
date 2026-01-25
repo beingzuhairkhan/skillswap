@@ -100,7 +100,7 @@ export class SessionService {
         })
         .populate({
           path: 'requesterId', // get info about who requested
-          select: '_id name imageUrl collegeName bio domain', // exclude sensitive info
+          select: '_id name imageUrl collegeName bio domain isOnline', // exclude sensitive info
         })
         .populate({
           path: 'postId', // get info about the post
@@ -363,7 +363,7 @@ export class SessionService {
         })
         .populate({
           path: 'requesterId',
-          select: '_id name imageUrl collegeName domain -password',
+          select: '_id name imageUrl collegeName domain -password isOnline',
         })
         .populate({
           path: 'postId',

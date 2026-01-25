@@ -117,13 +117,13 @@ export class RoomService {
                 rating: data.rating,
                 category: data.category,
                 message: data.message || '',
-                status: data.status || MeetingStatus.COMPLETED,
+                status: data.status || MeetingStatus.COMPLETE,
                 timestamp: new Date(),
             });
             const sessionComplete = await this.sessionModel.findOneAndUpdate(
                 { _id: new Types.ObjectId(postId) },
                 {
-                    status: MeetingStatus.COMPLETED,
+                    status: MeetingStatus.COMPLETE,
                     isCompleted: true,
                 },
                 { new: true }
