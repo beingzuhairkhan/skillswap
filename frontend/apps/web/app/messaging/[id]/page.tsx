@@ -51,7 +51,7 @@ const UserMessagePage = () => {
             domain: user.domain || "No domain",
             imageUrl: user.imageUrl,
             collegeName: user.collegeName,
-            lastMessage: chat.lastMessage,
+            lastMessage: user.lastMessage,
             lastMessageAt: chat.lastMessageAt,
             isOnline: chat.isOnline
           };

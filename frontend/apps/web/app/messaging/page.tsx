@@ -28,25 +28,23 @@ const Message = () => {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // 1️⃣ Fetch all chats (sidebar)
   useEffect(() => {
   const fetchChats = async () => {
     try {
-      const res = await ChatAPI.getAllChats(); // GET /chat
+      const res = await ChatAPI.getAllChats(); 
       const chats = res.data;
 
-      // Map chats to users
       const usersList: User[] = chats.map((chat: any) => {
-        const user = chat.user; // your backend already gives the other user
+        const user = chat.user; 
         return {
           id: user._id,
           name: user.name,
           topic: user.domain || "No domain",
           imageUrl: user.imageUrl ,
           collegeName: user.collegeName,
-           isOnline:chat.isOnline,
-          lastMessage: chat.lastMessage, // optional
-          lastMessageAt: chat.lastMessageAt, // optional
+          isOnline:user.isOnline,
+          lastMessage: chat.lastMessage, 
+          lastMessageAt: chat.lastMessageAt, 
         };
       });
 
@@ -59,19 +57,17 @@ const Message = () => {
   fetchChats();
 }, []);
 
-  // 2️⃣ Scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // 3️⃣ Fetch messages for selected user
   const handleSelectUser = async (user: User) => {
     setSelectedUser(user);
     try {
-      const res = await ChatAPI.getMessages(user.id); // GET /chat/messages/:userId
-      const chatMessages = res.data.messages || []; // backend returns { messages: [...], user: {...} }
+      const res = await ChatAPI.getMessages(user.id); 
+      const chatMessages = res.data.messages || [];
 
       const formattedMessages: ChatMessage[] = chatMessages.map((msg: any) => ({
         text: msg.message,
@@ -86,11 +82,10 @@ const Message = () => {
     }
   };
 
-  // 4️⃣ Send a new message
   const handleSend = async () => {
     if (!message.trim() || !selectedUser) return;
     try {
-      await ChatAPI.sendMessage(selectedUser.id, message); // POST /chat/send
+      await ChatAPI.sendMessage(selectedUser.id, message); 
       setMessages((prev) => [
         ...prev,
         {
