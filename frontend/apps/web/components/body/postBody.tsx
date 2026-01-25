@@ -12,19 +12,21 @@ import PostLoader from "../Loading/Loader";
 
 interface PostBodyProps {
   selectedSkill: string | null;
+  search: string | null;
 }
 
-const PostBody: React.FC<PostBodyProps> = ({ selectedSkill }) => {
+const PostBody: React.FC<PostBodyProps> = ({ selectedSkill , search }) => {
   const { user } = useAuth();
   const [postsData, setPostsData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  console.log("search from post " , search)
 
   // Fetch all posts once
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const res = await userDataAPI.getAllPosts();
+        const res = await userDataAPI.getAllPosts(search ?? undefined);
         setPostsData(res.data || []);
       } catch (error) {
         console.error("Error fetching posts:", error);
@@ -34,7 +36,7 @@ const PostBody: React.FC<PostBodyProps> = ({ selectedSkill }) => {
     };
 
     fetchPosts();
-  }, []);
+  }, [search]);
 
   // Share post
   const handleShare = async (postId: string) => {

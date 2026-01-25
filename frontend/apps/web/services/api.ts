@@ -3,7 +3,7 @@ import type { AxiosRequestConfig } from 'axios';
 import { error } from 'console';
 import { config } from 'process';
 import type { SessionStatusType } from '../components/constants/sessionStatus'
-const API_BASE_URL =process.env.NEXT_PUBLIC_BACKEND_URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 
 
 interface AxiosRequestConfigWithRetry extends AxiosRequestConfig {
@@ -50,9 +50,12 @@ export const userDataAPI = {
     });
   },
 
-  getAllPosts: async () => {
-    return authAPI.get('/user/posts')
+  getAllPosts: async (search?: string) => {
+    return authAPI.get('/user/posts', {
+      params: search ? { search } : {},
+    });
   },
+
 
   getUserProfileDataById: async (userId: string) => {
     return authAPI.get(`/user/profile/${userId}`)
@@ -84,8 +87,8 @@ export const userDataAPI = {
   myPosts: async () => {
     return authAPI.get('/user/myPosts')
   },
-  trendingSkills: async() =>{
-      return authAPI.get('/user/allTrendingSkill')
+  trendingSkills: async () => {
+    return authAPI.get('/user/allTrendingSkill')
   }
 };
 
@@ -106,8 +109,8 @@ export const SessionAPI = {
     return authAPI.get('/session/accept-session')
   },
 
-  getAllCompleteSession: async() => {
-     return authAPI.get('/session/complete-session')
+  getAllCompleteSession: async () => {
+    return authAPI.get('/session/complete-session')
   },
 
   getMyPendingSessions: async (params: { status: SessionStatusType }) => {
@@ -116,11 +119,11 @@ export const SessionAPI = {
     });
   },
 
-   postCancelSession: async (payload: { requesterId: string; sessionId: string }) => {
+  postCancelSession: async (payload: { requesterId: string; sessionId: string }) => {
     return authAPI.post('/session/cancel-session', payload);
   },
 
-    getAllCancelSession: async () => {
+  getAllCancelSession: async () => {
     return authAPI.get('/session/cancel-session')
   },
 
@@ -140,22 +143,22 @@ export const RoomAPI = {
   getDecodeRoomId: (meetLink: string) => {
     return authAPI.post('/room/decode', { meetLink });
   },
-    getAllReviews:async() =>{
+  getAllReviews: async () => {
     return authAPI.get('/room/myReview')
   }
 
 };
 
 export const notificationAPI = {
-  getMyNotification: ()=>{
+  getMyNotification: () => {
     return authAPI.get('/notifications')
   },
 
-  updateRead:(id:string)=>{
-    return authAPI.patch(`/notifications/${id}/read`) ;
+  updateRead: (id: string) => {
+    return authAPI.patch(`/notifications/${id}/read`);
   },
 
-  unreadCount:()=>{
+  unreadCount: () => {
     return authAPI.get('/notifications/unread/count')
   }
 }
