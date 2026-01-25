@@ -30,7 +30,7 @@ interface Notification {
 
 const Navigation = () => {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout , user } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [userFetchData, setUserFetchData] = useState<UserData | null>(null);
@@ -54,7 +54,7 @@ const Navigation = () => {
         const response = await userDataAPI.getProfile();
         const userData = {
           ...response.data,
-          imageUrl: response.data.imageUrl || "/default-avatar.png",
+          imageUrl: user?.imageUrl ,
         };
         console.log("[Navigation] User data fetched:", userData);
         setUserFetchData(userData);

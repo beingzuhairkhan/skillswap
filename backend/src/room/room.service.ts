@@ -120,6 +120,16 @@ export class RoomService {
                 status: data.status || MeetingStatus.COMPLETED,
                 timestamp: new Date(),
             });
+            const sessionComplete = await this.sessionModel.findOneAndUpdate(
+                { _id: new Types.ObjectId(postId) },
+                {
+                    status: MeetingStatus.COMPLETED,
+                    isCompleted: true,
+                },
+                { new: true }
+            );
+
+
 
             return await feedback.save();
         } catch (error) {
@@ -136,7 +146,7 @@ export class RoomService {
 
             {
                 $lookup: {
-                    from: 'users', 
+                    from: 'users',
                     localField: 'currentUserId',
                     foreignField: '_id',
                     as: 'currentUserInfo',
