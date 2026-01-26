@@ -76,13 +76,13 @@ const normalize = (str = "") =>
       const learn = normalize(post.wantToLearn);
 
       const trending = Array.isArray(post.trendingSkills)
-        ? post.trendingSkills.map((skill) => normalize(skill))
+        ? post.trendingSkills.map((skill:any) => normalize(skill))
         : [];
 
       return (
         regex.test(teach) ||
         regex.test(learn) ||
-        trending.some((skill) => regex.test(skill))
+        trending.some((skill:any) => regex.test(skill))
       );
     })
   : postsData;
