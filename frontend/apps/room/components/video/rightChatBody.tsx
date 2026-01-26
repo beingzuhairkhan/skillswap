@@ -23,7 +23,7 @@ const RightChatBody = ({ roomId }: Props) => {
   const [text, setText] = useState("");
   const [myId, setMyId] = useState("");
   const [currentRoomId, setCurrentRoomId] = useState(roomId || "");
-  const messagesEndRef = useRef<HTMLDivElement | null>(null); // ✅ ref for scrolling
+  const messagesEndRef = useRef<HTMLDivElement | null>(null); 
 
   useEffect(() => {
     if (!currentRoomId) {
@@ -70,7 +70,6 @@ const RightChatBody = ({ roomId }: Props) => {
     setText("");
   };
 
-  // ✅ Auto-scroll when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -93,7 +92,7 @@ const RightChatBody = ({ roomId }: Props) => {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          placeholder="Type a message..."
+          placeholder="Message… (@ text, # image)"
           className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
         />
         <button
