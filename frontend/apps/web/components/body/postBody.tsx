@@ -64,20 +64,29 @@ const PostBody: React.FC<PostBodyProps> = ({ selectedSkill , search }) => {
     }
   };
 
-  // Filter posts based on selectedSkill
+const normalize = (str = "") =>
+  str.toLowerCase().replace(/\s+/g, "");
+
   const filteredPosts = selectedSkill
-    ? postsData.filter((post) => {
-      const teach = post.wantToTeach;
-      const learn = post.wantToLearn;
-      const trending = post.trendingSkills;
+  ? postsData.filter((post) => {
+      const search = normalize(selectedSkill);
+      const regex = new RegExp(search, "i");
+
+      const teach = normalize(post.wantToTeach);
+      const learn = normalize(post.wantToLearn);
+
+      const trending = Array.isArray(post.trendingSkills)
+        ? post.trendingSkills.map((skill) => normalize(skill))
+        : [];
 
       return (
-        teach === selectedSkill ||
-        learn === selectedSkill ||
-        (Array.isArray(trending) && trending.includes(selectedSkill))
+        regex.test(teach) ||
+        regex.test(learn) ||
+        trending.some((skill) => regex.test(skill))
       );
     })
-    : postsData;
+  : postsData;
+
 
   return (
     <div className="text-black mt-20 w-[600px] h-[89vh] overflow-y-scroll space-y-6 px-3 hide-scrollbar">
