@@ -143,7 +143,7 @@ export class SessionService {
       if (!token) {
         throw new Error('Token is required ');
       }
-      const meetLink = `http://localhost:skillswap/meet/${token}`;
+      const meetLink = `https://skillswap-e1yj.onrender.com/meet/${token}`;
       session.status = SessionStatus.ACCEPT;
       session.googleMeetLink = meetLink;
       await session.save();
