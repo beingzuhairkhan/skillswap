@@ -170,7 +170,8 @@ const LoginPage = () => {
           className="flex-1 flex items-center justify-center gap-2 bg-gray-900/90 text-white hover:bg-gray-900 py-3 rounded-md transition duration-200"
           onClick={() => {
             // Redirect to NestJS backend route for GitHub login
-            window.location.href = 'http://localhost:4000/auth/github';
+            // window.location.href = 'http://localhost:4000/auth/github';
+            window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/github`;
           }}
         >
           <GithubIcon />
