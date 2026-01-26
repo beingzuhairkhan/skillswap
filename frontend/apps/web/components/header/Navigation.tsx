@@ -197,13 +197,13 @@ const Navigation = () => {
                 <AiOutlineEdit size={20} />
                 <span className="text-gray-500 font-medium">Edit Profile</span>
               </Link>
-              <Link
+              {/* <Link
                 href="/profile/certificates"
                 className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
               >
                 <AiOutlineSafetyCertificate size={20} />
                 <span className="text-gray-500 font-medium">Certificates</span>
-              </Link>
+              </Link> */}
 
               <button
                 onClick={logout}
