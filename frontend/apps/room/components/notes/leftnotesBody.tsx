@@ -6,7 +6,6 @@ import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import { ImagePlus, Download } from 'lucide-react'
-import html2pdf from 'html2pdf.js'
 
 const NotesEditor = () => {
   const [title, setTitle] = useState('Untitled Note')
@@ -36,7 +35,6 @@ const NotesEditor = () => {
     immediatelyRender: false,
   })
 
-  /* ---------------- IMAGE HELPERS ---------------- */
 
   const insertImages = useCallback(
     (sources: string[]) => {
@@ -83,24 +81,24 @@ const NotesEditor = () => {
     [insertImages]
   )
 
-  /* ---------------- PDF DOWNLOAD ---------------- */
 
-  const downloadAsPDF = () => {
-    if (!contentRef.current) return
+ const downloadAsPDF = async () => {
+  if (!contentRef.current) return
 
-    const element = contentRef.current
+  const html2pdf = (await import('html2pdf.js')).default
 
-    html2pdf()
-      .set({
-        margin: 10,
-        filename: `${title}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      })
-      .from(element)
-      .save()
-  }
+  html2pdf()
+    .set({
+      margin: 10,
+      filename: `${title}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    })
+    .from(contentRef.current)
+    .save()
+}
+
 
   if (!editor) return null
 
@@ -190,7 +188,6 @@ const NotesEditor = () => {
         </div>
       </div>
 
-      {/* Editor Content (PDF Source) */}
       <div className="flex-1 overflow-y-auto">
         <div ref={contentRef} className="w-full px-8 py-8 bg-white">
           <EditorContent editor={editor} />
