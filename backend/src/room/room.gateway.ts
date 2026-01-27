@@ -79,48 +79,27 @@ export class RoomGateway implements OnModuleInit {
   @SubscribeMessage('draw')
   handleDraw(
     @ConnectedSocket() client: Socket,
-    @MessageBody()
-    data: {
-      roomId: string;
-      start: { x: number; y: number };
-      end: { x: number; y: number };
-      color: string;
-      size: number;
-    },
+    @MessageBody() data: any,
   ) {
-    client.to(data.roomId).emit('draw', data);
+    // same as socket.broadcast.emit
+    client.broadcast.emit('draw', data);
   }
-
 
   @SubscribeMessage('shape')
   handleShape(
     @ConnectedSocket() client: Socket,
-    @MessageBody()
-    data: {
-      roomId: string;
-      type: string;
-      start: { x: number; y: number };
-      end: { x: number; y: number };
-      color: string;
-      size: number;
-    },
+    @MessageBody() data: any,
   ) {
-    
-    client.to(data.roomId).emit('shape', data);
+    client.broadcast.emit('shape', data);
   }
-
 
   @SubscribeMessage('clear')
   handleClear(
     @ConnectedSocket() client: Socket,
-    @MessageBody() roomId: string,
   ) {
-    this.server.to(roomId).emit('clear');
+    // same as io.emit
+    this.server.emit('clear');
   }
-
-
-
-
 
   @SubscribeMessage('offer')
   handleOffer(

@@ -27,7 +27,7 @@ type ToolType = "pen" | "line" | "rectangle" | "circle" | "eraser";
 
 const socket: Socket = io(process.env.NEXT_PUBLIC_SOCKET_URL);
 
-const LeftBoardBody  = ({roomId}:{roomId:string}) => {
+const LeftBoardBody = ({ roomId }: { roomId: string }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
@@ -42,7 +42,7 @@ const LeftBoardBody  = ({roomId}:{roomId:string}) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    canvas.width = window.innerWidth - 80; 
+    canvas.width = window.innerWidth - 80;
     canvas.height = window.innerHeight - 60;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -51,7 +51,6 @@ const LeftBoardBody  = ({roomId}:{roomId:string}) => {
     ctx.lineJoin = "round";
     ctxRef.current = ctx;
 
-    // Create temporary canvas for shape preview
     const temp = document.createElement("canvas");
     temp.width = canvas.width;
     temp.height = canvas.height;
@@ -69,7 +68,6 @@ const LeftBoardBody  = ({roomId}:{roomId:string}) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 
-    // Handle window resize
     const handleResize = () => {
       if (!canvas) return;
       const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
@@ -164,28 +162,28 @@ const LeftBoardBody  = ({roomId}:{roomId:string}) => {
 
     if (tool === "pen") {
       socket.emit("draw", {
-  roomId,
-  start: lastPoint,
-  end: newPoint,
-  color,
-  size: brushSize,
-});
+        roomId,
+        start: lastPoint,
+        end: newPoint,
+        color,
+        size: brushSize,
+      });
 
       drawLine(lastPoint, newPoint, color, brushSize);
       setLastPoint(newPoint);
     } else if (tool === "eraser") {
       socket.emit("draw", {
-  roomId,
-  start: lastPoint,
-  end: newPoint,
-  color,
-  size: brushSize,
-});
+        roomId,
+        start: lastPoint,
+        end: newPoint,
+        color: tool === "eraser" ? "#FFFFFF" : color,
+        size: tool === "eraser" ? brushSize * 2 : brushSize,
+      });
+
 
       drawLine(lastPoint, newPoint, "#FFFFFF", brushSize * 2);
       setLastPoint(newPoint);
     } else {
-      // Preview shape while drawing
       const ctx = ctxRef.current;
       const canvas = canvasRef.current;
       if (!ctx || !canvas || !tempCanvas || !startPoint) return;
@@ -201,13 +199,13 @@ const LeftBoardBody  = ({roomId}:{roomId:string}) => {
     if (tool !== "pen" && tool !== "eraser" && startPoint) {
       const endPoint = getPoint(e);
       socket.emit("shape", {
-  roomId,
-  type: tool,
-  start: startPoint,
-  end: endPoint,
-  color,
-  size: brushSize,
-});
+        roomId,
+        type: tool,
+        start: startPoint,
+        end: endPoint,
+        color,
+        size: brushSize,
+      });
 
     }
 
@@ -217,7 +215,7 @@ const LeftBoardBody  = ({roomId}:{roomId:string}) => {
   };
 
   const clearCanvas = (): void => {
-   socket.emit("clear", roomId);
+    socket.emit("clear", roomId);
 
     const ctx = ctxRef.current;
     const canvas = canvasRef.current;
@@ -235,11 +233,10 @@ const LeftBoardBody  = ({roomId}:{roomId:string}) => {
   const ToolButton: React.FC<ToolButtonProps> = ({ icon, value, label }) => (
     <button
       onClick={() => setTool(value)}
-      className={`group relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${
-        tool === value
-          ? "bg-black text-white shadow-xl scale-110"
-          : "bg-white text-gray-700 hover:bg-gray-100 hover:scale-105 shadow-md"
-      }`}
+      className={`group relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${tool === value
+        ? "bg-black text-white shadow-xl scale-110"
+        : "bg-white text-gray-700 hover:bg-gray-100 hover:scale-105 shadow-md"
+        }`}
       title={label}
     >
       {icon}
@@ -260,13 +257,10 @@ const LeftBoardBody  = ({roomId}:{roomId:string}) => {
           <ToolButton icon={<Square size={20} />} value="rectangle" label="Rectangle" />
           <ToolButton icon={<Circle size={20} />} value="circle" label="Circle" />
           <ToolButton icon={<Eraser size={20} />} value="eraser" label="Eraser" />
-          
-          {/* Divider */}
-          <div className="w-10 h-px bg-gray-300 my-2" />
-          
+
+
           {/* Color Picker */}
           <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl opacity-0 group-hover:opacity-100 blur transition duration-300"></div>
             <div className="relative">
               <input
                 type="color"
@@ -275,7 +269,6 @@ const LeftBoardBody  = ({roomId}:{roomId:string}) => {
                 className="w-12 h-12 rounded-xl cursor-pointer border-2 border-gray-300 hover:border-black transition-all duration-200"
                 title="Pick Color"
               />
-              <Palette size={16} className="absolute top-1 right-1 pointer-events-none text-gray-400" />
             </div>
           </div>
 
@@ -334,8 +327,8 @@ const LeftBoardBody  = ({roomId}:{roomId:string}) => {
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
         className="absolute cursor-crosshair bg-white"
-        style={{ 
-          left: "80px", 
+        style={{
+          left: "80px",
           top: "60px",
           width: "calc(100vw - 80px)",
           height: "calc(100vh - 60px)"
