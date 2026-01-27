@@ -27,7 +27,7 @@ type ToolType = "pen" | "line" | "rectangle" | "circle" | "eraser";
 
 const socket: Socket = io(process.env.NEXT_PUBLIC_SOCKET_URL);
 
-const LeftBoardBody: React.FC = ({roomId}:{roomId:any}) => {
+const LeftBoardBody  = ({roomId}:{roomId:string}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
