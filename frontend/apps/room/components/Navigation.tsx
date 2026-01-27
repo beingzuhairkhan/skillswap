@@ -128,7 +128,7 @@ if (!roomId) {
           </div>
 
           <div className={selected === "WhiteBoard" ? "block" : "hidden"}>
-            <WhiteBoard />
+            <WhiteBoard roomId={roomId} />
           </div>
 
           <div className={selected === "Notes" ? "block" : "hidden"}>
