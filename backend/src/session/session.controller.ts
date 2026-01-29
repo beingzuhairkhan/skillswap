@@ -8,6 +8,14 @@ import { SessionStatus } from 'src/schemas/session.schema';
 export class SessionController {
     constructor(private readonly sessionService: SessionService) { }
 
+    
+    @UseGuards(JwtAuthGuard)
+    @Get('dashboardData')
+    async getDashboardData(@Req() req: any){
+        const userId = req.user.userId ;
+        return this.sessionService.dashboard(userId);
+    }
+
     @UseGuards(JwtAuthGuard)
     @Post('book-session')
     async bookSession(@Req() req: any, @Body() bookSessionDto: BookSessionDto) {
@@ -75,10 +83,11 @@ export class SessionController {
     }
 
 
-     @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard)
     @Get('cancel-session')
     async getAllCancelSession(@Req() req: any) {
         const userId = req.user.userId;
         return this.sessionService.getAllCanceledRequestsForMe(userId);
     }
+
 }

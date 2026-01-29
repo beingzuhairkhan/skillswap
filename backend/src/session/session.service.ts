@@ -24,10 +24,10 @@ export class SessionService {
   ) { }
 
 
-  generateMeetToken(receiverId: string, requesterId: string , sessionId:string): string {
+  generateMeetToken(receiverId: string, requesterId: string, sessionId: string): string {
     if (!receiverId || !requesterId || !sessionId) throw new Error('Missing IDs');
     const payload = {
-      receiverId, requesterId , sessionId
+      receiverId, requesterId, sessionId
     }
     const meetToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_ACCESS_SECRET,
@@ -139,7 +139,7 @@ export class SessionService {
       if (session.status !== SessionStatus.PENDING) {
         throw new Error('Session is not in a pending state');
       }
-      const token = this.generateMeetToken(receiverId, requesterId , sessionId);
+      const token = this.generateMeetToken(receiverId, requesterId, sessionId);
       if (!token) {
         throw new Error('Token is required ');
       }
@@ -203,7 +203,7 @@ export class SessionService {
           path: 'postId',
           select: 'wantToLearn specificTopic',
         })
-        .select('-studentNotes') 
+        .select('-studentNotes')
         .sort({ createdAt: -1 });
 
       return sessions || [];
@@ -369,7 +369,7 @@ export class SessionService {
           path: 'postId',
           select: 'wantToLearn specificTopic',
         })
-        .select('-studentNotes') // optional
+        .select('-studentNotes')
         .sort({ createdAt: -1 });
 
       return sessions || [];
@@ -377,6 +377,80 @@ export class SessionService {
       console.error(error);
       throw new InternalServerErrorException(
         'Failed to fetch accepted session requests'
+      );
+    }
+  }
+
+
+  async dashboard(userId: string) {
+    try {
+      const userObjectId = new Types.ObjectId(userId);
+
+      const [
+        skillsToLearn,
+        skillsToTeach,
+        sessionsCompleted,
+        ratingAggregation,
+      ] = await Promise.all([
+        // Sessions where user was learning (requester)
+        this.sessionModel.countDocuments({
+          requesterId: userObjectId,
+          status: SessionStatus.COMPLETE,
+          isCompleted: true,
+        }),
+
+        // Sessions where user was teaching (receiver)
+        this.sessionModel.countDocuments({
+          receiverId: userObjectId,
+          status: SessionStatus.COMPLETE,
+          isCompleted: true,
+        }),
+
+        // Total completed sessions (both roles)
+        this.sessionModel.countDocuments({
+          $or: [
+            { requesterId: userObjectId },
+            { receiverId: userObjectId },
+          ],
+          status: SessionStatus.COMPLETE,
+          isCompleted: true,
+        }),
+
+        // Feedback received by user
+        this.feedbackModel.aggregate([
+          {
+            $match: {
+              otherUserId: userObjectId,
+            },
+          },
+          {
+            $group: {
+              _id: '$otherUserId',
+              avgRating: { $avg: '$rating' },
+              count: { $sum: 1 },
+            },
+          },
+        ]),
+      ]);
+
+      const avgRating = ratingAggregation.length
+        ? Number(ratingAggregation[0].avgRating.toFixed(1))
+        : 0;
+
+      const ratingCount = ratingAggregation.length
+        ? ratingAggregation[0].count
+        : 0;
+
+      return {
+        skillsToLearn,
+        skillsToTeach,
+        sessionsCompleted,
+        avgRating,
+        ratingCount,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to fetch dashboard data',
       );
     }
   }

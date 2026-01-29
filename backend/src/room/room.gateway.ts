@@ -81,7 +81,6 @@ export class RoomGateway implements OnModuleInit {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: any,
   ) {
-    // same as socket.broadcast.emit
     client.broadcast.emit('draw', data);
   }
 
@@ -97,7 +96,6 @@ export class RoomGateway implements OnModuleInit {
   handleClear(
     @ConnectedSocket() client: Socket,
   ) {
-    // same as io.emit
     this.server.emit('clear');
   }
 

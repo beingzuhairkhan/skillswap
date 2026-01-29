@@ -127,6 +127,10 @@ export const SessionAPI = {
     return authAPI.get('/session/cancel-session')
   },
 
+  getDashboardData:async() => {
+    return authAPI.get('/session/dashboardData')
+  }
+
 }
 
 export const ChatAPI = {
