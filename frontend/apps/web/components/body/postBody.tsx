@@ -19,7 +19,7 @@ const PostBody: React.FC<PostBodyProps> = ({ selectedSkill , search }) => {
   const { user } = useAuth();
   const [postsData, setPostsData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  console.log("search from post " , search)
+
 
   // Fetch all posts once
   useEffect(() => {
