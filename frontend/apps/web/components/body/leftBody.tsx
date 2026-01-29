@@ -13,15 +13,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { SessionAPI } from "../../services/api";
 
+interface DashboardData {
+  skillsToTeach: number;
+  skillsToLearn: number;
+  sessionsCompleted: number;
+  avgRating: number;
+  ratingCount: number;
+}
+
+
 const LeftBody = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState<boolean>(true);
+  const [data, setData] = useState<DashboardData | null>(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        await SessionAPI.getDashboardData();
+        const dashboardData = await SessionAPI.getDashboardData();
+        setData(dashboardData.data)
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -113,22 +124,22 @@ const LeftBody = () => {
               <StatRow
                 icon={<MdSchool className="text-green-500" size={16} />}
                 label="Skills to Teach"
-                value={user?.skillsToTeach?.length || 0}
+                value={data?.skillsToTeach || 0}
               />
               <StatRow
                 icon={<MdMenuBook className="text-purple-500" size={16} />}
                 label="Skills to Learn"
-                value={user?.skillsToLearn?.length || 0}
+                value={data?.skillsToLearn || 0}
               />
               <StatRow
                 icon={<MdCheckCircle className="text-blue-500" size={16} />}
                 label="Sessions Completed"
-                value={0}
+                value={data?.sessionsCompleted || 0}
               />
               <StatRow
                 icon={<MdStar className="text-yellow-400" size={16} />}
                 label="Rating"
-                value={user?.ratings || 0}
+                value={data?.avgRating || 0}
               />
             </>
           )}
