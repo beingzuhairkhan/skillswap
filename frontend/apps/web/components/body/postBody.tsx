@@ -128,7 +128,7 @@ const normalize = (str = "") =>
         </p>
 
       ) : (
-        filteredPosts.map((post) => (
+        filteredPosts?.map((post) => (
           <div
             key={post._id}
             className="bg-white rounded-2xl shadow-md border p-4 space-y-4 hover:shadow-lg transition"

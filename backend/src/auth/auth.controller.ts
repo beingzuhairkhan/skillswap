@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import type { Response } from 'express';
 import { SignupDto } from './dto/signup.dto';
 import { AuthGuard } from '@nestjs/passport';
+import axios from 'axios';
+import qs from 'qs';
 
 @Controller('auth')
 export class AuthController {
@@ -58,6 +60,48 @@ export class AuthController {
     async githubCallback(@Req() req: import('express').Request & { user?: any }, @Res({ passthrough: true }) res: Response) {
         const { user, tokens } = await this.authService.githubCallback(req.user)
         res.redirect(`${process.env.FRONTEND_URL}/oauth?token=${tokens.accessToken}`);
+
+    }
+
+    @Get("google")
+    googleAuthRedirect(@Res() res: Response) {
+        const url =
+            "https://accounts.google.com/o/oauth2/v2/auth" +
+            "?client_id=" + process.env.GOOGLE_CLIENT_ID +
+            "&redirect_uri=" + encodeURIComponent(`${process.env.BACKEND_URL}/auth/google/callback`) +
+            "&response_type=code" +
+            "&scope=openid email profile" +
+            "&access_type=offline";
+
+        return res.redirect(url);
+    }
+
+    @Get("google/callback")
+    async googleCallback(
+        @Query("code") code: string,
+        @Res() res: Response
+    ) {
+       const tokenResponse = await axios.post(
+      `${process.env.GOOGLE_OAUTH}`,
+      qs.stringify({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET, 
+        redirect_uri: `${process.env.BACKEND_URL}/auth/google/callback`,
+        grant_type: "authorization_code",
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
+
+    const { id_token } = tokenResponse.data;
+
+    const {user , tokens} = await this.authService.googleLogin(id_token);
+    res.redirect(`${process.env.FRONTEND_URL}/oauth?token=${tokens.accessToken}`);
+
 
     }
 }

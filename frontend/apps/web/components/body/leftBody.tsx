@@ -32,7 +32,7 @@ const LeftBody = () => {
       try {
         setLoading(true);
         const dashboardData = await SessionAPI.getDashboardData();
-        setData(dashboardData.data)
+        setData(dashboardData?.data)
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -46,7 +46,6 @@ const LeftBody = () => {
   return (
     <div className="mt-20 hidden sm:block w-[260px] space-y-4">
 
-      {/* ================= PROFILE CARD ================= */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
         <div className="h-20 bg-gradient-to-r from-gray-100 via-slate-100 to-gray-100 relative">
           <div className="absolute inset-0 bg-black/5"></div>
@@ -55,10 +54,8 @@ const LeftBody = () => {
         <div className="flex flex-col items-center -mt-12 px-5 pb-5">
           {loading ? (
             <>
-              {/* Avatar Skeleton */}
               <div className="w-24 h-24 rounded-full bg-gray-200 animate-pulse" />
 
-              {/* Text Skeleton */}
               <div className="mt-4 h-4 w-32 bg-gray-200 rounded animate-pulse" />
               <div className="mt-2 h-3 w-40 bg-gray-200 rounded animate-pulse" />
               <div className="mt-1 h-3 w-24 bg-gray-200 rounded animate-pulse" />
