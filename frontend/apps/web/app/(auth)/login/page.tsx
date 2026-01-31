@@ -158,6 +158,9 @@ const LoginPage = () => {
         {/* Google */}
         <button
           type="button"
+          onClick={() =>
+            (window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/google`)
+          }
           className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 py-3 rounded-md transition duration-200"
         >
           <GoogleIcon />
@@ -169,8 +172,6 @@ const LoginPage = () => {
           type="button"
           className="flex-1 flex items-center justify-center gap-2 bg-gray-900/90 text-white hover:bg-gray-900 py-3 rounded-md transition duration-200"
           onClick={() => {
-            // Redirect to NestJS backend route for GitHub login
-            // window.location.href = 'http://localhost:4000/auth/github';
             window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/github`;
           }}
         >

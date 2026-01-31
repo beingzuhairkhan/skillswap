@@ -6,6 +6,7 @@ import { SignupDto } from './dto/signup.dto'
 import { LoginDto } from './dto/login.dto'
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt'
+import { OAuth2Client } from 'google-auth-library';
 
 export interface AuthTokens {
   accessToken: string;
@@ -25,9 +26,13 @@ export interface LoginResponse extends SignupResponse {
 
 @Injectable()
 export class AuthService {
-  constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>,
-    private jwtService: JwtService
-  ) { }
+  private client: OAuth2Client;
+  constructor(
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    private jwtService: JwtService,
+  ) {
+    this.client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  }
 
 
   generateToken(user: UserDocument): AuthTokens {
@@ -113,18 +118,15 @@ export class AuthService {
         throw new UnauthorizedException('Refresh token missing');
       }
 
-      // verify refresh token
       const payload = this.jwtService.verify(refreshToken, {
         secret: process.env.JWT_REFRESH_SECRET,
       });
 
-      // find user in db
       const user = await this.userModel.findById(payload.id);
       if (!user) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      // generate new refresh token
       const tokens = this.generateToken(user);
 
       return tokens;
@@ -139,16 +141,14 @@ export class AuthService {
     try {
       const { githubId, username, email } = githubData;
 
-      // Step 1: Check if user already exists
       let user = await this.userModel.findOne({ email });
 
       if (!user) {
-        // Step 2: Create new user (no password!)
         user = new this.userModel({
           name: username,
           email,
           password: githubId,
-          githubUsername: username,
+          // githubUsername: username,
           role: UserRole.USER
         });
         await user.save();
@@ -156,11 +156,53 @@ export class AuthService {
       const tokens = this.generateToken(user);
 
       const sanitizedUser = await this.userModel.findById(user._id).select('-password');
-    
+
       return {
         user: sanitizedUser!,
         tokens
       }
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to register/login: ' + error);
+    }
+  }
+
+  async googleLogin(token: string) {
+    try {
+      const ticket = await this.client.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+
+      const payload = ticket?.getPayload();
+      if (!payload) {
+        throw new InternalServerErrorException('Invalid Google token payload');
+      }
+      const { email, name, picture } = payload;
+      const sub = (payload as any).sub; // fallback if sub is present
+ 
+      let user = await this.userModel.findOne({ email });
+       
+      if (!user) {
+        user = new this.userModel({
+          name,
+          email,
+          password: sub,
+          imageUrl:picture,
+          // githubUsername: name,
+          role: UserRole.USER
+        });
+        await user.save();
+      }
+      const tokens = this.generateToken(user);
+      
+      const sanitizedUser = await this.userModel.findById(user._id).select('-password');
+
+      return {
+        user: sanitizedUser!,
+        tokens
+      }
+
+
     } catch (error) {
       throw new InternalServerErrorException('Failed to register/login: ' + error);
     }
