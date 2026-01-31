@@ -148,7 +148,7 @@ export class AuthService {
           name: username,
           email,
           password: githubId,
-          // githubUsername: username,
+          githubUsername: username,
           role: UserRole.USER
         });
         await user.save();
@@ -188,7 +188,6 @@ export class AuthService {
           email,
           password: sub,
           imageUrl:picture,
-          // githubUsername: name,
           role: UserRole.USER
         });
         await user.save();
