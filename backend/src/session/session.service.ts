@@ -11,6 +11,7 @@ import { Chat, ChatDocument } from 'src/schemas/chat.schema';
 import { EVENTS } from '../notification/eventTypes'
 import eventBus from 'src/notification/eventBus';
 import { Feedback, FeedbackDocument } from 'src/schemas/feedback.schema';
+import { Resource, ResourceDocument } from 'src/schemas/resource.schema';
 
 @Injectable()
 export class SessionService {
@@ -19,6 +20,7 @@ export class SessionService {
     @InjectModel(Session.name) private readonly sessionModel: Model<SessionDocument>,
     @InjectModel(Chat.name) private readonly chatModel: Model<ChatDocument>,
     @InjectModel(Feedback.name) private readonly feedbackModel: Model<FeedbackDocument>,
+    @InjectModel(Resource.name) private readonly resourceModel: Model<ResourceDocument>,
     private readonly cloudinary: UploadService,
     private jwtService: JwtService
   ) { }
@@ -84,7 +86,7 @@ export class SessionService {
       return savedSession;
     } catch (error) {
       console.error('Error in createBookSession:', error);
-      throw new InternalServerErrorException(error.message || 'Failed to book session');
+      throw new InternalServerErrorException( 'Failed to book session');
     }
   }
 
@@ -454,6 +456,39 @@ export class SessionService {
       );
     }
   }
+
+  async uploadResource(
+    body: { postId: string , url?:any },
+    userId: string,
+    resource?: Express.Multer.File,
+  ) {
+    try {
+      let urlData = body.url ;
+      if (!userId) throw new NotFoundException('User not found');
+
+      let resourcePdf = '';
+
+      if (resource) {
+        // Upload file to Cloudinary
+        const { url, publicId } = await this.cloudinary.uploadFile(resource);
+        resourcePdf = url;
+      } 
+
+      // Save resource in DB
+      const savedResource = await this.resourceModel.create({
+        userId:new Types.ObjectId(userId),
+        postId: new Types.ObjectId(body.postId),
+        resourcePDF: resourcePdf || '',
+        resourceURL:urlData || ''
+      });
+
+      return savedResource;
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Failed to upload resource');
+    }
+  }
+
 
 
 

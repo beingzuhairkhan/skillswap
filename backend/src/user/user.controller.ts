@@ -123,7 +123,6 @@ export class UserController {
       return {
         success: false,
         message: "Failed to create post",
-        error: error.message,
       };
     }
   }

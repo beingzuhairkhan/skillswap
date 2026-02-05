@@ -79,7 +79,7 @@ authAPI.interceptors.response.use(
           typeof window !== 'undefined' &&
           window.location.pathname !== '/login'
         ) {
-          window.location.replace('/login'); // IMPORTANT
+          window.location.replace('/login');
         }
       }
     }
@@ -183,9 +183,18 @@ export const SessionAPI = {
     return authAPI.get('/session/cancel-session')
   },
 
-  getDashboardData:async() => {
+  getDashboardData: async () => {
     return authAPI.get('/session/dashboardData')
-  }
+  },
+
+  uploadResource: async (data: any) => {
+    return authAPI.post("/session/resource", data, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+
 
 }
 

@@ -1,19 +1,37 @@
-import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Post, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { SessionService } from './session.service';
 import { JwtAuthGuard } from 'src/auth/jwt-http.guard';
 import { BookSessionDto } from './dto/book-session.dto';
 import { SessionStatus } from 'src/schemas/session.schema';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('session')
 export class SessionController {
     constructor(private readonly sessionService: SessionService) { }
 
-    
+
     @UseGuards(JwtAuthGuard)
     @Get('dashboardData')
-    async getDashboardData(@Req() req: any){
-        const userId = req.user.userId ;
+    async getDashboardData(@Req() req: any) {
+        const userId = req.user.userId;
         return this.sessionService.dashboard(userId);
+    }
+
+
+    @UseGuards(JwtAuthGuard)
+    @Post('resource')
+    @UseInterceptors(FileInterceptor('resource'))
+    async uploadResource(
+        @Body() body: { postId: string , url?:any },
+        @Req() req: any,
+        @UploadedFile() resource?: Express.Multer.File,
+    ) {
+        const userId = req.user.userId;
+
+        if (!body.postId) {
+            throw new BadRequestException('postId/resource is required');
+        }
+        return this.sessionService.uploadResource(body, userId, resource);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -89,5 +107,7 @@ export class SessionController {
         const userId = req.user.userId;
         return this.sessionService.getAllCanceledRequestsForMe(userId);
     }
+
+
 
 }

@@ -10,6 +10,7 @@ import { CodingProfileDto } from './dto/create-codingProfile.dto';
 import axios from 'axios';
 import { Feedback, FeedbackDocument } from 'src/schemas/feedback.schema';
 import { TrendingSkills, TrendingSkillsDocument } from 'src/schemas/trending-skills.schema';
+import { Resource, ResourceDocument } from 'src/schemas/resource.schema';
 
 @Injectable()
 export class UserService {
@@ -17,6 +18,7 @@ export class UserService {
         @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
         @InjectModel(Feedback.name) private readonly feedbackModel: Model<FeedbackDocument>,
         @InjectModel(TrendingSkills.name) private readonly trendingSkillsModel: Model<TrendingSkillsDocument>,
+        @InjectModel(Resource.name) private readonly resourceModel: Model<ResourceDocument>,
         private readonly cloudinary: UploadService
     ) { }
 
@@ -182,40 +184,90 @@ export class UserService {
         }
     }
 
-    async getAllPosts(search?:string): Promise<any> {
+    async getAllPosts(search?: string): Promise<any> {
         const trendingSkills = await this.getTrendingSkills(5);
-          const matchStage: any = {};
-           if (search) {  
-        const regex = new RegExp(search, "i");
+        const matchStage: any = {};
 
-        matchStage.$or = [
-            { "userPostDetails.name": regex },
-            { "userPostDetails.email": regex },
-            { "userPostDetails.domain": regex },
-            { wantToTeach: regex },
-            { wantToLearn: regex },
-            { specificTopic: regex },
-            { trendingSkills: regex }
-        ];
-    }
+        if (search) {
+            const regex = new RegExp(search, "i");
+            matchStage.$or = [
+                { "userPostDetails.name": regex },
+                { "userPostDetails.email": regex },
+                { "userPostDetails.domain": regex },
+                { wantToTeach: regex },
+                { wantToLearn: regex },
+                { specificTopic: regex },
+                { trendingSkills: regex },
+            ];
+        }
+
         const Allpost = await this.postModel.aggregate([
-
-            {
-                $addFields: {
-                    userObjId: { $toObjectId: "$user" }
-                }
-            },
+            { $addFields: { userObjId: { $toObjectId: "$user" } } },
 
             {
                 $lookup: {
                     from: "users",
                     localField: "userObjId",
                     foreignField: "_id",
-                    as: "userPostDetails"
-                }
+                    as: "userPostDetails",
+                },
             },
             { $unwind: "$userPostDetails" },
+
             ...(search ? [{ $match: matchStage }] : []),
+
+            {
+                $lookup: {
+                    from: "resources",
+                    localField: "_id",
+                    foreignField: "postId",
+                    as: "resources",
+                },
+            },
+
+            {
+                $lookup: {
+                    from: "users",
+                    let: { resourceUserIds: "$resources.userId" },
+                    pipeline: [
+                        { $match: { $expr: { $in: ["$_id", "$$resourceUserIds"] } } },
+                        { $project: { _id: 1, name: 1 } },
+                    ],
+                    as: "resourceUsers",
+                },
+            },
+
+            {
+                $addFields: {
+                    resources: {
+                        $map: {
+                            input: "$resources",
+                            as: "res",
+                            in: {
+                                _id: "$$res._id",
+                                resourcePDF: "$$res.resourcePDF",
+                                resourceURL: "$$res.resourceURL",
+                                createdAt: "$$res.createdAt",
+                                userId: "$$res.userId",
+                                postId:"$$res.postId",
+                                userName: {
+                                    $arrayElemAt: [
+                                        {
+                                            $filter: {
+                                                input: "$resourceUsers",
+                                                as: "ru",
+                                                cond: { $eq: ["$$ru._id", "$$res.userId"] },
+                                            },
+                                        },
+                                        0,
+                                    ],
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+
             {
                 $project: {
                     _id: 1,
@@ -236,18 +288,22 @@ export class UserService {
                         skillsToLearn: 1,
                         imageUrl: 1,
                         domain: 1,
-                    }
-                }
+                    },
+                    resources: 1,
+                },
             },
-            { $sort: { createdAt: -1 } }
+
+            { $sort: { createdAt: -1 } },
         ]);
 
-        const posts = Allpost.map(post => ({
+        const posts = Allpost.map((post) => ({
             ...post,
-            trendingSkills
+            trendingSkills,
         }));
-        return posts
+
+        return posts;
     }
+
 
     async createPost(userId: string, createPostDto: CreatePostDto, imageBuffer?: Buffer, filename?: string): Promise<any> {
         try {
@@ -350,7 +406,7 @@ export class UserService {
             } as CodingProfileDto;
         } catch (error) {
             console.error(error); // optional: log actual error
-            throw new InternalServerErrorException('Failed to create Coding Profile: ' + error.message);
+            throw new InternalServerErrorException('Failed to create Coding Profile: ');
         }
     }
 
@@ -377,7 +433,7 @@ export class UserService {
             } as CodingProfileDto;
 
         } catch (error) {
-            throw new InternalServerErrorException('Failed to fetch Coding Profile: ' + error.message);
+            throw new InternalServerErrorException('Failed to fetch Coding Profile: ');
         }
     }
 
@@ -435,13 +491,13 @@ export class UserService {
 
             } catch (err) {
                 throw new InternalServerErrorException(
-                    'Failed to fetch LeetCode profile: ' + err.message,
+                    'Failed to fetch LeetCode profile: '
                 );
             }
 
 
         } catch (error) {
-            throw new InternalServerErrorException('Failed to fetch Leetcode Profile: ' + error.message);
+            throw new InternalServerErrorException('Failed to fetch Leetcode Profile: ');
         }
     }
 
@@ -476,7 +532,7 @@ export class UserService {
                 ratingCount,
             };
         } catch (error) {
-            throw new InternalServerErrorException('Failed to fetch user profile: ' + error.message);
+            throw new InternalServerErrorException('Failed to fetch user profile: ');
         }
     }
 
@@ -514,7 +570,7 @@ export class UserService {
             return { message: "Followed successfully" };
         } catch (error) {
             throw new InternalServerErrorException(
-                'Failed to follow user: ' + error.message
+                'Failed to follow user: '
             );
         }
     }
@@ -544,7 +600,7 @@ export class UserService {
                 imageUrl: u.imageUrl || null,
                 followerCount: u.follower.length,
                 firstSkillToLearn: u.skillsToLearn[0] || null,
-                isOnline:u.isOnline
+                isOnline: u.isOnline
             }));
 
             return formatted.slice(0, 5);
