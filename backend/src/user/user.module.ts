@@ -9,6 +9,7 @@ import { UploadModule } from 'src/upload/upload.module';
 import {Post, PostSchema } from 'src/schemas/post.schema';
 import { Feedback, FeedbackSchema } from 'src/schemas/feedback.schema';
 import { TrendingSkills, TrendingSkillsSchema } from 'src/schemas/trending-skills.schema';
+import { Resource, ResourceSchema } from 'src/schemas/resource.schema';
 
 @Module({
   imports:[
@@ -17,6 +18,7 @@ import { TrendingSkills, TrendingSkillsSchema } from 'src/schemas/trending-skill
       {name:Post.name , schema:PostSchema},
       {name:Feedback.name, schema:FeedbackSchema },
       {name:TrendingSkills.name, schema:TrendingSkillsSchema },
+         { name: Resource.name, schema: ResourceSchema },
     ]),
     PassportModule.register({defaultStrategy:'jwt'}),
     JwtModule.register({}),

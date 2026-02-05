@@ -10,6 +10,7 @@ import { Chat, ChatSchema } from 'src/schemas/chat.schema';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { Feedback, FeedbackSchema } from 'src/schemas/feedback.schema';
+import { Resource, ResourceSchema } from 'src/schemas/resource.schema';
 
 @Module({
   imports: [
@@ -18,8 +19,9 @@ import { Feedback, FeedbackSchema } from 'src/schemas/feedback.schema';
       { name: User.name, schema: UserSchema },
       { name: Post.name, schema: PostSchema },
       { name: Session.name, schema: SessionSchema },
-      { name: Chat.name, schema: ChatSchema }, 
+      { name: Chat.name, schema: ChatSchema },
       { name: Feedback.name, schema: FeedbackSchema },
+      { name: Resource.name, schema: ResourceSchema },
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({}),
@@ -27,4 +29,4 @@ import { Feedback, FeedbackSchema } from 'src/schemas/feedback.schema';
   providers: [SessionService],
   controllers: [SessionController],
 })
-export class SessionModule {}
+export class SessionModule { }
