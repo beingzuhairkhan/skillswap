@@ -369,7 +369,7 @@ const PostBody: React.FC<PostBodyProps> = ({ selectedSkill, search }) => {
 
                   {/* Resource List */}
                   <div className="px-6 py-4 max-h-52 overflow-y-auto">
-                    {post.resources.length === 0 ? (
+                    {post?.resources?.length === 0 ? (
                       <div className="text-center py-6">
                         <FileText size={28} className="mx-auto text-gray-300 mb-2" />
                         <p className="text-sm text-gray-400">No resources yet.</p>
@@ -379,7 +379,7 @@ const PostBody: React.FC<PostBodyProps> = ({ selectedSkill, search }) => {
                       </div>
                     ) : (
                       <div className="space-y-3 overflow-y-auto  hide-scrollbar">
-                        {post.resources.map((res: Resource) => (
+                        {post?.resources?.map((res: Resource) => (
                           <div
                             key={res._id}
                             className="flex items-center justify-between gap-4 p-3 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all"
