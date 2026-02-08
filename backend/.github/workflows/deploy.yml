@@ -9,16 +9,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Run deploy script on EC2
-      uses: appleboy/ssh-action@v0.1.8
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          cd ~/skillswap/backend
-          ./deploy.sh
+      - name: Setup Node.js locally (for lint/tests)
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
 
+      - name: Install dependencies & build (local check)
+        run: |
+          npm ci
+          npm run build
+          npm test
+
+      - name: Deploy and restart on EC2
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            cd ~/skillswap/backend
+            echo "Pulling latest code..."
+            git fetch --all
+            git reset --hard origin/main
+            echo "Installing dependencies..."
+            npm ci
+            echo "Building NestJS app..."
+            npm run build
+            echo "Reloading app with PM2..."
+            pm2 reload myapp || pm2 start dist/main.js --name myapp
+            echo "✅ Deployment finished!"
