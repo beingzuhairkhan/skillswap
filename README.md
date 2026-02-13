@@ -2,7 +2,7 @@ Wallet API – Backend Assignment Submission
 Overview
 
 This backend implements a Wallet API using NestJS.
-The original implementation had logical gaps in error handling, validation, and response consistency. These issues have been identified and corrected to ensure the API behaves reliably and follows REST best practices.
+The original codebase had logical gaps in error handling, validation, and response consistency. These issues have been identified and corrected to ensure the API behaves reliably and follows REST best practices.
 
 Problems Identified
 
@@ -27,7 +27,7 @@ Debit operation ensures sufficient balance before deduction.
 
 2. Structured Error Handling
 
-All service methods are wrapped in try-catch blocks to ensure:
+All service methods are wrapped in try-catch blocks.
 
 Known exceptions (BadRequestException, NotFoundException) are preserved.
 
@@ -38,10 +38,7 @@ The API does not crash due to unhandled runtime errors.
 3. Consistent API Response
 
 All endpoints now return a consistent response structure:
-
-{
-"balance": number
-}
+{ "balance": number }
 
 This ensures predictable behavior for frontend integration.
 
@@ -52,7 +49,7 @@ Query Parameter:
 
 userId
 
-Returns the current wallet balance.
+Description: Returns the current wallet balance.
 
 POST /wallet/credit
 
@@ -62,7 +59,7 @@ userId
 
 amount
 
-Adds the specified amount to the wallet balance after validation.
+Description: Adds the specified amount to the wallet balance after validation.
 
 POST /wallet/debit
 
@@ -72,7 +69,7 @@ userId
 
 amount
 
-Deducts the specified amount from the wallet balance after validating:
+Description: Deducts the specified amount from the wallet balance after validating:
 
 Wallet exists
 
@@ -92,12 +89,12 @@ The API returns appropriate HTTP status codes:
 
 Future Enhancements
 
-Replace in-memory storage with MongoDB.
+Replace in-memory storage with MongoDB
 
-Add DTO validation using class-validator.
+Add DTO validation using class-validator
 
-Add unit and integration tests.
+Add unit and integration tests
 
-Implement transaction logging.
+Implement transaction logging
 
-Add concurrency control for production readiness.
+Add concurrency control for production readiness
