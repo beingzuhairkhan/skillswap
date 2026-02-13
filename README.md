@@ -2,7 +2,8 @@ Wallet API – Backend Assignment Submission
 Overview
 
 This backend implements a Wallet API using NestJS.
-The original codebase had logical gaps in error handling, validation, and response consistency. These issues have been identified and corrected to ensure the API behaves reliably and follows REST best practices.
+The original implementation had issues with error handling, validation, and response consistency.
+These issues have been fixed to ensure the API behaves reliably and follows REST best practices.
 
 Problems Identified
 
@@ -14,10 +15,9 @@ Negative or zero transaction amounts were allowed.
 
 Error handling was inconsistent across different methods.
 
-There was no structured handling for unexpected runtime errors.
+API responses were not consistent in structure.
 
 Improvements Implemented
-1. Proper Validation
 
 Wallet existence is validated before performing any operation.
 
@@ -25,76 +25,87 @@ Credit and debit operations reject zero or negative amounts.
 
 Debit operation ensures sufficient balance before deduction.
 
-2. Structured Error Handling
+All service methods use structured error handling with try-catch blocks.
 
-All service methods are wrapped in try-catch blocks.
-
-Known exceptions (BadRequestException, NotFoundException) are preserved.
-
-Unexpected errors are converted into InternalServerErrorException.
-
-The API does not crash due to unhandled runtime errors.
-
-3. Consistent API Response
-
-All endpoints now return a consistent response structure:
-{ "balance": number }
-
-This ensures predictable behavior for frontend integration.
+All endpoints return a consistent response structure: { "balance": number }.
 
 API Endpoints
-GET /wallet/balance
+GET /wallet/balance?userId=u1
 
-Query Parameter:
+Response:
 
-userId
-
-Description: Returns the current wallet balance.
+{
+  "balance": 100
+}
 
 POST /wallet/credit
 
 Request Body:
 
-userId
+{
+  "userId": "u1",
+  "amount": 50
+}
 
-amount
 
-Description: Adds the specified amount to the wallet balance after validation.
+Response:
+
+{
+  "balance": 150
+}
 
 POST /wallet/debit
 
 Request Body:
 
-userId
+{
+  "userId": "u1",
+  "amount": 30
+}
 
-amount
 
-Description: Deducts the specified amount from the wallet balance after validating:
+Response:
 
-Wallet exists
+{
+  "balance": 120
+}
 
-Amount is valid
+Error Responses
 
-Sufficient balance is available
+Wallet Not Found:
 
-Error Handling Behavior
+{
+  "statusCode": 404,
+  "message": "Wallet not found",
+  "error": "Not Found"
+}
 
-The API returns appropriate HTTP status codes:
 
-404 Not Found – When wallet does not exist
+Insufficient Balance:
 
-400 Bad Request – For invalid amounts or insufficient balance
+{
+  "statusCode": 400,
+  "message": "Insufficient balance",
+  "error": "Bad Request"
+}
 
-500 Internal Server Error – For unexpected runtime failures
+
+Invalid Amount:
+
+{
+  "statusCode": 400,
+  "message": "Amount must be greater than zero",
+  "error": "Bad Request"
+}
 
 Future Enhancements
 
-Replace in-memory storage with MongoDB
+Replace in-memory storage with MongoDB.
 
-Add DTO validation using class-validator
+Add DTO validation using class-validator.
 
-Add unit and integration tests
+Add unit and integration tests.
 
-Implement transaction logging
+Implement transaction logging.
 
-Add concurrency control for production readiness
+Add concurrency control for production readiness.
