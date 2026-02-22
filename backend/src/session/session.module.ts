@@ -29,4 +29,4 @@ import { Resource, ResourceSchema } from 'src/schemas/resource.schema';
   providers: [SessionService],
   controllers: [SessionController],
 })
-export class SessionModule { }
+export class SessionModule {}

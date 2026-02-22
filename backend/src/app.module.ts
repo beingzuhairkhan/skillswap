@@ -13,31 +13,31 @@ import { NotificationModule } from './notification/notification.module';
 import { redis } from './notification/redis';
 
 @Module({
-  imports: [ConfigModule.forRoot({
-    isGlobal:true
-  }),
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
 
-MongooseModule.forRoot(process.env.MONGO_URL!, {
-  onConnectionCreate: (connection) => {
-    connection.on('connected', () => {
-      console.log('MongoDB connected successfully');
-    });
+    MongooseModule.forRoot(process.env.MONGO_URL!, {
+      onConnectionCreate: (connection) => {
+        connection.on('connected', () => {
+          console.log('MongoDB connected successfully');
+        });
 
-    connection.on('error', (err) => {
-      console.error('MongoDB connection error:', err);
-    });
+        connection.on('error', (err) => {
+          console.error('MongoDB connection error:', err);
+        });
 
-    return connection;
-  },
-}),
-  AuthModule,
-  UserModule,
-  UploadModule,
-  SessionModule,
-  ChatModule,
-  RoomModule,
-  NotificationModule ,
-  
+        return connection;
+      },
+    }),
+    AuthModule,
+    UserModule,
+    UploadModule,
+    SessionModule,
+    ChatModule,
+    RoomModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

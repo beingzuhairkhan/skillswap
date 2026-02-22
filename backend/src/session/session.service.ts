@@ -1,49 +1,67 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, Types } from 'mongoose';
 import { Post, PostDocument } from 'src/schemas/post.schema';
-import { Session, SessionDocument, SessionStatus } from 'src/schemas/session.schema';
+import {
+  Session,
+  SessionDocument,
+  SessionStatus,
+} from 'src/schemas/session.schema';
 import { User, UserDocument } from 'src/schemas/user.schema';
 import { UploadService } from 'src/upload/upload.service';
 import { BookSessionDto } from './dto/book-session.dto';
 import { JwtService } from '@nestjs/jwt';
 import { Chat, ChatDocument } from 'src/schemas/chat.schema';
-import { EVENTS } from '../notification/eventTypes'
+import { EVENTS } from '../notification/eventTypes';
 import eventBus from 'src/notification/eventBus';
 import { Feedback, FeedbackDocument } from 'src/schemas/feedback.schema';
 import { Resource, ResourceDocument } from 'src/schemas/resource.schema';
 
 @Injectable()
 export class SessionService {
-  constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+  constructor(
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
-    @InjectModel(Session.name) private readonly sessionModel: Model<SessionDocument>,
+    @InjectModel(Session.name)
+    private readonly sessionModel: Model<SessionDocument>,
     @InjectModel(Chat.name) private readonly chatModel: Model<ChatDocument>,
-    @InjectModel(Feedback.name) private readonly feedbackModel: Model<FeedbackDocument>,
-    @InjectModel(Resource.name) private readonly resourceModel: Model<ResourceDocument>,
+    @InjectModel(Feedback.name)
+    private readonly feedbackModel: Model<FeedbackDocument>,
+    @InjectModel(Resource.name)
+    private readonly resourceModel: Model<ResourceDocument>,
     private readonly cloudinary: UploadService,
-    private jwtService: JwtService
-  ) { }
+    private jwtService: JwtService,
+  ) {}
 
-
-  generateMeetToken(receiverId: string, requesterId: string, sessionId: string): string {
-    if (!receiverId || !requesterId || !sessionId) throw new Error('Missing IDs');
+  generateMeetToken(
+    receiverId: string,
+    requesterId: string,
+    sessionId: string,
+  ): string {
+    if (!receiverId || !requesterId || !sessionId)
+      throw new Error('Missing IDs');
     const payload = {
-      receiverId, requesterId, sessionId
-    }
+      receiverId,
+      requesterId,
+      sessionId,
+    };
     const meetToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_ACCESS_SECRET,
       expiresIn: '90d',
-    })
+    });
 
-    return meetToken
-
+    return meetToken;
   }
-
 
   async createBookSession(
     userId: string,
-    bookSessionDto: BookSessionDto
+    bookSessionDto: BookSessionDto,
   ): Promise<SessionDocument> {
     try {
       if (!userId) throw new NotFoundException('User not found');
@@ -51,7 +69,9 @@ export class SessionService {
       const user = await this.userModel.findById(userId);
       if (!user) throw new NotFoundException('User not found');
 
-      const post = await this.postModel.findById(bookSessionDto.receiverId).select('_id user');
+      const post = await this.postModel
+        .findById(bookSessionDto.receiverId)
+        .select('_id user');
       if (!post) throw new NotFoundException('Post not found');
 
       if (userId === post.user.toString())
@@ -71,7 +91,7 @@ export class SessionService {
       });
 
       const savedSession = await newSession.save();
-      console.log("event bus hitting")
+      console.log('event bus hitting');
 
       eventBus.emit(EVENTS.SESSION_CREATED, {
         sessionId: savedSession._id,
@@ -80,13 +100,13 @@ export class SessionService {
         postId: savedSession.postId,
         date: savedSession.date,
         time: savedSession.time,
-        sessionData: savedSession
-      })
+        sessionData: savedSession,
+      });
 
       return savedSession;
     } catch (error) {
       console.error('Error in createBookSession:', error);
-      throw new InternalServerErrorException( 'Failed to book session');
+      throw new InternalServerErrorException('Failed to book session');
     }
   }
 
@@ -113,19 +133,28 @@ export class SessionService {
       return sessions || [];
     } catch (error) {
       console.error(error);
-      throw new InternalServerErrorException('Failed to fetch pending requests for your posts');
+      throw new InternalServerErrorException(
+        'Failed to fetch pending requests for your posts',
+      );
     }
   }
 
-
-  async acceptBookSession(requesterId: string, receiverId: string, sessionId: string): Promise<any> {
+  async acceptBookSession(
+    requesterId: string,
+    receiverId: string,
+    sessionId: string,
+  ): Promise<any> {
     try {
       if (!requesterId || !receiverId || !sessionId) {
-        throw new NotFoundException('Missing requesterId, receiverId, or sessionId');
+        throw new NotFoundException(
+          'Missing requesterId, receiverId, or sessionId',
+        );
       }
 
       if (requesterId === receiverId) {
-        throw new UnauthorizedException('You are not authorized to accept this session');
+        throw new UnauthorizedException(
+          'You are not authorized to accept this session',
+        );
       }
 
       const session = await this.sessionModel.findById(sessionId);
@@ -135,7 +164,9 @@ export class SessionService {
       }
 
       if (session.receiverId.toString() !== receiverId) {
-        throw new UnauthorizedException('You are not authorized to accept this session');
+        throw new UnauthorizedException(
+          'You are not authorized to accept this session',
+        );
       }
 
       if (session.status !== SessionStatus.PENDING) {
@@ -155,7 +186,9 @@ export class SessionService {
         session,
       };
     } catch (error) {
-      throw new InternalServerErrorException('Failed to accept booked sessions');
+      throw new InternalServerErrorException(
+        'Failed to accept booked sessions',
+      );
     }
   }
 
@@ -183,7 +216,7 @@ export class SessionService {
     } catch (error) {
       console.error(error);
       throw new InternalServerErrorException(
-        'Failed to fetch accepted session requests'
+        'Failed to fetch accepted session requests',
       );
     }
   }
@@ -212,7 +245,7 @@ export class SessionService {
     } catch (error) {
       console.error(error);
       throw new InternalServerErrorException(
-        'Failed to fetch accepted session requests'
+        'Failed to fetch accepted session requests',
       );
     }
   }
@@ -226,58 +259,65 @@ export class SessionService {
               $and: [
                 {
                   $or: [
-                    { $eq: ["$requesterId", userId] },
-                    { $eq: ["$requesterId", { $toObjectId: userId }] }
-                  ]
+                    { $eq: ['$requesterId', userId] },
+                    { $eq: ['$requesterId', { $toObjectId: userId }] },
+                  ],
                 },
-                { $eq: ["$status", status] }
-              ]
-            }
-          }
-
+                { $eq: ['$status', status] },
+              ],
+            },
+          },
         },
 
         // Requester
         {
           $lookup: {
-            from: "users",
-            let: { requesterIdObj: { $toObjectId: "$requesterId" } },
+            from: 'users',
+            let: { requesterIdObj: { $toObjectId: '$requesterId' } },
             pipeline: [
-              { $match: { $expr: { $eq: ["$_id", "$$requesterIdObj"] } } },
+              { $match: { $expr: { $eq: ['$_id', '$$requesterIdObj'] } } },
               { $project: { _id: 1, name: 1, imageUrl: 1 } },
             ],
-            as: "requester",
+            as: 'requester',
           },
         },
-        { $unwind: { path: "$requester", preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: '$requester', preserveNullAndEmptyArrays: true } },
 
         // Receiver
         {
           $lookup: {
-            from: "users",
-            let: { receiverIdObj: { $toObjectId: "$receiverId" } },
+            from: 'users',
+            let: { receiverIdObj: { $toObjectId: '$receiverId' } },
             pipeline: [
-              { $match: { $expr: { $eq: ["$_id", "$$receiverIdObj"] } } },
+              { $match: { $expr: { $eq: ['$_id', '$$receiverIdObj'] } } },
               { $project: { _id: 1, name: 1, imageUrl: 1 } },
             ],
-            as: "receiver",
+            as: 'receiver',
           },
         },
-        { $unwind: { path: "$receiver", preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: '$receiver', preserveNullAndEmptyArrays: true } },
 
         // Post
         {
           $lookup: {
-            from: "posts",
-            let: { postIdObj: { $toObjectId: "$postId" } },
+            from: 'posts',
+            let: { postIdObj: { $toObjectId: '$postId' } },
             pipeline: [
-              { $match: { $expr: { $eq: ["$_id", "$$postIdObj"] } } },
-              { $project: { wantToLearn: 1, wantToTeach: 1, specificTopic: 1, postImageUrl: 1, postUrl: 1 } },
+              { $match: { $expr: { $eq: ['$_id', '$$postIdObj'] } } },
+              {
+                $project: {
+                  wantToLearn: 1,
+                  wantToTeach: 1,
+                  specificTopic: 1,
+                  postImageUrl: 1,
+                  postUrl: 1,
+                },
+              },
             ],
-            as: "post",
+            as: 'post',
           },
         },
-        { $unwind: { path: "$post", preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: '$post', preserveNullAndEmptyArrays: true } },
 
         // Project
         {
@@ -292,42 +332,48 @@ export class SessionService {
             isCompleted: 1,
             googleMeetLink: 1,
             createdAt: 1,
-            "requester._id": 1,
-            "requester.name": 1,
-            "requester.imageUrl": 1,
-            "receiver._id": 1,
-            "receiver.name": 1,
-            "receiver.imageUrl": 1,
-            "post.wantToLearn": 1,
-            "post.wantToTeach": 1,
-            "post.specificTopic": 1,
-            "post.postImageUrl": 1,
-            "post.postUrl": 1,
+            'requester._id': 1,
+            'requester.name': 1,
+            'requester.imageUrl': 1,
+            'receiver._id': 1,
+            'receiver.name': 1,
+            'receiver.imageUrl': 1,
+            'post.wantToLearn': 1,
+            'post.wantToTeach': 1,
+            'post.specificTopic': 1,
+            'post.postImageUrl': 1,
+            'post.postUrl': 1,
           },
         },
 
         { $sort: { createdAt: -1 } },
       ]);
 
-
-
       return sessionData;
     } catch (error) {
       console.error(error);
       throw new InternalServerErrorException(
-        "Failed to fetch session requests"
+        'Failed to fetch session requests',
       );
     }
   }
 
-  async cancelBookSession(requesterId: string, receiverId: string, sessionId: string): Promise<any> {
+  async cancelBookSession(
+    requesterId: string,
+    receiverId: string,
+    sessionId: string,
+  ): Promise<any> {
     try {
       if (!requesterId || !receiverId || !sessionId) {
-        throw new NotFoundException('Missing requesterId, receiverId, or sessionId');
+        throw new NotFoundException(
+          'Missing requesterId, receiverId, or sessionId',
+        );
       }
 
       if (requesterId === receiverId) {
-        throw new UnauthorizedException('You are not authorized to accept this session');
+        throw new UnauthorizedException(
+          'You are not authorized to accept this session',
+        );
       }
 
       const session = await this.sessionModel.findById(sessionId);
@@ -337,7 +383,9 @@ export class SessionService {
       }
 
       if (session.receiverId.toString() !== receiverId) {
-        throw new UnauthorizedException('You are not authorized to accept this session');
+        throw new UnauthorizedException(
+          'You are not authorized to accept this session',
+        );
       }
 
       if (session.status !== SessionStatus.PENDING) {
@@ -350,7 +398,9 @@ export class SessionService {
         session,
       };
     } catch (error) {
-      throw new InternalServerErrorException('Failed to accept booked sessions');
+      throw new InternalServerErrorException(
+        'Failed to accept booked sessions',
+      );
     }
   }
 
@@ -378,11 +428,10 @@ export class SessionService {
     } catch (error) {
       console.error(error);
       throw new InternalServerErrorException(
-        'Failed to fetch accepted session requests'
+        'Failed to fetch accepted session requests',
       );
     }
   }
-
 
   async dashboard(userId: string) {
     try {
@@ -410,10 +459,7 @@ export class SessionService {
 
         // Total completed sessions (both roles)
         this.sessionModel.countDocuments({
-          $or: [
-            { requesterId: userObjectId },
-            { receiverId: userObjectId },
-          ],
+          $or: [{ requesterId: userObjectId }, { receiverId: userObjectId }],
           status: SessionStatus.COMPLETE,
           isCompleted: true,
         }),
@@ -451,19 +497,17 @@ export class SessionService {
         ratingCount,
       };
     } catch (error) {
-      throw new InternalServerErrorException(
-        'Failed to fetch dashboard data',
-      );
+      throw new InternalServerErrorException('Failed to fetch dashboard data');
     }
   }
 
   async uploadResource(
-    body: { postId: string , url?:any },
+    body: { postId: string; url?: any },
     userId: string,
     resource?: Express.Multer.File,
   ) {
     try {
-      let urlData = body.url ;
+      const urlData = body.url;
       if (!userId) throw new NotFoundException('User not found');
 
       let resourcePdf = '';
@@ -472,14 +516,14 @@ export class SessionService {
         // Upload file to Cloudinary
         const { url, publicId } = await this.cloudinary.uploadFile(resource);
         resourcePdf = url;
-      } 
+      }
 
       // Save resource in DB
       const savedResource = await this.resourceModel.create({
-        userId:new Types.ObjectId(userId),
+        userId: new Types.ObjectId(userId),
         postId: new Types.ObjectId(body.postId),
         resourcePDF: resourcePdf || '',
-        resourceURL:urlData || ''
+        resourceURL: urlData || '',
       });
 
       return savedResource;
@@ -488,8 +532,4 @@ export class SessionService {
       throw new InternalServerErrorException('Failed to upload resource');
     }
   }
-
-
-
-
 }

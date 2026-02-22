@@ -1,11 +1,17 @@
-import { ConflictException, Injectable, InternalServerErrorException, UnauthorizedException, Res } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+  Res,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument, UserRole } from '../schemas/user.schema'
-import { SignupDto } from './dto/signup.dto'
-import { LoginDto } from './dto/login.dto'
+import { User, UserDocument, UserRole } from '../schemas/user.schema';
+import { SignupDto } from './dto/signup.dto';
+import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
 
 export interface AuthTokens {
@@ -22,8 +28,6 @@ export interface LoginResponse extends SignupResponse {
   tokens: AuthTokens;
 }
 
-
-
 @Injectable()
 export class AuthService {
   private client: OAuth2Client;
@@ -34,24 +38,25 @@ export class AuthService {
     this.client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
   }
 
-
   generateToken(user: UserDocument): AuthTokens {
     const payload = {
       id: user._id?.toString(),
       email: user.email,
-      role: user.role
+      role: user.role,
     };
 
     const accessToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_ACCESS_SECRET,
       expiresIn: '50m',
-    })
+    });
     const refreshToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_REFRESH_SECRET,
-      expiresIn: process.env.JWT_REFRESH_EXPIRY ? parseInt(process.env.JWT_REFRESH_EXPIRY, 10) : '7d',
-    })
+      expiresIn: process.env.JWT_REFRESH_EXPIRY
+        ? parseInt(process.env.JWT_REFRESH_EXPIRY, 10)
+        : '7d',
+    });
 
-    return { accessToken, refreshToken }
+    return { accessToken, refreshToken };
   }
 
   async signUp(signupDto: SignupDto): Promise<UserDocument> {
@@ -65,17 +70,18 @@ export class AuthService {
         name,
         email,
         password,
-        role: role || UserRole.USER
+        role: role || UserRole.USER,
       });
 
       await user.save();
       const savedUser = await this.userModel.findOne({ email });
       if (!savedUser) {
-        throw new InternalServerErrorException('Failed to find user after signup');
+        throw new InternalServerErrorException(
+          'Failed to find user after signup',
+        );
       }
 
       return savedUser;
-
     } catch (error) {
       throw new InternalServerErrorException('Failed to register ' + error);
     }
@@ -84,14 +90,17 @@ export class AuthService {
   async login(loginDto: LoginDto): Promise<LoginResponse> {
     try {
       const { email, password } = loginDto;
-      console.log(email, password)
+      console.log(email, password);
       const existingUser = await this.userModel.findOne({ email });
       // console.log(existingUser )
       if (!existingUser) {
         throw new ConflictException('User Not registered');
       }
 
-      const isMatchPassword = await bcrypt.compare(password, existingUser.password);
+      const isMatchPassword = await bcrypt.compare(
+        password,
+        existingUser.password,
+      );
       //  console.log(isMatchPassword )
       if (!isMatchPassword) {
         throw new UnauthorizedException('Invalid email or password');
@@ -99,15 +108,15 @@ export class AuthService {
 
       const tokens = this.generateToken(existingUser);
 
-      const sanitizedUser = await this.userModel.findById(existingUser._id).select('-password');
+      const sanitizedUser = await this.userModel
+        .findById(existingUser._id)
+        .select('-password');
       // console.log(sanitizedUser)
       // console.log(sanitizedUser , tokens)
       return {
         user: sanitizedUser!,
-        tokens
-      }
-
-
+        tokens,
+      };
     } catch (error) {
       throw new InternalServerErrorException('Failed to Login ' + error);
     }
@@ -149,20 +158,24 @@ export class AuthService {
           email,
           password: githubId,
           githubUsername: username,
-          role: UserRole.USER
+          role: UserRole.USER,
         });
         await user.save();
       }
       const tokens = this.generateToken(user);
 
-      const sanitizedUser = await this.userModel.findById(user._id).select('-password');
+      const sanitizedUser = await this.userModel
+        .findById(user._id)
+        .select('-password');
 
       return {
         user: sanitizedUser!,
-        tokens
-      }
+        tokens,
+      };
     } catch (error) {
-      throw new InternalServerErrorException('Failed to register/login: ' + error);
+      throw new InternalServerErrorException(
+        'Failed to register/login: ' + error,
+      );
     }
   }
 
@@ -179,32 +192,33 @@ export class AuthService {
       }
       const { email, name, picture } = payload;
       const sub = (payload as any).sub; // fallback if sub is present
- 
+
       let user = await this.userModel.findOne({ email });
-       
+
       if (!user) {
         user = new this.userModel({
           name,
           email,
           password: sub,
-          imageUrl:picture,
-          role: UserRole.USER
+          imageUrl: picture,
+          role: UserRole.USER,
         });
         await user.save();
       }
       const tokens = this.generateToken(user);
-      
-      const sanitizedUser = await this.userModel.findById(user._id).select('-password');
+
+      const sanitizedUser = await this.userModel
+        .findById(user._id)
+        .select('-password');
 
       return {
         user: sanitizedUser!,
-        tokens
-      }
-
-
+        tokens,
+      };
     } catch (error) {
-      throw new InternalServerErrorException('Failed to register/login: ' + error);
+      throw new InternalServerErrorException(
+        'Failed to register/login: ' + error,
+      );
     }
   }
-
 }

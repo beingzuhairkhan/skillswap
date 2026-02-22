@@ -1,11 +1,22 @@
-import { Body, Controller, Get, InternalServerErrorException, NotFoundException, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  InternalServerErrorException,
+  NotFoundException,
+  Post,
+  Req,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { RoomService } from './room.service';
 import { JwtAuthGuard } from 'src/auth/jwt-http.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('room')
 export class RoomController {
-  constructor(private readonly roomService: RoomService) { }
+  constructor(private readonly roomService: RoomService) {}
 
   @Post('audioSummary')
   @UseInterceptors(FileInterceptor('file'))
@@ -23,10 +34,15 @@ export class RoomController {
     //   throw new NotFoundException('Missing required metadata');
     // }
 
-    console.log("data from frontend", file, roomId, speakerId, speakerRole)
+    console.log('data from frontend', file, roomId, speakerId, speakerRole);
 
     try {
-      const transcription = await this.roomService.convertAudioToText(file, roomId, speakerId, speakerRole);
+      const transcription = await this.roomService.convertAudioToText(
+        file,
+        roomId,
+        speakerId,
+        speakerRole,
+      );
       return {
         text: transcription,
         roomId,
@@ -54,15 +70,13 @@ export class RoomController {
 
   @Post('feedback')
   async createFeedback(@Body() body: any) {
-    return this.roomService.saveFeedback(body)
+    return this.roomService.saveFeedback(body);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('myReview')
   async getAllMyReviews(@Req() req) {
     const userId = req.user.userId;
-    return this.roomService.getUserReviews(userId)
-
+    return this.roomService.getUserReviews(userId);
   }
-
 }

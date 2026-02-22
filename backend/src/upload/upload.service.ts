@@ -12,10 +12,12 @@ export class UploadService {
     });
   }
 
-  async uploadFile(file: Express.Multer.File): Promise<{ url: string; publicId: string }> {
+  async uploadFile(
+    file: Express.Multer.File,
+  ): Promise<{ url: string; publicId: string }> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { folder: 'skillswap' , resource_type:'auto'},
+        { folder: 'skillswap', resource_type: 'auto' },
         (error, result) => {
           if (error) return reject(error);
           resolve({
@@ -32,7 +34,7 @@ export class UploadService {
   async deleteImage(publicId: string): Promise<{ result: string }> {
     try {
       const res = await cloudinary.uploader.destroy(publicId);
-      return res; 
+      return res;
     } catch (error) {
       throw new Error(`Failed to delete image: ${error.message}`);
     }

@@ -7,48 +7,52 @@ import { NotificationService } from './notification.service';
 
 @Injectable()
 export class EmailWorkerService implements OnModuleInit {
-     constructor(private readonly notificationService: NotificationService) { }
-    private worker: Worker;
+  constructor(private readonly notificationService: NotificationService) {}
+  private worker: Worker;
 
-    onModuleInit() {
-        console.log(' EmailWorkerService initializing...');
+  onModuleInit() {
+    console.log(' EmailWorkerService initializing...');
 
-        this.worker = new Worker(
-            'email-queue',
-            async (job) => {
-                const { toEmail, subject, session, userName, template } = job.data;
+    this.worker = new Worker(
+      'email-queue',
+      async (job) => {
+        const { toEmail, subject, session, userName, template } = job.data;
 
-                if (!toEmail) throw new Error('Recipient email is missing');
+        if (!toEmail) throw new Error('Recipient email is missing');
 
-                let html;
-                switch (template) {
-                    case 'SESSION_BOOKED':
-                        html = getSessionBookedEmailTemplate(session, userName);
-                        break;
-                    default:
-                        throw new Error('Unknown email template');
-                }
+        let html;
+        switch (template) {
+          case 'SESSION_BOOKED':
+            html = getSessionBookedEmailTemplate(session, userName);
+            break;
+          default:
+            throw new Error('Unknown email template');
+        }
 
-                const ok = await this.notificationService.sendEmail(toEmail, subject, html );
-                console.log(' Email sent successfully to',  ok);
-            },
-            {
-                connection: {
-                    host: process.env.REDIS_HOST,
-                    port:parseInt(process.env.REDIS_PORT || "6379"),
-                    password: process.env.REDIS_PASSWORD,
-                    tls: {} 
-                },
-                concurrency: 5,
-            }
+        const ok = await this.notificationService.sendEmail(
+          toEmail,
+          subject,
+          html,
         );
+        console.log(' Email sent successfully to', ok);
+      },
+      {
+        connection: {
+          host: process.env.REDIS_HOST,
+          port: parseInt(process.env.REDIS_PORT || '6379'),
+          password: process.env.REDIS_PASSWORD,
+          tls: {},
+        },
+        concurrency: 5,
+      },
+    );
 
-        this.worker.on('completed', (job) => {
-            console.log(' Email job completed:', job.id);
-        });
+    this.worker.on('completed', (job) => {
+      console.log(' Email job completed:', job.id);
+    });
 
-        this.worker.on('failed', (job, err) => {
-            console.error(' Email job failed:', job?.id, err.message);
-        });
-    }
+    this.worker.on('failed', (job, err) => {
+      console.error(' Email job failed:', job?.id, err.message);
+    });
+  }
 }
