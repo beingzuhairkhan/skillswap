@@ -6,9 +6,10 @@ import { User, UserDocument } from 'src/schemas/user.schema';
 
 @Injectable()
 export class ChatService {
-  constructor(@InjectModel(Chat.name) private readonly chatModel: Model<ChatDocument>,
-    @InjectModel(User.name) private readonly userModel: Model<UserDocument>
-  ) { }
+  constructor(
+    @InjectModel(Chat.name) private readonly chatModel: Model<ChatDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+  ) {}
 
   async getAllUserChats(userId: string): Promise<any> {
     try {
@@ -20,17 +21,22 @@ export class ChatService {
 
       const chats = await this.chatModel
         .find({
-          $or: [
-            { user1: objectUserId },
-            { user2: objectUserId },
-          ],
+          $or: [{ user1: objectUserId }, { user2: objectUserId }],
         })
-        .populate('user1', 'name imageUrl collegeName domain -password isOnline')
-        .populate('user2', 'name imageUrl collegeName domain -password isOnline')
+        .populate(
+          'user1',
+          'name imageUrl collegeName domain -password isOnline',
+        )
+        .populate(
+          'user2',
+          'name imageUrl collegeName domain -password isOnline',
+        )
         .sort({ updatedAt: -1 });
 
-      const formattedChats = chats.map(chat => {
-        const otherUser = chat.user1._id.equals(objectUserId) ? chat.user2 : chat.user1;
+      const formattedChats = chats.map((chat) => {
+        const otherUser = chat.user1._id.equals(objectUserId)
+          ? chat.user2
+          : chat.user1;
         const lastMessage = chat.messages[chat.messages.length - 1] || null;
         return {
           chatId: chat._id,
@@ -43,7 +49,9 @@ export class ChatService {
       return formattedChats;
     } catch (error) {
       console.error('Error fetching user chats:', error);
-      throw new InternalServerErrorException(error.message || 'Failed to fetch chats');
+      throw new InternalServerErrorException(
+        error.message || 'Failed to fetch chats',
+      );
     }
   }
 
@@ -77,17 +85,17 @@ export class ChatService {
         $setOnInsert: { user1: sender, user2: receiver },
         $push: { messages: newMessage },
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     return chat;
   }
 
-
   async getMessagesBetweenUsers(userId1: string, userId2: string) {
     try {
-
-      const findUser = await this.userModel.findById(userId2).select('name domain imageUrl');
+      const findUser = await this.userModel
+        .findById(userId2)
+        .select('name domain imageUrl');
       if (!findUser) {
         throw new InternalServerErrorException('User does not exist');
       }
@@ -95,8 +103,14 @@ export class ChatService {
       const chat = await this.chatModel
         .findOne({
           $or: [
-            { user1: new Types.ObjectId(userId1), user2: new Types.ObjectId(userId2) },
-            { user1: new Types.ObjectId(userId2), user2: new Types.ObjectId(userId1) },
+            {
+              user1: new Types.ObjectId(userId1),
+              user2: new Types.ObjectId(userId2),
+            },
+            {
+              user1: new Types.ObjectId(userId2),
+              user2: new Types.ObjectId(userId1),
+            },
           ],
         })
         .populate('messages.sender', 'name imageUrl')
@@ -110,7 +124,10 @@ export class ChatService {
           imageUrl: findUser.imageUrl,
         },
         messages: chat?.messages
-          ? chat.messages.sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime())
+          ? chat.messages.sort(
+              (a, b) =>
+                new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime(),
+            )
           : [],
       };
     } catch (error) {
@@ -118,6 +135,4 @@ export class ChatService {
       throw new InternalServerErrorException('Failed to fetch messages');
     }
   }
-
-
 }

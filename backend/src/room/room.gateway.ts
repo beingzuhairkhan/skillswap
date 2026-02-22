@@ -7,24 +7,29 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import Groq from "groq-sdk";
+import Groq from 'groq-sdk';
 import { ConfigService } from '@nestjs/config';
-import fs from 'fs'
+import fs from 'fs';
 import { User, UserDocument } from 'src/schemas/user.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 @WebSocketGateway({
   cors: {
-    origin: ['https://skillswap-iota-three.vercel.app', 'https://skillswap-upmw.vercel.app', 'http://localhost:3000', 'http://localhost:3001'],
+    origin: [
+      'https://skillswap-iota-three.vercel.app',
+      'https://skillswap-upmw.vercel.app',
+      'http://localhost:3000',
+      'http://localhost:3001',
+    ],
   },
 })
-
 export class RoomGateway implements OnModuleInit {
   private groq: Groq;
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly configService: ConfigService,
+  constructor(
+    private readonly configService: ConfigService,
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {
     this.groq = new Groq({
@@ -42,15 +47,12 @@ export class RoomGateway implements OnModuleInit {
     const userId = client.handshake.query.userId as string;
     if (userId) {
       this.userModel.findByIdAndUpdate(userId, { isOnline: true }).exec();
-      this.server.emit("update-user-status", { userId, isOnline: true });
+      this.server.emit('update-user-status', { userId, isOnline: true });
     }
   }
 
   @SubscribeMessage('join-room')
-  handleJoin(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() roomId: string,
-  ) {
+  handleJoin(@ConnectedSocket() client: Socket, @MessageBody() roomId: string) {
     // Leave previous room if exists
     const oldRoom = this.clientRooms.get(client.id);
     if (oldRoom) {
@@ -77,25 +79,17 @@ export class RoomGateway implements OnModuleInit {
   }
 
   @SubscribeMessage('draw')
-  handleDraw(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: any,
-  ) {
+  handleDraw(@ConnectedSocket() client: Socket, @MessageBody() data: any) {
     client.broadcast.emit('draw', data);
   }
 
   @SubscribeMessage('shape')
-  handleShape(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: any,
-  ) {
+  handleShape(@ConnectedSocket() client: Socket, @MessageBody() data: any) {
     client.broadcast.emit('shape', data);
   }
 
   @SubscribeMessage('clear')
-  handleClear(
-    @ConnectedSocket() client: Socket,
-  ) {
+  handleClear(@ConnectedSocket() client: Socket) {
     this.server.emit('clear');
   }
 
@@ -115,7 +109,6 @@ export class RoomGateway implements OnModuleInit {
     client.to(data.roomId).emit('answer', data.answer);
   }
 
-
   @SubscribeMessage('ice-candidate')
   handleIce(
     @ConnectedSocket() client: Socket,
@@ -123,7 +116,6 @@ export class RoomGateway implements OnModuleInit {
   ) {
     client.to(data.roomId).emit('ice-candidate', data.candidate);
   }
-
 
   @SubscribeMessage('toggle-mic')
   handleMic(
@@ -147,13 +139,12 @@ export class RoomGateway implements OnModuleInit {
     });
   }
 
-
   handleDisconnect(client: Socket) {
     const roomId = this.clientRooms.get(client.id);
     const userId = client.handshake.query.userId as string;
     if (userId) {
       this.userModel.findByIdAndUpdate(userId, { isOnline: false }).exec();
-      this.server.emit("update-user-status", { userId, isOnline: false });
+      this.server.emit('update-user-status', { userId, isOnline: false });
     }
 
     if (roomId) {
@@ -176,7 +167,7 @@ export class RoomGateway implements OnModuleInit {
       roomId: string;
       message: string;
       isAI?: boolean;
-    }
+    },
   ) {
     this.server.to(data.roomId).emit('chat-message', {
       senderId: client.id,
@@ -203,9 +194,7 @@ export class RoomGateway implements OnModuleInit {
       if (!prompt) return;
 
       aiResponse = await this.getAIImageResponse(prompt);
-    }
-
-    else {
+    } else {
       return;
     }
 
@@ -216,12 +205,10 @@ export class RoomGateway implements OnModuleInit {
       time: Date.now(),
       isAI: true,
     });
-
   }
 
-
   async getAIResponse(prompt: string): Promise<string> {
-    return this.getChatCompletion(prompt)
+    return this.getChatCompletion(prompt);
   }
 
   async getChatCompletion(prompt: string): Promise<string> {
@@ -230,13 +217,14 @@ export class RoomGateway implements OnModuleInit {
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful assistant. Answer in one or two short sentences only, concisely, and remove markdown symbols.'
+          content:
+            'You are a helpful assistant. Answer in one or two short sentences only, concisely, and remove markdown symbols.',
         },
         {
           role: 'user',
-          content: prompt
-        }
-      ]
+          content: prompt,
+        },
+      ],
     });
     let response = completion.choices[0]?.message?.content ?? '';
 
@@ -244,19 +232,18 @@ export class RoomGateway implements OnModuleInit {
     return response;
   }
 
-
   async getAIImageResponse(prompt: string): Promise<string> {
     if (!prompt) {
-      console.error("No prompt provided");
-      throw new Error("Prompt is required");
+      console.error('No prompt provided');
+      throw new Error('Prompt is required');
     }
 
     try {
       const url = process.env.REQUEST_URL!;
       const response = await fetch(url, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${process.env.API_KEY}`,
         },
         body: JSON.stringify({ prompt }),
@@ -269,27 +256,26 @@ export class RoomGateway implements OnModuleInit {
 
       const arrayBuffer = await response.arrayBuffer();
 
-      const base64 = Buffer.from(arrayBuffer).toString("base64");
+      const base64 = Buffer.from(arrayBuffer).toString('base64');
       const dataURI = `data:image/jpeg;base64,${base64}`;
       return dataURI;
-
     } catch (err: any) {
-      console.error("Failed to generate image:", err.message);
-      throw new Error("Image generation failed");
+      console.error('Failed to generate image:', err.message);
+      throw new Error('Image generation failed');
     }
   }
 
   async transcribeGenerate(file: any): Promise<any> {
     try {
-      console.log("filepath from trans", file)
-      const language = 'hi'
+      console.log('filepath from trans', file);
+      const language = 'hi';
       const audioFile = new File(
         [file.buffer],
         file.originalname || 'audio.webm',
         {
           type: file.mimetype || 'audio/webm',
           lastModified: Date.now(),
-        }
+        },
       );
       const transcription = await this.groq.audio.transcriptions.create({
         file: audioFile,
@@ -307,8 +293,8 @@ export class RoomGateway implements OnModuleInit {
         language: language || 'en',
         temperature: 0.0,
       });
-      console.log("res from tran", transcription)
-      return transcription
+      console.log('res from tran', transcription);
+      return transcription;
     } catch (error) {
       throw new Error(error.message || 'Transcription failed');
     }
@@ -316,9 +302,9 @@ export class RoomGateway implements OnModuleInit {
 
   async transcribeSummarize(transcription: string): Promise<string> {
     try {
-      console.log("filepath from transcription", transcription)
+      console.log('filepath from transcription', transcription);
       const completion = await this.groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: 'llama-3.3-70b-versatile',
         messages: [
           {
             role: 'system',
@@ -339,27 +325,26 @@ e:
 
            Speaker 2:
            - Key point 1
-           - Key point 2`
+           - Key point 2`,
           },
           {
             role: 'user',
-            content: `Summarize the following transcript in a concise way:\n\n${transcription}`
-          }
-        ]
+            content: `Summarize the following transcript in a concise way:\n\n${transcription}`,
+          },
+        ],
       });
 
-      console.log("res from transcription", completion.choices?.[0]?.message?.content)
+      console.log(
+        'res from transcription',
+        completion.choices?.[0]?.message?.content,
+      );
 
       return completion.choices?.[0]?.message?.content || '';
     } catch (error: any) {
       throw new Error(error.message || 'Summary generation failed');
     }
   }
-
-
 }
-
-
 
 // ata from frontend {
 //   fieldname: 'file',
@@ -499,4 +484,4 @@ e:
 // }
 // ^C
 // PS D:\zuhair\project4\newss\skillswap\backend> ^C
-// PS D:\zuhair\project4\newss\skillswap\backend> 
+// PS D:\zuhair\project4\newss\skillswap\backend>

@@ -1,4 +1,17 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors , Query} from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Req,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+  Query,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { AddProfileDto } from './dto/add-profile.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-http.guard';
@@ -14,15 +27,12 @@ interface FileUpload {
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
-
-   
   @Get('allTrendingSkill')
   async getTrendingSkills() {
-    return await this.userService.getTrendingSkills()
+    return await this.userService.getTrendingSkills();
   }
-
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
@@ -59,14 +69,16 @@ export class UserController {
       filename = image.originalname;
     }
 
-    return this.userService.updateUserProfile(userId, addProfileDto, imageBuffer, filename);
+    return this.userService.updateUserProfile(
+      userId,
+      addProfileDto,
+      imageBuffer,
+      filename,
+    );
   }
 
-
   @Get('posts')
-  async getAllPost(
-    @Query('search') search?: string,
-  ) {
+  async getAllPost(@Query('search') search?: string) {
     return this.userService.getAllPosts(search);
   }
 
@@ -76,7 +88,7 @@ export class UserController {
   async createPost(
     @Req() req,
     @Body() body: any, // using 'any' here to manually map fields from frontend
-    @UploadedFile() image?: Express.Multer.File
+    @UploadedFile() image?: Express.Multer.File,
   ) {
     try {
       // console.log("User data from controller:", req.user, body);
@@ -85,8 +97,8 @@ export class UserController {
 
       // Map frontend fields to DTO
       const createPostDto: CreatePostDto = {
-        wantToLearn: body.wantLearn || body.wantToLearn || "",
-        wantToTeach: body.wantTeach || body.wantToTeach || "",
+        wantToLearn: body.wantLearn || body.wantToLearn || '',
+        wantToTeach: body.wantTeach || body.wantToTeach || '',
         specificTopic: body.specificTopic,
         trendingSkills: body.trendingSkills
           ? Array.isArray(body.trendingSkills)
@@ -110,19 +122,19 @@ export class UserController {
         userId,
         createPostDto,
         imageBuffer,
-        filename
+        filename,
       );
 
       return {
         success: true,
-        message: "Post created successfully",
+        message: 'Post created successfully',
         data: newPost,
       };
     } catch (error) {
-      console.error("Error creating post:", error);
+      console.error('Error creating post:', error);
       return {
         success: false,
-        message: "Failed to create post",
+        message: 'Failed to create post',
       };
     }
   }
@@ -131,9 +143,8 @@ export class UserController {
   @Get('myPosts')
   async myPosts(@Req() req: any) {
     const currentUserId = req.user.userId;
-    return this.userService.myPostsData(currentUserId)
+    return this.userService.myPostsData(currentUserId);
   }
-
 
   @UseGuards(JwtAuthGuard)
   @Post('coding-profile')
@@ -152,7 +163,12 @@ export class UserController {
       filename = image.originalname;
     }
 
-    return await this.userService.createCodingProfile(userId, codingProfileDto, imageBuffer, filename);
+    return await this.userService.createCodingProfile(
+      userId,
+      codingProfileDto,
+      imageBuffer,
+      filename,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -172,9 +188,8 @@ export class UserController {
   @Get('suggestedUser')
   async suggestedUsers(@Req() req) {
     const currentUserId = req.user.userId;
-    return this.userService.suggestedUsers(currentUserId)
+    return this.userService.suggestedUsers(currentUserId);
   }
-
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
@@ -188,9 +203,4 @@ export class UserController {
     const currentUserId = req.user.userId;
     return this.userService.followUser(currentUserId, followId);
   }
-
-
-
-
-
 }

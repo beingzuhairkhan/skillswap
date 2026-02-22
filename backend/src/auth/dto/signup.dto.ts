@@ -7,7 +7,7 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
-import { UserRole } from '../../schemas/user.schema'
+import { UserRole } from '../../schemas/user.schema';
 
 export class SignupDto {
   @IsNotEmpty()
@@ -21,7 +21,6 @@ export class SignupDto {
   @IsString()
   @MinLength(6, { message: 'Password must be at least 6 characters long' })
   password: string;
-
 
   @IsOptional()
   @IsEnum(UserRole, { message: 'Invalid Role' })

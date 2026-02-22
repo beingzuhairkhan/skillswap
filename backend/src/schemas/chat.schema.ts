@@ -11,8 +11,8 @@ export class ChatMessage {
   @Prop({ type: String, required: true })
   message: string;
 
-  @Prop({required:false})
-  roomId?:string;
+  @Prop({ required: false })
+  roomId?: string;
 
   @Prop({ type: Date, default: Date.now })
   sentAt: Date;

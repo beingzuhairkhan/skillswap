@@ -17,7 +17,7 @@ import { Feedback, FeedbackSchema } from 'src/schemas/feedback.schema';
       { name: User.name, schema: UserSchema },
       { name: Post.name, schema: PostSchema },
       { name: Session.name, schema: SessionSchema },
-      {name: Transcript.name , schema:TranscriptSchema},
+      { name: Transcript.name, schema: TranscriptSchema },
       { name: Feedback.name, schema: FeedbackSchema },
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -25,6 +25,6 @@ import { Feedback, FeedbackSchema } from 'src/schemas/feedback.schema';
   ],
   providers: [RoomService, RoomGateway],
   controllers: [RoomController],
-  exports:[RoomGateway]
+  exports: [RoomGateway],
 })
-export class RoomModule { }
+export class RoomModule {}

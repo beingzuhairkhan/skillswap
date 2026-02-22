@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsDateString,
+  IsEnum,
+} from 'class-validator';
 
 export enum SessionStatus {
   PENDING = 'pending',
@@ -9,17 +15,17 @@ export enum SessionStatus {
 export class BookSessionDto {
   // @IsString()
   // @IsNotEmpty()
-    @IsOptional()
+  @IsOptional()
   receiverId?: string;
 
   // @IsString()
   // @IsNotEmpty()
-    @IsOptional()
+  @IsOptional()
   postId?: string;
 
   // @IsString()
   // @IsNotEmpty()
-    @IsOptional()
+  @IsOptional()
   requesterId?: string;
 
   @IsString()

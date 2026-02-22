@@ -12,7 +12,6 @@ export enum NotificationRole {
 
 @Schema({ timestamps: true })
 export class Notification {
-
   @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
   userId: Types.ObjectId;
 
@@ -36,10 +35,8 @@ export class Notification {
   @Prop({ default: null })
   link?: string;
 
-
   @Prop({ type: String, required: false })
   typeSession: string; // e.g. SESSION_CREATED
 }
 
-export const NotificationSchema =
-  SchemaFactory.createForClass(Notification);
+export const NotificationSchema = SchemaFactory.createForClass(Notification);

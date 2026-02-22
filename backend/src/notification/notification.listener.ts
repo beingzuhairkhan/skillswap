@@ -5,16 +5,21 @@ import eventBus from './eventBus';
 import { EVENTS } from './eventTypes';
 import { emailQueue } from './email.queue';
 import { User, UserDocument } from 'src/schemas/user.schema';
-import { Notification, NotificationDocument, NotificationRole } from 'src/schemas/notification.schema';
-import { Server } from 'socket.io'; 
-import { RoomGateway  } from '../room/room.gateway'
+import {
+  Notification,
+  NotificationDocument,
+  NotificationRole,
+} from 'src/schemas/notification.schema';
+import { Server } from 'socket.io';
+import { RoomGateway } from '../room/room.gateway';
 
 @Injectable()
 export class NotificationListener implements OnModuleInit {
   constructor(
-    @InjectModel(Notification.name) private notificationModel: Model<NotificationDocument>,
+    @InjectModel(Notification.name)
+    private notificationModel: Model<NotificationDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-      private roomGateway: RoomGateway ,
+    private roomGateway: RoomGateway,
   ) {}
 
   onModuleInit() {
@@ -25,7 +30,7 @@ export class NotificationListener implements OnModuleInit {
   private registerListener() {
     eventBus.on(EVENTS.SESSION_CREATED, async (payload) => {
       try {
-        const { receiverId, date, time, sessionId , sessionData } = payload;
+        const { receiverId, date, time, sessionId, sessionData } = payload;
 
         await this.notificationModel.create({
           userId: receiverId,
@@ -57,20 +62,18 @@ export class NotificationListener implements OnModuleInit {
           toEmail: user.email,
           subject: 'New Session Booked 🎉',
           userName: user.name,
-          session: { 
-            sessionId, 
+          session: {
+            sessionId,
             date,
             time,
-            status:sessionData.status,
-            sessionType:sessionData.sessionType,
-         },
+            status: sessionData.status,
+            sessionType: sessionData.sessionType,
+          },
           template: 'SESSION_BOOKED',
         });
-
       } catch (err) {
         console.error(' SESSION_CREATED handler error:', err);
       }
     });
   }
 }
-

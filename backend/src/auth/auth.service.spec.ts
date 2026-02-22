@@ -2,8 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
-import { ConflictException, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
-import { UserRole, UserDocument } from '../schemas/user.schema'
+import {
+  ConflictException,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { UserRole, UserDocument } from '../schemas/user.schema';
 import bcrypt from 'bcrypt';
 
 jest.mock('bcrypt');
@@ -86,14 +90,19 @@ describe('AuthService', () => {
     userModel.create.mockResolvedValueOnce(mockUserDoc);
     userModel.findOne.mockResolvedValueOnce(null);
 
-    await expect(service.signUp(signupDto)).rejects.toThrow(InternalServerErrorException);
+    await expect(service.signUp(signupDto)).rejects.toThrow(
+      InternalServerErrorException,
+    );
   });
 
   // -------------------- Login Tests --------------------
   it('should login successfully', async () => {
     userModel.findOne.mockResolvedValueOnce(mockUserDoc); // user exists
     (bcrypt.compare as jest.Mock).mockResolvedValueOnce(true);
-    userModel.findById.mockResolvedValueOnce({ ...mockUserDoc, password: undefined });
+    userModel.findById.mockResolvedValueOnce({
+      ...mockUserDoc,
+      password: undefined,
+    });
 
     const result = await service.login(loginDto);
 
@@ -112,6 +121,8 @@ describe('AuthService', () => {
     userModel.findOne.mockResolvedValueOnce(mockUserDoc);
     (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);
 
-    await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+    await expect(service.login(loginDto)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 });

@@ -3,7 +3,7 @@ import { Document } from 'mongoose';
 
 export type TranscriptDocument = Transcript & Document;
 
-@Schema({ timestamps: true }) 
+@Schema({ timestamps: true })
 export class Transcript {
   @Prop({ required: true, index: true })
   roomId: string;
@@ -27,7 +27,7 @@ export class Transcript {
   summary: string;
 
   @Prop({ type: Array, default: [] })
-  segments?: { start: number; end: number; text: string }[]; 
+  segments?: { start: number; end: number; text: string }[];
 }
 
 export const TranscriptSchema = SchemaFactory.createForClass(Transcript);

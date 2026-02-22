@@ -1,10 +1,20 @@
-import { Controller, Get, Post, Query, Req, UseGuards, Body, Param, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+  Body,
+  Param,
+  BadRequestException,
+} from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from 'src/auth/jwt-http.guard';
 
 @Controller('chat')
 export class ChatController {
-  constructor(private readonly chatService: ChatService) { }
+  constructor(private readonly chatService: ChatService) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('/')
@@ -16,7 +26,6 @@ export class ChatController {
   @UseGuards(JwtAuthGuard)
   @Get('/messages/:userId')
   async getMessages(@Req() req, @Param('userId') otherUserId: string) {
-
     const userId = req.user.userId;
 
     if (!otherUserId) {
@@ -41,10 +50,8 @@ export class ChatController {
   // @Get('single-message')
   // async getSingleMessage(
   //  @Req() req ,
-  //  @Query() 
+  //  @Query()
   // ){
 
   // }
-
-
 }
