@@ -19,16 +19,39 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CodingProfileDto } from './dto/create-codingProfile.dto';
 import { encrypt } from './../utils/encryption.util';
-
+import * as crypto from 'crypto';
 interface FileUpload {
   originalname: string;
   buffer: Buffer;
   mimetype: string;
 }
 
+
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
+
+  private encrypt(data: any): string {
+    if (!process.env.ENCRYPT_KEY) {
+      throw new Error('ENCRYPT_KEY is not defined in environment variables');
+    }
+
+    const algorithm = 'aes-256-cbc';
+    const secretKey = crypto
+      .createHash('sha256')
+      .update(process.env.ENCRYPT_KEY)
+      .digest(); // raw 32 bytes
+
+    const iv = Buffer.alloc(16, 0);
+
+    const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
+    const encrypted = Buffer.concat([
+      cipher.update(JSON.stringify(data), 'utf8'),
+      cipher.final(),
+    ]);
+
+    return encrypted.toString('base64');
+  }
 
   @Get('allTrendingSkill')
   async getTrendingSkills() {
@@ -79,8 +102,9 @@ export class UserController {
   }
 
   @Get('posts')
-  async getAllPost(@Query('search') search?: string) {
-    return encrypt(this.userService.getAllPosts(search));
+  async getAllPosts(@Query('search') search?: string) {
+    const posts = await this.userService.getAllPosts(search);
+    return this.encrypt(posts)
   }
 
   @UseGuards(JwtAuthGuard)

@@ -16,6 +16,7 @@ import { redis } from './notification/redis';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env', 
     }),
 
     MongooseModule.forRoot(process.env.MONGO_URL!, {
