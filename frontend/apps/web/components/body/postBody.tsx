@@ -21,6 +21,7 @@ import { SessionAPI, userDataAPI } from "../../services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../contexts/AuthContext";
 import PostLoader from "../Loading/Loader";
+import { decrypt } from './../Decrypt';
 
 interface PostBodyProps {
   selectedSkill: string | null;
@@ -48,7 +49,7 @@ const PostBody: React.FC<PostBodyProps> = ({ selectedSkill, search }) => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const res = await userDataAPI.getAllPosts(search ?? undefined);
+        const res = decrypt(await userDataAPI.getAllPosts(search ?? undefined));
         setPostsData(res.data || []);
       } catch (error) {
         console.error("Error fetching posts:", error);
