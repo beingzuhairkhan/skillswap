@@ -1,17 +1,31 @@
-import CryptoJS from 'crypto-js';
+import CryptoJS from "crypto-js";
 
-const secretKey = CryptoJS.SHA256(process.env.NEXT_PUBLIC_DECRYPT_KEY!)
-  .toString(CryptoJS.enc.Base64)
-  .substr(0, 32);
+const secretKey = CryptoJS.SHA256(
+  process.env.NEXT_PUBLIC_DECRYPT_KEY!
+); // ❗ NO toString(), NO substr()
 
-const iv = CryptoJS.enc.Hex.parse('00000000000000000000000000000000');
+const iv = CryptoJS.enc.Hex.parse(
+  "00000000000000000000000000000000"
+);
 
 export function decrypt(encryptedData: string) {
-  const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey, {
-    iv: iv,
-    mode: CryptoJS.mode.CBC,
-    padding: CryptoJS.pad.Pkcs7,
-  });
+  const decrypted = CryptoJS.AES.decrypt(
+    encryptedData,
+    secretKey,
+    {
+      iv: iv,
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7,
+    }
+  );
 
-  return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+  const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
+
+  console.log("Decrypted text:", decryptedText);
+
+  if (!decryptedText) {
+    throw new Error("Decryption failed - check key/iv match");
+  }
+
+  return JSON.parse(decryptedText);
 }

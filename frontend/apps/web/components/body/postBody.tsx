@@ -51,7 +51,7 @@ const PostBody: React.FC<PostBodyProps> = ({ selectedSkill, search }) => {
         setLoading(true);
         const apiResponse = await userDataAPI.getAllPosts(search ?? undefined);
         const res = decrypt(apiResponse.data);
-        setPostsData(res.data || []);
+        setPostsData(res || []);
       } catch (error) {
         console.error("Error fetching posts:", error);
       } finally {
