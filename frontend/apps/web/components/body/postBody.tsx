@@ -49,7 +49,8 @@ const PostBody: React.FC<PostBodyProps> = ({ selectedSkill, search }) => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const res = decrypt(await userDataAPI.getAllPosts(search ?? undefined));
+        const apiResponse = await userDataAPI.getAllPosts(search ?? undefined);
+        const res = decrypt(apiResponse.data);
         setPostsData(res.data || []);
       } catch (error) {
         console.error("Error fetching posts:", error);
@@ -110,7 +111,8 @@ const PostBody: React.FC<PostBodyProps> = ({ selectedSkill, search }) => {
       setUrl("");
 
       // Refresh posts to get updated resources
-      const res = await userDataAPI.getAllPosts(search ?? undefined);
+      const apiResponse = await userDataAPI.getAllPosts(search ?? undefined);
+      const res = decrypt(apiResponse.data);
       setPostsData(res.data || []);
     } catch (error) {
       console.error(error);

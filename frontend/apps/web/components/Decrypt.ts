@@ -1,6 +1,6 @@
 import CryptoJS from 'crypto-js';
 
-const secretKey = CryptoJS.SHA256(process.env.NEXT_PUBLIC_DECRYPT_KEY)
+const secretKey = CryptoJS.SHA256(process.env.NEXT_PUBLIC_DECRYPT_KEY!)
   .toString(CryptoJS.enc.Base64)
   .substr(0, 32);
 
