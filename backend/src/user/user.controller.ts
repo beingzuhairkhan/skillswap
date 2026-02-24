@@ -18,6 +18,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-http.guard';
 import { CreatePostDto } from './dto/create-post.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CodingProfileDto } from './dto/create-codingProfile.dto';
+import { encrypt } from './../utils/encryption.util';
 
 interface FileUpload {
   originalname: string;
@@ -79,7 +80,7 @@ export class UserController {
 
   @Get('posts')
   async getAllPost(@Query('search') search?: string) {
-    return this.userService.getAllPosts(search);
+    return encrypt(this.userService.getAllPosts(search));
   }
 
   @UseGuards(JwtAuthGuard)
