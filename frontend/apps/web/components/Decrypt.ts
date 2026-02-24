@@ -2,7 +2,7 @@ import CryptoJS from "crypto-js";
 
 const secretKey = CryptoJS.SHA256(
   process.env.NEXT_PUBLIC_DECRYPT_KEY!
-); // ❗ NO toString(), NO substr()
+); 
 
 const iv = CryptoJS.enc.Hex.parse(
   "00000000000000000000000000000000"
@@ -20,8 +20,6 @@ export function decrypt(encryptedData: string) {
   );
 
   const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
-
-  console.log("Decrypted text:", decryptedText);
 
   if (!decryptedText) {
     throw new Error("Decryption failed - check key/iv match");
