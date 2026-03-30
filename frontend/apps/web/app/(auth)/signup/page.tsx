@@ -115,22 +115,7 @@ const SignUp = () => {
           
         </div>
 
-        {/* Password */}
-        <div className="relative">
-          <input
-            type="password"
-            {...register("password", { required: "Password is required" })}
-            placeholder="Enter your password"
-            className="w-full bg-gray-50 border border-gray-300 rounded-md p-3 text-gray-800
-             focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500"
-          />
-
-          {errors.password && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.password.message}
-            </p>
-          )}
-        </div>
+       
 
         {/* Submit */}
         <button
