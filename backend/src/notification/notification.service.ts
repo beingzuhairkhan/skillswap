@@ -6,23 +6,26 @@ export class NotificationService {
   private transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
-    secure: false,
+    secure: false, // TLS
     auth: {
-      user: process.env.MAIL_USER,
-      pass: process.env.MAIL_PASS,
+      user: process.env.MAIL_USER, // Gmail address
+      pass: process.env.MAIL_PASS, // App password!
     },
   });
 
   async sendEmail(to: string, subject: string, html: string) {
     try {
-      await this.transporter.sendMail({
+      const info = await this.transporter.sendMail({
         from: process.env.MAIL_USER,
         to,
         subject,
         html,
       });
+      console.log('✅ Email sent:', info.messageId);
+      return info;
     } catch (error) {
-      console.log('failed to send mail ', error);
+      console.error('❌ Failed to send email:', error);
+      throw error; // Important: rethrow for BullMQ retries
     }
   }
 }

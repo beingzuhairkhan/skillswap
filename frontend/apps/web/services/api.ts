@@ -145,6 +145,12 @@ export const userDataAPI = {
   },
   trendingSkills: async () => {
     return authAPI.get('/user/allTrendingSkill')
+  },
+  forgotPasswordEmail: async (email:string) => {
+    return authAPI.post('/auth/forgot-password' , {email})
+  },
+  confirmPassword: async(body:any)=>{
+    return authAPI.post('/auth/reset-password' , body)
   }
 };
 

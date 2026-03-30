@@ -1,14 +1,13 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Worker } from 'bullmq';
-import { redis } from './redis';
 import { getSessionBookedEmailTemplate } from '../template/sessionBook.template';
-import { sendEmail } from './send.email';
 import { NotificationService } from './notification.service';
+import { getForgotPasswordEmailTemplate } from 'src/template/forgotPassword.template';
 
 @Injectable()
 export class EmailWorkerService implements OnModuleInit {
   constructor(private readonly notificationService: NotificationService) {}
-  private worker: Worker;
+  private worker!: Worker;
 
   onModuleInit() {
     console.log(' EmailWorkerService initializing...');
@@ -16,25 +15,39 @@ export class EmailWorkerService implements OnModuleInit {
     this.worker = new Worker(
       'email-queue',
       async (job) => {
-        const { toEmail, subject, session, userName, template } = job.data;
+        try {
+          const { toEmail, subject, session, userName, template, OTP } = job.data;
+          console.log("jon" , job.data)
 
-        if (!toEmail) throw new Error('Recipient email is missing');
+          if (!toEmail) throw new Error('Recipient email is missing');
 
-        let html;
-        switch (template) {
-          case 'SESSION_BOOKED':
-            html = getSessionBookedEmailTemplate(session, userName);
-            break;
-          default:
-            throw new Error('Unknown email template');
+          console.log(` Processing email job ${job.id} for ${toEmail} | Template: ${template}`);
+
+          let html;
+          switch (template) {
+            case 'SESSION_BOOKED':
+              html = getSessionBookedEmailTemplate(session, userName);
+              break;
+            case 'FORGOT_PASSWORD':
+              if (!OTP) throw new Error('OTP is missing');
+              html = getForgotPasswordEmailTemplate(OTP);
+              break;
+            default:
+              throw new Error('Unknown email template');
+          }
+
+          // Wrap sendEmail in try/catch to catch provider errors
+          try {
+            const result = await this.notificationService.sendEmail(toEmail, subject, html);
+            console.log(' Email sent successfully to', toEmail, '| Result:', result);
+          } catch (sendErr) {
+            console.error(' Failed to send email to', toEmail, '| Error:', sendErr);
+            throw sendErr; // Let BullMQ retry if needed
+          }
+        } catch (err) {
+          console.error(' Email job processing failed for job', job.id, '| Error:', err);
+          throw err; // Let BullMQ mark job as failed
         }
-
-        const ok = await this.notificationService.sendEmail(
-          toEmail,
-          subject,
-          html,
-        );
-        console.log(' Email sent successfully to', ok);
       },
       {
         connection: {
@@ -52,7 +65,7 @@ export class EmailWorkerService implements OnModuleInit {
     });
 
     this.worker.on('failed', (job, err) => {
-      console.error(' Email job failed:', job?.id, err.message);
+      console.error(' Email job failed:', job?.id, '| Error:', err?.message || err);
     });
   }
 }

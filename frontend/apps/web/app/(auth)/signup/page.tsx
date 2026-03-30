@@ -10,6 +10,7 @@ import Link from "next/link"
 import { useAuth } from '../../../contexts/AuthContext'
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react"
 
 interface IUserSignup {
   name: string
@@ -26,6 +27,7 @@ const SignUp = () => {
   const { Register } = useAuth()
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false)
+   const [showPassword, setShowPassword] = useState(false);
   const onSubmit = async (data: IUserSignup) => {
     try {
       setIsLoading(true);
@@ -83,22 +85,34 @@ const SignUp = () => {
         </div>
 
         {/* Email */}
-        <div>
+       <div className="relative">
           <input
-            id="email"
-            type="email"
-            {...register("email", { required: "Email is required" })}
-            placeholder="Enter your email"
+            id="password"
+            type={showPassword ? "text" : "password"}
+            {...register("password", { required: "Password is required" })}
+            placeholder="Enter your password"
             className={`w-full bg-gray-50 border rounded-md p-3 text-gray-800
-      focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500
-      border-gray-300
-      ${errors.email ? "border-red-500" : ""}`}
+        focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500
+        border-gray-300
+        ${errors.password ? "border-red-500" : ""}`}
           />
-          {errors.email && (
+
+          {/* Eye Icon */}
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-3 text-gray-600"
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+
+          {errors.password && (
             <p className="text-red-500 text-sm mt-1">
-              {errors.email.message}
+              {errors.password.message}
             </p>
           )}
+
+          
         </div>
 
         {/* Password */}

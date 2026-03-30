@@ -75,5 +75,20 @@ export class NotificationListener implements OnModuleInit {
         console.error(' SESSION_CREATED handler error:', err);
       }
     });
+
+    eventBus.on(EVENTS.FORGOT_PASSWORD , async (payload)=>{
+      try {
+        const {emailId , OTP} = payload ;
+        const ok = await emailQueue.add('send-forgot-email',{
+          toEmail:emailId,
+          subject:'Forgot password ' ,
+          OTP ,
+          template:'FORGOT_PASSWORD'
+        })
+        
+      } catch (error) {
+         console.error(' FORGOT_PASSWORD handler error:', error);
+      }
+    })
   }
 }
