@@ -10,7 +10,6 @@ import { SessionModule } from './session/session.module';
 import { ChatModule } from './chat/chat.module';
 import { RoomModule } from './room/room.module';
 import { NotificationModule } from './notification/notification.module';
-import { redis } from './notification/redis';
 
 @Module({
   imports: [

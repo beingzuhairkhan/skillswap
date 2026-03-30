@@ -7,13 +7,13 @@ import {
 } from 'src/schemas/notification.schema';
 import { NotificationService } from './notification.service';
 import { BullModule } from '@nestjs/bullmq';
-import { redis } from './redis';
 
 import './notification.listener';
 import { User, UserSchema } from 'src/schemas/user.schema';
 import { NotificationListener } from './notification.listener';
 import { EmailWorkerService } from './email.worker';
 import { RoomModule } from 'src/room/room.module';
+import { RedisProvider } from './redis';
 
 @Module({
   imports: [
@@ -29,13 +29,10 @@ import { RoomModule } from 'src/room/room.module';
   controllers: [NotificationController],
   providers: [
     NotificationService,
-    {
-      provide: 'REDIS',
-      useValue: redis,
-    },
+    RedisProvider,
     NotificationListener,
     EmailWorkerService,
   ],
-  exports: ['REDIS'],
+  exports: ['REDIS' , NotificationService],
 })
 export class NotificationModule {}

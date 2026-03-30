@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -18,7 +19,7 @@ import qs from 'qs';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('signup')
   async signup(@Body() signupDto: SignupDto): Promise<SignupDto> {
@@ -67,7 +68,7 @@ export class AuthController {
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  async githubLogin() {}
+  async githubLogin() { }
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
@@ -120,5 +121,36 @@ export class AuthController {
     res.redirect(
       `${process.env.FRONTEND_URL}/oauth?token=${tokens.accessToken}`,
     );
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string): Promise<{ message: string }> {
+    if (!email) {
+      throw new BadRequestException('Email is required');
+    }
+    return this.authService.forgotPasswordGetEmail(email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() body: any) {
+    const { emailId, otp, password, confirmPassword } = body;
+    return this.authService.newPassword(emailId, otp, password, confirmPassword);
+  }
+
+  @Post('verify-captcha')
+  async verifyCaptcha(@Body('token') token: string) {
+    const isValid = await this.authService.verifyCaptcha(token);
+
+    if (!isValid) {
+      return {
+        success: false,
+        message: 'Captcha failed',
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Captcha verified',
+    };
   }
 }

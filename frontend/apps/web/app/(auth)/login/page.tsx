@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import toast from "react-hot-toast"
 import ReCAPTCHA from "react-google-recaptcha";
 import axios from "axios"
+import { Eye, EyeOff } from 'lucide-react';
 
 interface IUserLogin {
   email: string
@@ -21,6 +22,7 @@ interface IUserLogin {
 const LoginPage = () => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -29,26 +31,50 @@ const LoginPage = () => {
   } = useForm<IUserLogin>()
   const { login } = useAuth()
   const router = useRouter();
-  const onSubmit = async (data: IUserLogin) => {
-    try {
-      setIsLoading(true);
-      const response = await login(data.email, data.password);
-      if (response) {
-        toast.success("User Login Successfully");
-        router.push("/"); // Redirect after login
-      } else {
-        toast.error(response || "Login failed");
+ const onSubmit = async (data: IUserLogin) => {
+  if (!token) {
+    toast.error("Please complete captcha");
+    return;
+  }
+
+  try {
+     setIsLoading(true);
+    const captchaRes = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-captcha`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token }),
       }
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        toast.error(err.response?.data?.message || 'Failed to login');
-      } else {
-        toast.error('Failed to login');
-      }
-    } finally {
-      setIsLoading(false);
+    );
+
+    const captchaData = await captchaRes.json();
+
+    if (!captchaData.success) {
+      toast.error("Captcha verification failed");
+      return;
     }
-  };
+    const response = await login(data.email, data.password);
+
+    if (response) {
+      toast.success("User Login Successfully");
+      router.push("/");
+    }
+
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      toast.error(err.response?.data?.message || "Failed to login");
+    } else {
+      toast.error("Failed to login");
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
 
   return (
     <div className="max-w-6xl mt-20 mx-auto md:p-4 p-8">
@@ -90,22 +116,33 @@ const LoginPage = () => {
         </div>
 
         {/* Password */}
-        <div>
+        <div className="relative">
           <input
             id="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             {...register("password", { required: "Password is required" })}
             placeholder="Enter your password"
             className={`w-full bg-gray-50 border rounded-md p-3 text-gray-800
-      focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500
-      border-gray-300
-      ${errors.password ? "border-red-500" : ""}`}
+        focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500
+        border-gray-300
+        ${errors.password ? "border-red-500" : ""}`}
           />
+
+          {/* Eye Icon */}
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-3 text-gray-600"
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+
           {errors.password && (
             <p className="text-red-500 text-sm mt-1">
               {errors.password.message}
             </p>
           )}
+
           <div className="text-right mt-2">
             <Link
               href="/forgot-password"
@@ -119,7 +156,7 @@ const LoginPage = () => {
           <div className="w-full max-w-6xl">
             <ReCAPTCHA
               sitekey="6Lc-3fcrAAAAAKOctjYBuJVd5ERuLKsyi_DChQuV"
-              onChange={(value: any) => setToken(value)}
+              onChange={(value: string | null) => setToken(value)}
               theme="light"
             />
           </div>

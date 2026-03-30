@@ -4,6 +4,8 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
   Res,
+  Inject,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -13,7 +15,12 @@ import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
-
+import eventBus from 'src/notification/eventBus';
+import { EVENTS } from 'src/notification/eventTypes';
+import { Redis } from 'ioredis';
+import { NotificationService } from 'src/notification/notification.service';
+import { getForgotPasswordEmailTemplate } from 'src/template/forgotPassword.template';
+import axios from 'axios';
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -34,6 +41,8 @@ export class AuthService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private jwtService: JwtService,
+    @Inject('REDIS') private readonly redis: Redis,
+    private readonly notificationService: NotificationService
   ) {
     this.client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
   }
@@ -219,6 +228,98 @@ export class AuthService {
       throw new InternalServerErrorException(
         'Failed to register/login: ' + error,
       );
+    }
+  }
+
+  async forgotPasswordGetEmail(emailId: string) {
+    try {
+      const checkUserExits = await this.userModel.findOne({ email: emailId });
+      if (!checkUserExits) {
+        throw new InternalServerErrorException('User not exits');
+      }
+
+      const generateOTP = Math.floor(100000 + Math.random() * 900000);
+      await this.redis.set(`otp:${emailId}`, generateOTP, 'EX', 300);
+      const subject = 'forgot password '
+      const html = getForgotPasswordEmailTemplate(generateOTP);
+      this.notificationService.sendEmail(emailId, subject, html)
+
+
+      return {
+        message: 'OTP sent successfully',
+      };
+
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to send OTP: ' + error,
+      );
+    }
+  }
+
+  async newPassword(
+    emailId: string,
+    otp: string,
+    password: string,
+    confirmPassword: string,
+  ) {
+    try {
+      const user = await this.userModel.findOne({ email: emailId });
+      if (!user) {
+        throw new InternalServerErrorException('User does not exist');
+      }
+
+      const redisOtp = await this.redis.get(`otp:${emailId}`);
+      if (!redisOtp || redisOtp !== otp) {
+        throw new UnauthorizedException('Invalid or expired OTP');
+      }
+
+      if (password !== confirmPassword) {
+        throw new ConflictException('Passwords do not match');
+      }
+
+      user.password = password;
+      await user.save();
+
+      await this.redis.del(`otp:${emailId}`);
+
+      return { message: 'Password updated successfully' };
+    } catch (error) {
+      if (
+        error instanceof UnauthorizedException ||
+        error instanceof ConflictException ||
+        error instanceof InternalServerErrorException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Failed to update new password: ' + error,
+      );
+    }
+  }
+
+  async verifyCaptcha(token: string): Promise<boolean> {
+    console.log("token" , token)
+    if (!token) {
+      throw new BadRequestException('Captcha token missing');
+    }
+
+    try {
+      const response = await axios.post(
+        'https://www.google.com/recaptcha/api/siteverify',
+        null,
+        {
+          params: {
+            secret:process.env.RECAPTCHA_SECRET_KEY,
+            response: token,
+          },
+        },
+      );
+      console.log("res" , response.data)
+
+      return response.data.success;
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestException('Captcha verification failed');
     }
   }
 }
