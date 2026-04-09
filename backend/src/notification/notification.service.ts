@@ -4,9 +4,7 @@ import * as nodemailer from 'nodemailer';
 @Injectable()
 export class NotificationService {
   private transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // TLS
+    service: 'gmail',
     auth: {
       user: process.env.MAIL_USER, // Gmail address
       pass: process.env.MAIL_PASS, // App password!
