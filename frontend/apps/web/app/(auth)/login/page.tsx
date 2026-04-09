@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import signupImage from "../../../public/signup-image.png"
@@ -29,48 +29,53 @@ const LoginPage = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<IUserLogin>()
-  const { login } = useAuth()
+  const { login, user } = useAuth()
   const router = useRouter();
- const onSubmit = async (data: IUserLogin) => {
-  if (!token) {
-    toast.error("Please complete captcha");
-    return;
-  }
-
-  try {
-     setIsLoading(true);
-    const captchaRes = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-captcha`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token }),
-      }
-    );
-
-    const captchaData = await captchaRes.json();
-
-    if (!captchaData.success) {
-      toast.error("Captcha verification failed");
+  useEffect(() => {
+    if (user) {
+      router.replace("/"); // redirect to home if already logged in
+    }
+  }, [user, router]);
+  const onSubmit = async (data: IUserLogin) => {
+    if (!token) {
+      toast.error("Please complete captcha");
       return;
     }
-    const response = await login(data.email, data.password);
 
-    if (response) {
-      toast.success("User Login Successfully");
-      router.push("/");
-    }
+    try {
+      setIsLoading(true);
+      const captchaRes = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-captcha`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ token }),
+        }
+      );
 
-  } catch (err: unknown) {
+      const captchaData = await captchaRes.json();
+
+      if (!captchaData.success) {
+        toast.error("Captcha verification failed");
+        return;
+      }
+      const response = await login(data.email, data.password);
+
+      if (response) {
+        toast.success("User Login Successfully");
+        router.push("/");
+      }
+
+    } catch (err: unknown) {
 
       toast.error("Failed to login");
 
-  } finally {
-    setIsLoading(false);
-  }
-};
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
 
 
