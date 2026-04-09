@@ -52,14 +52,25 @@ const PostBody: React.FC<PostBodyProps> = ({ selectedSkill, search }) => {
         const apiResponse = await userDataAPI.getAllPosts(search ?? undefined);
         const res = decrypt(apiResponse.data);
         setPostsData(res || []);
-      } catch (error) {
-        console.error("Error fetching posts:", error);
+      } catch (e) {
       } finally {
         setLoading(false);
       }
     };
     fetchPosts();
   }, [search]);
+
+  
+    const savingPost = async(postId:any)=>{
+      try {
+        const post = await userDataAPI.savingPost(postId);
+        // if(post.status === 200){
+          toast.success("Post saved successfully")
+        // } 
+      } catch (error) {
+        toast.error("Failed to save post")
+      }
+    }
 
   const handleShare = async (postId: string) => {
     const shareUrl = `${window.location.origin}/post/${postId}`;
@@ -278,7 +289,9 @@ const PostBody: React.FC<PostBodyProps> = ({ selectedSkill, search }) => {
                 <span>Resources</span>
               </Button>
 
-              <Button variant="ghost" className="flex items-center gap-1 hover:text-blue-600">
+              <Button variant="ghost" className="flex items-center gap-1 hover:text-blue-600"
+              onClick={() => savingPost(post._id)}
+              >
                 <Bookmark size={16} />
                 <span>Save</span>
               </Button>

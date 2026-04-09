@@ -314,7 +314,6 @@ export class AuthService {
           },
         },
       );
-      console.log("res" , response.data)
 
       return response.data.success;
     } catch (error) {

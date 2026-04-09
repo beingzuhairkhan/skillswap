@@ -144,24 +144,23 @@ const LeftBody = () => {
       </div>
 
       {/* ================= QUICK ACTIONS ================= */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 hover:shadow-lg transition-shadow duration-300">
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { icon: <MdTrendingUp size={24} />, text: "Skill Gap Analysis" },
-            { icon: <MdSaveAlt size={20} />, text: "Saved" }
-          ].map((item, idx) => (
-            <div
-              key={idx}
-              className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-all"
-            >
-              <div className="text-blue-500">{item.icon}</div>
-              <span className="text-xs font-medium text-gray-700">
-                {item.text}
-              </span>
-            </div>
-          ))}
+    <div className="bg-white rounded-2xl border border-gray-100 p-4 hover:shadow-lg transition-shadow duration-300">
+  <div className="grid grid-cols-2 gap-3">
+    {[
+      { icon: <MdTrendingUp size={24} />, text: "Skill Gap Analysis", link: "/skill-gap" },
+      { icon: <MdSaveAlt size={20} />, text: "Saved", link: "/saved-post" }
+    ].map((item, idx) => (
+      <Link key={idx} href={item.link}>
+        <div className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-all">
+          <div className="text-blue-500">{item.icon}</div>
+          <span className="text-xs font-medium text-gray-700">
+            {item.text}
+          </span>
         </div>
-      </div>
+      </Link>
+    ))}
+  </div>
+</div>
     </div>
   );
 };

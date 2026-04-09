@@ -151,6 +151,16 @@ export const userDataAPI = {
   },
   confirmPassword: async(body:any)=>{
     return authAPI.post('/auth/reset-password' , body)
+  },
+  savingPost: async(postId:string)=>{
+    console.log("Saving post with ID from client:", postId);
+    return authAPI.post('/user/save-post' , {postId})
+  },
+  getSavedPosts: async()=>{
+    return authAPI.get('/user/saved-posts')
+  },
+  unsavePost: async(postId:string)=>{
+    return authAPI.post('/user/unsave-post' , {postId})
   }
 };
 
