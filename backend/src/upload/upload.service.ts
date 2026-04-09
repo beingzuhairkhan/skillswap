@@ -17,7 +17,7 @@ export class UploadService {
   ): Promise<{ url: string; publicId: string }> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { folder: 'skillswap', resource_type: 'auto' },
+        { folder: 'skillswap', resource_type: 'raw' },
         (error, result) => {
           if (error) return reject(error);
           resolve({
