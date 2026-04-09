@@ -58,6 +58,13 @@ export class UserController {
     return await this.userService.getTrendingSkills();
   }
 
+   @UseGuards(JwtAuthGuard)
+  @Get('saved-posts')
+  async getSavedPosts(@Req() req) {
+    const currentUserId = req.user.userId;
+    return this.userService.getSavedPosts(currentUserId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getProfile(@Req() req: any) {
@@ -227,5 +234,21 @@ export class UserController {
   async followUser(@Param('id') followId: string, @Req() req) {
     const currentUserId = req.user.userId;
     return this.userService.followUser(currentUserId, followId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('save-post')
+  async savePost(@Body('postId') postId: string, @Req() req) {
+    const currentUserId = req.user.userId;
+    return this.userService.savePost(currentUserId, postId);
+  }
+
+ 
+
+  @UseGuards(JwtAuthGuard)
+  @Post('unsave-post')
+  async unsavePost(@Body('postId') postId: string, @Req() req) {
+    const currentUserId = req.user.userId;
+    return this.userService.unsavePost(currentUserId, postId);
   }
 }

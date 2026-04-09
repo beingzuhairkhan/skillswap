@@ -13,7 +13,7 @@ import {
   TrendingSkillsSchema,
 } from 'src/schemas/trending-skills.schema';
 import { Resource, ResourceSchema } from 'src/schemas/resource.schema';
-
+import { Save, SaveSchema } from 'src/schemas/save.schema';
 @Module({
   imports: [
     UploadModule,
@@ -23,6 +23,7 @@ import { Resource, ResourceSchema } from 'src/schemas/resource.schema';
       { name: Feedback.name, schema: FeedbackSchema },
       { name: TrendingSkills.name, schema: TrendingSkillsSchema },
       { name: Resource.name, schema: ResourceSchema },
+      { name: Save.name, schema: SaveSchema },
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({}),

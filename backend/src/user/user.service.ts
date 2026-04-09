@@ -19,20 +19,19 @@ import {
   TrendingSkillsDocument,
 } from 'src/schemas/trending-skills.schema';
 import { Resource, ResourceDocument } from 'src/schemas/resource.schema';
+import { Save, SavedDocument } from 'src/schemas/save.schema';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
-    @InjectModel(Feedback.name)
-    private readonly feedbackModel: Model<FeedbackDocument>,
-    @InjectModel(TrendingSkills.name)
-    private readonly trendingSkillsModel: Model<TrendingSkillsDocument>,
-    @InjectModel(Resource.name)
-    private readonly resourceModel: Model<ResourceDocument>,
+    @InjectModel(Feedback.name) private readonly feedbackModel: Model<FeedbackDocument>,
+    @InjectModel(TrendingSkills.name) private readonly trendingSkillsModel: Model<TrendingSkillsDocument>,
+    @InjectModel(Resource.name) private readonly resourceModel: Model<ResourceDocument>,
+    @InjectModel(Save.name) private readonly saveModel: Model<SavedDocument>,
     private readonly cloudinary: UploadService,
-  ) {}
+  ) { }
 
   async getMyProfile(userId: string): Promise<any> {
     try {
@@ -708,4 +707,86 @@ export class UserService {
       return [];
     }
   }
+
+  async savePost(userId: string, postId: string): Promise<any> {
+    try {
+      if (!postId || !userId) {
+        throw new NotFoundException('User or Post not found');
+      }
+
+      // Check if post exists
+      const post = await this.postModel.findById(postId);
+      const user = await this.userModel.findById(userId);
+
+      if (!post || !user) {
+        throw new NotFoundException('User or Post not found');
+      }
+
+      // Check for duplicate using ObjectId
+      const checkPostExist = await this.saveModel.findOne({
+        user: user._id,
+        Post: post._id
+      });
+
+      if (checkPostExist) {
+        return { message: "Post already saved" };
+      }
+
+      // Save new post
+      const newSave = new this.saveModel({
+        user: user._id,
+        Post: post._id
+      });
+
+      await newSave.save();
+      return { message: 'Post saved successfully' };
+
+    } catch (error) {
+      console.error('Error saving post:', error);
+      throw new InternalServerErrorException('Failed to save post');
+    }
+  }
+
+  async getSavedPosts(userId: string): Promise<any> {
+    try {
+      console.log("Fetching saved posts for user:", userId);
+
+      if (!userId) {
+        throw new NotFoundException('User not found');
+      }
+
+      const savedPosts = await this.saveModel
+        .find({ user: new Types.ObjectId(userId) })
+        .populate('Post');
+
+
+      return savedPosts.map(save => save.Post);
+    } catch (error) {
+      console.error('Error fetching saved posts:', error);
+
+      throw new InternalServerErrorException(
+        error.message || 'Failed to fetch saved posts'
+      );
+    }
+  }
+
+
+  async unsavePost(userId: string, postId: string): Promise<any> {
+    try {
+      if (!postId || !userId) {
+        throw new NotFoundException('User or Post not found');
+      }
+
+      const deleted = await this.saveModel.findOneAndDelete({ user: new Types.ObjectId(userId), Post: new Types.ObjectId(postId) });
+      if (!deleted) {
+        throw new NotFoundException('Saved post not found');
+      }
+      return { message: 'Post unsaved successfully' };
+    } catch (error) {
+      console.error('Error unsaving post:', error);
+      throw new InternalServerErrorException('Failed to unsave post');
+    }
+  }
+
+
 }
