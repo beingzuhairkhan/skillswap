@@ -4,6 +4,7 @@ import { UserPlus, TrendingUp, Users } from "lucide-react";
 import { userDataAPI } from "../../services/api";
 import Image from "next/image";
 import SuggestedUserSkeleton from "../Loading/SuggestedUserSkeleton";
+import toast from "react-hot-toast";
 
 interface ISuggestedUser {
   _id: string;
@@ -11,7 +12,7 @@ interface ISuggestedUser {
   imageUrl?: string;
   followerCount: number;
   firstSkillToLearn?: string;
-  isOnline?:boolean
+  isOnline?: boolean
 }
 
 interface RightBodyProps {
@@ -26,6 +27,7 @@ const RightBody: React.FC<RightBodyProps> = ({ onSkillClick }) => {
   const [loadingSkills, setLoadingSkills] = useState<boolean>(true);
   const [usersError, setUsersError] = useState<string | null>(null);
   const [skillsError, setSkillsError] = useState<string | null>(null);
+  const [loadingFollow, setLoadingFollow] = useState<{ [key: string]: boolean }>({});
 
   const handleFollow = (userId: string) => {
     setFollowingStates(prev => ({
@@ -34,20 +36,20 @@ const RightBody: React.FC<RightBodyProps> = ({ onSkillClick }) => {
     }));
   };
 
+  // Fetch suggested users
+  const fetchSuggestedUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const response = await userDataAPI.suggestedUser();
+      setSuggestedUsers(response.data);
+    } catch (error: any) {
+      console.error("Failed to fetch suggested users:", error);
+      setUsersError(error.message || "Failed to fetch suggested users");
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
   useEffect(() => {
-    // Fetch suggested users
-    const fetchSuggestedUsers = async () => {
-      try {
-        setLoadingUsers(true);
-        const response = await userDataAPI.suggestedUser();
-        setSuggestedUsers(response.data);
-      } catch (error: any) {
-        console.error("Failed to fetch suggested users:", error);
-        setUsersError(error.message || "Failed to fetch suggested users");
-      } finally {
-        setLoadingUsers(false);
-      }
-    };
 
     // Fetch trending skills
     const fetchTrendingSkills = async () => {
@@ -66,6 +68,25 @@ const RightBody: React.FC<RightBodyProps> = ({ onSkillClick }) => {
     fetchSuggestedUsers();
     fetchTrendingSkills();
   }, []);
+
+  const handleFollowUser = async (userId: string) => {
+  if (loadingFollow[userId]) return; // prevent double clicks
+
+  try {
+    setLoadingFollow((prev) => ({ ...prev, [userId]: true }));
+    const response = await userDataAPI.userFollow(userId);
+    //  if (response.status === 200) {
+      toast.success(response.data.message || "Followed user successfully");
+      // Immediately fetch new suggested users
+      fetchSuggestedUsers();
+    // }
+  } catch (error) {
+    console.error("Failed to follow user:", error);
+    toast.error("Failed to follow user");
+  } finally {
+    setLoadingFollow((prev) => ({ ...prev, [userId]: false }));
+  }
+};
 
   return (
     <div className="hidden sm:block text-black mt-20 w-72 space-y-5">
@@ -165,17 +186,14 @@ const RightBody: React.FC<RightBodyProps> = ({ onSkillClick }) => {
               </div>
 
               <button
-                onClick={() => handleFollow(user._id)}
+                disabled={loadingFollow[user._id]}
                 className={`flex-shrink-0 p-2.5 rounded-xl transition-all duration-200 ${followingStates[user._id]
                   ? 'bg-gray-200 text-gray-700'
                   : 'hover:bg-gray-200 group-hover:scale-110'
                   }`}
+               onClick={() => handleFollowUser(user._id)}
               >
-                <UserPlus
-                  size={18}
-                  className={`transition-colors duration-200 ${followingStates[user._id] ? 'text-gray-600' : 'text-gray-700'
-                    }`}
-                />
+                <UserPlus size={18} className="transition-colors duration-200" />
               </button>
             </div>
           ))}

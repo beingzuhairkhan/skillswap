@@ -64,11 +64,9 @@ const LoginPage = () => {
     }
 
   } catch (err: unknown) {
-    if (axios.isAxiosError(err)) {
-      toast.error(err.response?.data?.message || "Failed to login");
-    } else {
+
       toast.error("Failed to login");
-    }
+
   } finally {
     setIsLoading(false);
   }
