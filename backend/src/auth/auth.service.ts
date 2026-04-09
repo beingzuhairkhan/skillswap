@@ -242,7 +242,13 @@ export class AuthService {
       await this.redis.set(`otp:${emailId}`, generateOTP, 'EX', 300);
       const subject = 'forgot password '
       const html = getForgotPasswordEmailTemplate(generateOTP);
-       this.notificationService.sendEmail(emailId, subject, html)
+       try {
+      await this.notificationService.sendEmail(emailId, subject, html);
+    } catch (err) {
+      console.error("❌ Email failed:", err.message);
+      // Don't break API if email fails
+    }
+
 
 
       return {
