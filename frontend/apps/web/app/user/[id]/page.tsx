@@ -24,7 +24,7 @@ const UserProfile = () => {
   if (profile?.skillsToTeach) {
     if (Array.isArray(profile.skillsToTeach)) {
       skillsTeach = profile.skillsToTeach;
-      console.log("t" , skillsTeach)
+      console.log("t", skillsTeach)
     } else {
       console.warn('skillsToTeach is not an array:', profile.skillsToTeach);
       skillsTeach = [];
@@ -59,6 +59,21 @@ const UserProfile = () => {
 
     if (profileId) fetchProfile();
   }, [profileId]);
+
+  const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
+
+  const handleFollowUser = async (userId: string) => {
+    try {
+      const response = await userDataAPI.userFollow(userId);
+      if (response.status === 200) {
+        toast.success(response.data.message || "Connected successfully");
+        setConnectedUsers(prev => [...prev, userId]); // mark as connected
+      }
+    } catch (error) {
+      toast.error("Failed to connect");
+    }
+  };
+
 
   const tabClasses = (tab: string) =>
     `cursor-pointer px-4 py-2 font-medium border-b-2 ${activeTab === tab
@@ -115,18 +130,19 @@ const UserProfile = () => {
           </span>
         </div>
         {user?._id !== profile?._id && (
-          <div className="flex items-center space-x-2 bg-gray-100 rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-200 transition">
-            <AiOutlineUserAdd size={20} className="text-purple-500" />
-            <span className="font-medium text-gray-800">Connect</span>
-          </div>
+          <button
+            onClick={() => handleFollowUser(user?._id || "")}
+            className={`flex items-center gap-2 font-medium text-sm px-4 py-2 rounded-lg transition-all duration-200
+      ${connectedUsers.includes(user?._id || "") ? "bg-green-100 text-green-800" : "bg-gray-100 hover:bg-gray-200 text-gray-800"}`}
+            disabled={connectedUsers.includes(user?._id || "")} // optional: disable after connecting
+          >
+            <AiOutlineUserAdd
+              size={20}
+              className={connectedUsers.includes(user?._id || "") ? "text-green-500" : "text-purple-500"}
+            />
+            <span>{connectedUsers.includes(user?._id || "") ? "Connected" : "Connect"}</span>
+          </button>
         )}
-         {/* <button
-              className="font-semibold text-sm px-3 py-1 rounded"
-              onClick={() => followUser(post.user)}
-            > */}
-              {/* {isConnected ? "Connected" : "+ Connect"} */}
-              {/* + Connect */}
-              {/* </button> */}
       </div>
 
       {/* Skills Section */}
