@@ -13,9 +13,9 @@ export class UploadService {
       api_secret: process.env.CLOUDINARY_API_SECRET,
     });
 
-     this.pinata = new PinataSDK({
+    this.pinata = new PinataSDK({
       pinataJwt: process.env.PINATA_JWT!,
-      pinataGateway: process.env.PINATA_GATEWAY ,
+      pinataGateway: process.env.PINATA_GATEWAY,
     });
   }
 
@@ -51,12 +51,13 @@ export class UploadService {
     file: Express.Multer.File,
   ): Promise<{ cid: string; url: string }> {
     try {
-      // Convert buffer → Blob → File
-      const blob = new Blob([file.buffer], { type: file.mimetype });
-
-      const pinataFile = new File([blob], file.originalname, {
-        type: file.mimetype,
-      });
+      const pinataFile = new File(
+        [new Uint8Array(file.buffer)],
+        file.originalname,
+        {
+          type: file.mimetype,
+        },
+      );
 
       const upload = await this.pinata.upload.public.file(pinataFile);
 
