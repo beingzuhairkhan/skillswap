@@ -20,6 +20,7 @@ import {
 } from 'src/schemas/trending-skills.schema';
 import { Resource, ResourceDocument } from 'src/schemas/resource.schema';
 import { Save, SavedDocument } from 'src/schemas/save.schema';
+import { PinataSDK } from "pinata";
 
 @Injectable()
 export class UserService {
@@ -399,7 +400,7 @@ export class UserService {
           originalname: filename,
         } as Express.Multer.File;
 
-        const { url } = await this.cloudinary.uploadFile(file);
+        const { url } = await this.cloudinary.uploadPfp(file);
         imageUrl = url;
       }
 

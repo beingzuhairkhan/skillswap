@@ -21,6 +21,8 @@ import { Redis } from 'ioredis';
 import { NotificationService } from 'src/notification/notification.service';
 import { getForgotPasswordEmailTemplate } from 'src/template/forgotPassword.template';
 import axios from 'axios';
+import * as nodemailer from 'nodemailer';
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -231,6 +233,30 @@ export class AuthService {
     }
   }
 
+   private transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.MAIL_USER, // Gmail address
+      pass: process.env.MAIL_PASS, // App password!
+    },
+  });
+
+  async sendEmail(to: string, subject: string, html: string) {
+    try {
+      const info = await this.transporter.sendMail({
+        from: process.env.MAIL_USER,
+        to,
+        subject,
+        html,
+      });
+      console.log('✅ Email sent:', info.messageId);
+      return info;
+    } catch (error) {
+      console.error('❌ Failed to send email:', error);
+      throw error; // Important: rethrow for BullMQ retries
+    }
+  }
+
   async forgotPasswordGetEmail(emailId: string) {
     try {
       const checkUserExits = await this.userModel.findOne({ email: emailId });
@@ -242,7 +268,7 @@ export class AuthService {
       await this.redis.set(`otp:${emailId}`, generateOTP, 'EX', 300);
       const subject = 'forgot password '
       const html = getForgotPasswordEmailTemplate(generateOTP);
-      this.notificationService.sendEmail(emailId, subject, html)
+      this.sendEmail(emailId, subject, html)
 
 
       return {

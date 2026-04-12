@@ -514,7 +514,7 @@ export class SessionService {
 
       if (resource) {
         // Upload file to Cloudinary
-        const { url, publicId } = await this.cloudinary.uploadFile(resource);
+        const { url } = await this.cloudinary.uploadPfp(resource);
         resourcePdf = url;
       }
 

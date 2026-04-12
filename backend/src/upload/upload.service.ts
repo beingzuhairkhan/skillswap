@@ -1,14 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { v2 as cloudinary } from 'cloudinary';
 import * as streamifier from 'streamifier';
+import { PinataSDK } from "pinata";
 
 @Injectable()
 export class UploadService {
+  private pinata: PinataSDK;
   constructor() {
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,
       api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+
+     this.pinata = new PinataSDK({
+      pinataJwt: process.env.PINATA_JWT!,
+      pinataGateway: process.env.PINATA_GATEWAY ,
     });
   }
 
@@ -37,6 +44,28 @@ export class UploadService {
       return res;
     } catch (error) {
       throw new Error(`Failed to delete image: ${error.message}`);
+    }
+  }
+
+  async uploadPfp(
+    file: Express.Multer.File,
+  ): Promise<{ cid: string; url: string }> {
+    try {
+      // Convert buffer → Blob → File
+      const blob = new Blob([file.buffer], { type: file.mimetype });
+
+      const pinataFile = new File([blob], file.originalname, {
+        type: file.mimetype,
+      });
+
+      const upload = await this.pinata.upload.public.file(pinataFile);
+
+      return {
+        cid: upload.cid,
+        url: `https://${process.env.PINATA_GATEWAY}/ipfs/${upload.cid}`,
+      };
+    } catch (error) {
+      throw new Error(`PFP upload failed: ${error.message}`);
     }
   }
 }
