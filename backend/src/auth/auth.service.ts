@@ -21,6 +21,7 @@ import { Redis } from 'ioredis';
 import { NotificationService } from 'src/notification/notification.service';
 import { getForgotPasswordEmailTemplate } from 'src/template/forgotPassword.template';
 import axios from 'axios';
+import * as nodemailer from 'nodemailer';
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
