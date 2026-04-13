@@ -267,7 +267,7 @@ export class AuthService {
       await this.redis.set(`otp:${emailId}`, generateOTP, 'EX', 300);
       const subject = 'forgot password '
       const html = getForgotPasswordEmailTemplate(generateOTP);
-      this.sendEmail(emailId, subject, html)
+      await this.sendEmail(emailId, subject, html)
 
 
       return {
