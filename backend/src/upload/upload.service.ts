@@ -5,6 +5,7 @@ import { PinataSDK } from "pinata";
 
 @Injectable()
 export class UploadService {
+  private pinata: PinataSDK;
   constructor() {
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
