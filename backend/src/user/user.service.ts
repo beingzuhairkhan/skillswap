@@ -399,7 +399,7 @@ export class UserService {
           originalname: filename,
         } as Express.Multer.File;
 
-        const { url } = await this.cloudinary.uploadFile(file);
+         const { url } = await this.cloudinary.uploadPfp(file);
         imageUrl = url;
       }
 
