@@ -59,6 +59,7 @@ export class UploadService {
       );
 
       const upload = await this.pinata.upload.public.file(pinataFile);
+  
 
       return {
         cid: upload.cid,

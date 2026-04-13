@@ -12,7 +12,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import Image from "next/image";
 import Link from "next/link";
 import { SessionAPI } from "../../services/api";
-
+import { HiOutlineBriefcase } from "react-icons/hi";
 interface DashboardData {
   skillsToTeach: number;
   skillsToLearn: number;
@@ -147,7 +147,7 @@ const LeftBody = () => {
     <div className="bg-white rounded-2xl border border-gray-100 p-4 hover:shadow-lg transition-shadow duration-300">
   <div className="grid grid-cols-2 gap-3">
     {[
-      { icon: <MdTrendingUp size={24} />, text: "Recommed Job", link: "/recomm-job" },
+      { icon: <HiOutlineBriefcase  size={20} />, text: "Job", link: "/recomm-job" },
       { icon: <MdSaveAlt size={20} />, text: "Saved", link: "/saved-post" }
     ].map((item, idx) => (
       <Link key={idx} href={item.link}>

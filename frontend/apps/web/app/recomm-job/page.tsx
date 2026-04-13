@@ -221,10 +221,10 @@ export default function JobsPage() {
         const jobList = Array.isArray(data?.result?.jobs)
           ? data.result.jobs
           : Array.isArray(data?.jobs)
-          ? data.jobs
-          : Array.isArray(data)
-          ? data
-          : []
+            ? data.jobs
+            : Array.isArray(data)
+              ? data
+              : []
         setJobs(jobList)
       } catch {
         setError('Failed to load jobs. Please try again.')
@@ -237,46 +237,25 @@ export default function JobsPage() {
 
   const recommendedJobs = user && Array.isArray(jobs)
     ? [...jobs]
-        .map(job => ({ job, score: getMatchScore(job, user) }))
-        .filter(({ score }) => score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 9)
-        .map(({ job }) => job)
+      .map(job => ({ job, score: getMatchScore(job, user) }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 9)
+      .map(({ job }) => job)
     : Array.isArray(jobs) ? jobs.slice(0, 9) : []
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 mt-10">
+    <div className="max-w-5xl mx-auto px-4 py-8 mt-12">
       {/* Header */}
-      <div className="mb-7">
-        <div className="flex items-center gap-3 mb-1">
-          {user?.imageUrl && (
-            <img
-              src={user.imageUrl}
-              alt={user.name}
-              className="w-9 h-9 rounded-full object-cover ring-2 ring-indigo-500"
-            />
-          )}
-          <div>
-            <h1 className="text-xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight">
-              Recommended Jobs
-            </h1>
-            {user?.skillsToTeach?.length > 0 && (
-              <p className="text-xs text-zinc-400">
-                Based on:{' '}
-                <span className="text-indigo-500 font-semibold">
-                  {user.skillsToTeach.slice(0, 3).join(', ')}
-                </span>
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
+
 
       {/* Loading */}
       {loading && (
-        <div className="flex flex-col items-center justify-center min-h-64 gap-4">
-          <div className="w-9 h-9 rounded-full border-[3px] border-zinc-200 border-t-indigo-500 animate-spin" />
-          <p className="text-sm text-zinc-400">Finding your best matches…</p>
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-20 h-20 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+            <p className="text-black font-semibold text-lg">Loading...</p>
+          </div>
         </div>
       )}
 
