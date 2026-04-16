@@ -35,4 +35,4 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/backend-app:latest
             docker stop backend-container || true
             docker rm backend-container || true
-            docker run -d --name backend-container -p 4000:4000 ${{ secrets.DOCKER_USERNAME }}/backend-app:latest
+            docker run -d --name backend-container -p 4000:4000  --env-file /home/ubuntu/.env  ${{ secrets.DOCKER_USERNAME }}/backend-app:latest
