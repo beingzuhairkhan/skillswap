@@ -287,7 +287,7 @@ export class AuthService {
       const generateOTP = Math.floor(100000 + Math.random() * 900000);
       await this.redis.set(`otp:${emailId}`, generateOTP, 'EX', 300);
       const subject = 'forgot password '
-      const html = this.getForgotPasswordEmailTemplate(otp);
+      const html = this.getForgotPasswordEmailTemplate(generateOTP);
        await this.sendEmail(emailId, subject, html)
 
 
