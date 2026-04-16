@@ -39,6 +39,7 @@ export interface LoginResponse extends SignupResponse {
 @Injectable()
 export class AuthService {
   private client: OAuth2Client;
+  private transporter;
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private jwtService: JwtService,
@@ -46,6 +47,22 @@ export class AuthService {
     private readonly notificationService: NotificationService
   ) {
     this.client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+      this.transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS, // Gmail App Password
+      },
+    });
+
+    // Verify transporter on startup
+    this.transporter.verify((error, success) => {
+      if (error) {
+        console.error('❌ Mail transporter error:', error);
+      } else {
+        console.log('✅ Mail server is ready');
+      }
+    });
   }
 
   generateToken(user: UserDocument): AuthTokens {
@@ -232,28 +249,32 @@ export class AuthService {
     }
   }
 
-   private transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.MAIL_USER, // Gmail address
-      pass: process.env.MAIL_PASS, // App password!
-    },
-  });
-
-  async sendEmail(to: string, subject: string, html: string) {
+   async sendEmail(to: string, subject: string, html: string) {
     try {
       const info = await this.transporter.sendMail({
-        from: process.env.MAIL_USER,
+        from: `"Support Team" <${process.env.MAIL_USER}>`,
         to,
         subject,
         html,
       });
+
       console.log(' Email sent:', info.messageId);
       return info;
     } catch (error) {
       console.error(' Failed to send email:', error);
-      throw error; 
+      throw new InternalServerErrorException(error.message);
     }
+  }
+
+    private getForgotPasswordEmailTemplate(otp: number): string {
+    return `
+      <div style="font-family: Arial; padding: 20px;">
+        <h2>Password Reset</h2>
+        <p>Your OTP is:</p>
+        <h1 style="color: blue;">${otp}</h1>
+        <p>This OTP will expire in 5 minutes.</p>
+      </div>
+    `;
   }
 
   async forgotPasswordGetEmail(emailId: string) {
@@ -266,8 +287,8 @@ export class AuthService {
       const generateOTP = Math.floor(100000 + Math.random() * 900000);
       await this.redis.set(`otp:${emailId}`, generateOTP, 'EX', 300);
       const subject = 'forgot password '
-      const html = getForgotPasswordEmailTemplate(generateOTP);
-      await this.sendEmail(emailId, subject, html)
+      const html = this.getForgotPasswordEmailTemplate(otp);
+       await this.sendEmail(emailId, subject, html)
 
 
       return {

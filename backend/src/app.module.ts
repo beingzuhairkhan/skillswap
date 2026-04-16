@@ -10,6 +10,7 @@ import { SessionModule } from './session/session.module';
 import { ChatModule } from './chat/chat.module';
 import { RoomModule } from './room/room.module';
 import { NotificationModule } from './notification/notification.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { NotificationModule } from './notification/notification.module';
     ChatModule,
     RoomModule,
     NotificationModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
