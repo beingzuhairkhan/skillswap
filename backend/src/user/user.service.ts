@@ -20,6 +20,7 @@ import {
 } from 'src/schemas/trending-skills.schema';
 import { Resource, ResourceDocument } from 'src/schemas/resource.schema';
 import { Save, SavedDocument } from 'src/schemas/save.schema';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class UserService {
@@ -399,7 +400,7 @@ export class UserService {
           originalname: filename,
         } as Express.Multer.File;
 
-         const { url } = await this.cloudinary.uploadPfp(file);
+        const { url } = await this.cloudinary.uploadPfp(file);
         imageUrl = url;
       }
 
@@ -788,5 +789,113 @@ export class UserService {
     }
   }
 
+  async leetcode(username: string) {
+    try {
+      const response = await axios.post(
+        "https://leetcode.com/graphql",
+        {
+          query: `
+          query getUserProfile($username: String!) {
+            matchedUser(username: $username) {
+              submitStats {
+                acSubmissionNum {
+                  difficulty
+                  count
+                }
+              }
+            }
+          }
+        `,
+          variables: { username }
+        }
+      );
+
+      const stats =
+        response.data.data.matchedUser.submitStats.acSubmissionNum;
+
+      let result = {
+        leetcode_solved: 0,
+        easy_solved: 0,
+        medium_solved: 0,
+        hard_solved: 0
+      };
+
+      stats.forEach((item) => {
+        if (item.difficulty === "All") result.leetcode_solved = item.count;
+        if (item.difficulty === "Easy") result.easy_solved = item.count;
+        if (item.difficulty === "Medium") result.medium_solved = item.count;
+        if (item.difficulty === "Hard") result.hard_solved = item.count;
+      });
+
+      return result;
+    } catch (err) {
+      throw new InternalServerErrorException("LeetCode fetch failed");
+    }
+  }
+
+  async github(username: string) {
+    try {
+      const res = await axios.get(
+        `https://api.github.com/users/${username}`
+      );
+
+      return {
+        repos: res.data.public_repos,
+        followers: res.data.followers
+      };
+    } catch (err) {
+      throw new InternalServerErrorException("GitHub fetch failed");
+    }
+  }
+
+  @Cron('*/5 * * * *')
+  async handleCron() {
+    console.log('Running badge generator cron...');
+
+    await this.badgeGenerator();
+  }
+
+  async badgeGenerator() {
+    const users = await this.userModel.find({});
+
+    for (const user of users) {
+      if (!user.leetcodeUsername || !user.githubUsername) continue;
+
+      try {
+        const leetcodeData = await this.leetcode(user.leetcodeUsername);
+        const githubData = await this.github(user.githubUsername);
+
+        const hard_ratio =
+          leetcodeData.hard_solved / (leetcodeData.leetcode_solved + 1);
+
+        const repo_score =
+          githubData.repos * 0.7 + githubData.followers * 0.3;
+
+        const payload = {
+          ...leetcodeData,
+          ...githubData,
+          hard_ratio,
+          repo_score
+        };
+
+        const mlResponse = await axios.post(
+          "http://localhost:8000/predict",
+          payload
+        );
+
+        const { badge, confidence } = mlResponse.data;
+
+        user.badge = badge;
+
+        await user.save();
+     
+
+      } catch (err) {
+        console.error("Error processing user:", user._id);
+      }
+    }
+
+    return { message: "Badges updated successfully" };
+  }
 
 }

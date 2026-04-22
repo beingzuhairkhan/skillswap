@@ -77,6 +77,9 @@ export class User {
 
   @Prop({ type: Boolean, default: false })
   isOnline: boolean;
+
+  @Prop({ type: String, default: '' })
+  badge?:string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -11,6 +11,7 @@ import { ChatModule } from './chat/chat.module';
 import { RoomModule } from './room/room.module';
 import { NotificationModule } from './notification/notification.module';
 import { MetricsModule } from './metrics/metrics.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { MetricsModule } from './metrics/metrics.module';
       isGlobal: true,
       envFilePath: '.env', 
     }),
+    ScheduleModule.forRoot(),
 
     MongooseModule.forRoot(process.env.MONGO_URL!, {
       onConnectionCreate: (connection) => {
