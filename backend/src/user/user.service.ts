@@ -309,7 +309,7 @@ export class UserService {
             skillsToLearn: 1,
             imageUrl: 1,
             domain: 1,
-            badge:1
+            badge: 1
           },
           resources: 1,
         },
@@ -849,7 +849,7 @@ export class UserService {
     }
   }
 
-  @Cron('*/5 * * * *')
+  @Cron('0 0 * * 0')
   async handleCron() {
     console.log('Running badge generator cron...');
 
@@ -889,7 +889,7 @@ export class UserService {
         user.badge = badge;
 
         await user.save();
-     
+
 
       } catch (err) {
         console.error("Error processing user:", user._id);
