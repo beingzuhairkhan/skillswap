@@ -851,8 +851,6 @@ export class UserService {
 
   @Cron('0 0 * * 0')
   async handleCron() {
-    console.log('Running badge generator cron...');
-
     await this.badgeGenerator();
   }
 
