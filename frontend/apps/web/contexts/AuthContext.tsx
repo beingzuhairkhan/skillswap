@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       await fetchCurrentUser();
 
-      toast.success("Logged in successfully");
+      // toast.success("Logged in successfully");
       router.push("/");
       return true;
     } catch (err: any) {

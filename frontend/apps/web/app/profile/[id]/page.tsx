@@ -13,7 +13,7 @@ import ProfileAcceptSession from "../../../components/ProfileData/ProfileAcceptS
 import ProfileCancelSession from "../../../components/ProfileData/ProfileCancelSession";
 import { SessionStatus } from '../../../components/constants/sessionStatus'
 import ProfileReviews from "@/components/ProfileData/ProfileReviews";
-
+import { Leaf, Zap, Flame, Crown } from "lucide-react";
 
 // export const SessionStatus = {
 //   ACCEPT: "accept",
@@ -72,15 +72,15 @@ const Profile = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "Posts":
-        return <ProfilePosts/>;
+        return <ProfilePosts />;
       case "Reviews":
-        return <ProfileReviews/>;
+        return <ProfileReviews />;
       case "Upcoming Sessions":
         return <ProfileAcceptSession status={SessionStatus.ACCEPT} />;
       case "Request Sessions":
         return <ProfileRequestSessio status={SessionStatus.PENDING} />;
       case "Cancel Session":
-        return <ProfileCancelSession status={SessionStatus.REJECT}/>;
+        return <ProfileCancelSession status={SessionStatus.REJECT} />;
       default:
         return null;
     }
@@ -99,6 +99,7 @@ const Profile = () => {
     <div className="mt-20 flex flex-col items-center mx-auto max-w-7xl px-4 space-y-6">
 
       {/* Profile Image */}
+        <div className="relative inline-block">
       <Image
         src={profile?.imageUrl || ProfileImage}
         alt="avatar"
@@ -106,6 +107,32 @@ const Profile = () => {
         height={120}
         className="rounded-full"
       />
+      <span
+        className={`
+     absolute top-0 left-20
+  flex items-center gap-1 px-2 py-0.5 rounded-full
+  text-xs font-semibold shadow-md border border-white
+    ${profile?.badge === 'Beginner'
+            ? 'bg-green-100 text-green-700'
+            : profile?.badge === 'Intermediate'
+              ? 'bg-blue-100 text-blue-700'
+              : profile?.badge === 'Advanced'
+                ? 'bg-purple-100 text-purple-700'
+                : profile?.badge === 'Pro'
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : 'bg-gray-100 text-gray-500'
+          }
+  `}
+      >
+        {/* Icon per level */}
+        {profile?.badge === 'Beginner' && <Leaf size={14} />}
+        {profile?.badge === 'Intermediate' && <Zap size={14} />}
+        {profile?.badge === 'Advanced' && <Flame size={14} />}
+        {profile?.badge === 'Pro' && <Crown size={14} />}
+
+        {profile?.badge || 'Beginner'}
+      </span>
+      </div>
 
       {/* Name & Education */}
       <div className="text-center space-y-1 py-2">

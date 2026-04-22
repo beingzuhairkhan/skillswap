@@ -309,6 +309,7 @@ export class UserService {
             skillsToLearn: 1,
             imageUrl: 1,
             domain: 1,
+            badge:1
           },
           resources: 1,
         },

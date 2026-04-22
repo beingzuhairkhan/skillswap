@@ -10,6 +10,8 @@ import { AiOutlineUserAdd } from 'react-icons/ai';
 import LeetCodeCard from '../../../components/codingProfile/Leetcode';
 import GitHubCard from '../../../components/codingProfile/Github';
 import { useParams } from 'next/navigation';
+import { Leaf, Zap, Flame, Crown } from "lucide-react";
+
 const UserProfile = () => {
   const params = useParams();
   const profileId = params?.id;
@@ -91,6 +93,7 @@ const UserProfile = () => {
   return (
     <div className="mt-20 flex flex-col items-center mx-auto max-w-7xl px-4 space-y-6">
       {/* Profile Header */}
+      <div className="relative inline-block">
       <Image
         src={profile?.imageUrl || ProfileImage}
         alt="avatar"
@@ -98,6 +101,32 @@ const UserProfile = () => {
         height={120}
         className="rounded-full"
       />
+      <span
+        className={`
+     absolute top-0 left-20
+  flex items-center gap-1 px-2 py-0.5 rounded-full
+  text-xs font-semibold shadow-md border border-white
+    ${profile?.badge === 'Beginner'
+            ? 'bg-green-100 text-green-700'
+            : profile?.badge === 'Intermediate'
+              ? 'bg-blue-100 text-blue-700'
+              : profile?.badge === 'Advanced'
+                ? 'bg-purple-100 text-purple-700'
+                : profile?.badge === 'Pro'
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : 'bg-gray-100 text-gray-500'
+          }
+  `}
+      >
+        {/* Icon per level */}
+        {profile?.badge === 'Beginner' && <Leaf size={14} />}
+        {profile?.badge === 'Intermediate' && <Zap size={14} />}
+        {profile?.badge === 'Advanced' && <Flame size={14} />}
+        {profile?.badge === 'Pro' && <Crown size={14} />}
+
+        {profile?.badge || 'Beginner'}
+      </span>
+      </div>
 
       <div className="text-center space-y-1 py-2">
         <h1 className="text-gray-800 font-semibold text-[30px]">{profile?.name}</h1>
