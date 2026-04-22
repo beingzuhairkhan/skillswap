@@ -879,7 +879,7 @@ export class UserService {
         };
 
         const mlResponse = await axios.post(
-          "http://localhost:8000/predict",
+          `${process.env.MODEL}/predict`,
           payload
         );
 
