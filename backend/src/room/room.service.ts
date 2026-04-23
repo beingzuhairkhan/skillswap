@@ -215,7 +215,7 @@ export class RoomService {
       return translation;
     } catch (err) {
 
-      throw new Error('Failed to Translate in english', error);
+      throw new Error('Failed to Translate in english', err);
     }
   }
 }
