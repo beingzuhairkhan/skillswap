@@ -10,15 +10,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: any) => {
           const authHeader = req?.headers?.authorization;
-          console.log(req.headers);
 
           if (!authHeader) return null;
 
           const encryptedToken = authHeader.replace('Bearer ', '');
 
           try {
-            return this.decrypt(encryptedToken); // 🔓 decrypt FIRS
+            const jwt = this.decrypt(encryptedToken); // 🔓 step 1
+            return jwt; // return NORMAL JWT to passport
           } catch (err) {
+            console.log('DECRYPT ERROR:', err.message);
             return null;
           }
         },
@@ -29,16 +30,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   private decrypt(token: string): string {
-    const crypto = require('crypto');
-
-    const [ivBase64, encryptedData] = token.split(':');
-
-    const iv = Buffer.from(ivBase64, 'base64');
-
     const key = crypto
       .createHash('sha256')
       .update(process.env.ENCRYPT_KEY!)
       .digest();
+
+    const [ivBase64, encryptedData] = token.split(':');
+
+    if (!ivBase64 || !encryptedData) {
+      throw new Error('Invalid token format');
+    }
+
+    const iv = Buffer.from(ivBase64, 'base64');
 
     const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
 
