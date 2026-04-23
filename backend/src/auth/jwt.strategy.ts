@@ -9,25 +9,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: any) => {
-          console.log('================ REQUEST DEBUG ================');
-          console.log('HEADERS:', req?.headers);
 
           const authHeader = req?.headers?.authorization;
 
-          console.log('AUTH HEADER:', authHeader);
 
           if (!authHeader) {
-            console.log('❌ NO AUTH HEADER FOUND');
             return null;
           }
 
           const encryptedToken = authHeader.replace('Bearer ', '');
 
-          console.log('ENCRYPTED TOKEN:', encryptedToken);
 
           try {
             const jwt = this.decrypt(encryptedToken);
-            console.log('✅ DECRYPT SUCCESS:', jwt);
+  
             return jwt;
           } catch (err) {
             console.log('❌ DECRYPT FAILED:', err.message);
@@ -63,8 +58,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    console.log('🎯 JWT PAYLOAD:', payload);
-
     return {
       userId: payload.id,
       email: payload.email,

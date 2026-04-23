@@ -15,11 +15,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     status?: any,
   ): any {
     const req = context.switchToHttp().getRequest();
-    // console.log("User data from auth guard :" , user)
-     console.log('================ GUARD DEBUG ================');
-    console.log('ERROR:', err);
-    console.log('USER:', user);
-    console.log('INFO:', info);
+
 
     if (err || !user) {
       const message =
