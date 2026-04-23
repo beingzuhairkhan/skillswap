@@ -78,7 +78,7 @@ export class AuthController {
   ) {
     const { user, tokens } = await this.authService.githubCallback(req.user);
     res.redirect(
-      `${process.env.FRONTEND_URL}/oauth?token=${tokens.accessToken}`,
+      `${process.env.FRONTEND_URL}/oauth?token=${encodeURIComponent(tokens.accessToken)}`
     );
   }
 
