@@ -72,21 +72,26 @@ export class AuthService {
       throw new Error('ENCRYPT_KEY is not defined in environment variables');
     }
 
+    const crypto = require('crypto');
+
     const algorithm = 'aes-256-cbc';
-    const secretKey = crypto
+
+    const key = crypto
       .createHash('sha256')
       .update(process.env.ENCRYPT_KEY)
-      .digest(); // raw 32 bytes
+      .digest();
 
-    const iv = Buffer.alloc(16, 0);
+    const iv = crypto.randomBytes(16); // ✅ FIXED
 
-    const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+
     const encrypted = Buffer.concat([
       cipher.update(JSON.stringify(data), 'utf8'),
       cipher.final(),
     ]);
 
-    return encrypted.toString('base64');
+    // send iv + encrypted data together
+    return iv.toString('base64') + ':' + encrypted.toString('base64');
   }
 
   generateToken(user: UserDocument): AuthTokens {

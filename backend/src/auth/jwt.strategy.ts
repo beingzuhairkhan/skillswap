@@ -28,23 +28,25 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   private decrypt(token: string): string {
-    const algorithm = 'aes-256-cbc';
+    const crypto = require('crypto');
 
-    const secretKey = crypto
+    const [ivBase64, encryptedData] = token.split(':');
+
+    const iv = Buffer.from(ivBase64, 'base64');
+
+    const key = crypto
       .createHash('sha256')
       .update(process.env.ENCRYPT_KEY!)
       .digest();
 
-    const iv = Buffer.alloc(16, 0); 
-
-    const decipher = crypto.createDecipheriv(algorithm, secretKey, iv);
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
 
     const decrypted = Buffer.concat([
-      decipher.update(Buffer.from(token, 'base64')),
+      decipher.update(Buffer.from(encryptedData, 'base64')),
       decipher.final(),
     ]);
 
-    return decrypted.toString('utf8'); 
+    return decrypted.toString('utf8');
   }
 
   async validate(payload: any) {
