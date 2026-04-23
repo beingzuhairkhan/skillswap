@@ -10,6 +10,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: any) => {
           const authHeader = req?.headers?.authorization;
+          console.log(req.headers);
 
           if (!authHeader) return null;
 

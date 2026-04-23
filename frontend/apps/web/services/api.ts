@@ -19,18 +19,18 @@ export const authAPI = axios.create({
   }
 })
 
-authAPI.interceptors.request.use(
-  (config) => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('accessToken');
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+authAPI.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('accessToken');
+
+    if (token) {
+      config.headers = config.headers ?? {};
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+  }
+
+  return config;
+});
 
 authAPI.interceptors.response.use(
   (response) => response,
