@@ -100,11 +100,18 @@ const Message = () => {
     }
   };
 
-  const handleGenerateSession = () => {
-    if (selectedUser) {
-      alert(`Session generated for User: ${selectedUser.name}`);
+    const handleTranslate = async () => {
+    if (!message.trim()) return;
+
+    try {
+      const translated = await ChatAPI.chatTranslate(message);
+      console.log("Translated text:", translated);
+      setMessage(translated.data);
+    } catch (error) {
+      console.error("Translation failed:", error);
     }
   };
+
 
   return (
     <div className="flex gap-6 bg-white mt-20 max-w-6xl mx-auto">
@@ -214,12 +221,12 @@ const Message = () => {
               >
                 Send
               </button>
-              <button
-                onClick={handleGenerateSession}
-                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
-              >
-                Generate Session
-              </button>
+            <button
+            onClick={handleTranslate}
+            className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
+          >
+            Translate to English
+          </button>
             </div>
           </>
         ) : (
