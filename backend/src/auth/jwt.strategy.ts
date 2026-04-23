@@ -21,7 +21,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
 
           try {
+            console.log('🔍 Encrypted token:', encryptedToken);
             const jwt = this.decrypt(encryptedToken);
+            console.log('🔍 Decrypted JWT:', jwt);
   
             return jwt;
           } catch (err) {
