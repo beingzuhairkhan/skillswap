@@ -79,4 +79,10 @@ export class RoomController {
     const userId = req.user.userId;
     return this.roomService.getUserReviews(userId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('translate')
+  async translateText(@Body('text') text: string) {
+    return this.roomService.chatTranslate(text);
+  }
 }

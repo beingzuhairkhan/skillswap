@@ -32,7 +32,7 @@ export class RoomService {
     private readonly feedbackModel: Model<FeedbackDocument>,
     private jwtService: JwtService,
     private readonly roomGateway: RoomGateway,
-  ) {}
+  ) { }
 
   async decodeMeetLink(meetLink: string, userId: string): Promise<any> {
     try {
@@ -207,5 +207,15 @@ export class RoomService {
   }
   catch(error) {
     throw new Error('Failed to fetch reviews', error);
+  }
+
+  async chatTranslate(text: string) {
+    try {
+      const translation = await this.roomGateway.getChatTranslate(text);
+      return translation;
+    } catch (err) {
+
+      throw new Error('Failed to Translate in english', error);
+    }
   }
 }

@@ -222,6 +222,9 @@ export const ChatAPI = {
 
   sendMessage: (receiverId: string, message: string) =>
     authAPI.post(`/chat/send`, { receiverId, message }),
+
+  chatTranslate: (text: string) =>
+    authAPI.post('/room/translate', { text })
 };
 
 export const RoomAPI = {

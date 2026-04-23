@@ -153,9 +153,16 @@ const UserMessagePage = () => {
     }
   };
 
-  const handleGenerateSession = () => {
-    if (!userId) return;
-    alert(`Session generated for User ID: ${userId}`);
+  const handleTranslate = async () => {
+    if (!message.trim()) return;
+
+    try {
+      const translated = await ChatAPI.chatTranslate(message);
+      console.log("Translated text:", translated);
+      setMessage(translated.data);
+    } catch (error) {
+      console.error("Translation failed:", error);
+    }
   };
 
   return (
@@ -269,10 +276,10 @@ const UserMessagePage = () => {
             Send
           </button>
           <button
-            onClick={handleGenerateSession}
+            onClick={handleTranslate}
             className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
           >
-            Generate Session
+            Translate to English
           </button>
         </div>
       </div>

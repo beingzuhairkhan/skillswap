@@ -334,154 +334,33 @@ e:
         ],
       });
 
-      console.log(
-        'res from transcription',
-        completion.choices?.[0]?.message?.content,
-      );
 
       return completion.choices?.[0]?.message?.content || '';
     } catch (error: any) {
       throw new Error(error.message || 'Summary generation failed');
     }
   }
+
+  async getChatTranslate(prompt: string): Promise<string> {
+    const completion = await this.groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        {
+          role: 'system',
+          content:
+           'You are a helpful assistant. Translate the given Hindi text into English. Return only the translated text. Do not add any explanations, formatting, labels, or extra words.',
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+    });
+    let response = completion.choices[0]?.message?.content ?? '';
+
+    response = response.replace(/[#\-\*\>`_~]/g, '').trim();
+    return response;
+  }
 }
 
-// ata from frontend {
-//   fieldname: 'file',
-//   originalname: 'audio.webm',
-//   encoding: '7bit',
-//   mimetype: 'audio/webm',
-//   buffer: <Buffer 1a 45 df a3 9f 42 86 81 01 42 f7 81 01 42 f2 81 04 42 f3 81 08 42 82 84 77 65 62 6d 42 87 81 04 42 85 81 02 18 53 80 67 01 00 00 00 00 00 57 06 11 4d ... 22276 more bytes>,
-//   size: 22326
-// } 68f612b1ad916a584418a416-68f627aa750890ee59b36b1e 68f612b1ad916a584418a416 UserA
-// filepath from trans {
-//   fieldname: 'file',
-//   originalname: 'audio.webm',
-//   encoding: '7bit',
-//   mimetype: 'audio/webm',
-//   buffer: <Buffer 1a 45 df a3 9f 42 86 81 01 42 f7 81 01 42 f2 81 04 42 f3 81 08 42 82 84 77 65 62 6d 42 87 81 04 42 85 81 02 18 53 80 67 01 00 00 00 00 00 57 06 11 4d ... 22276 more bytes>,
-//   size: 22326
-// }
-// data from frontend {
-//   fieldname: 'file',
-//   originalname: 'audio.webm',
-//   encoding: '7bit',
-//   mimetype: 'audio/webm',
-//   buffer: <Buffer 1a 45 df a3 9f 42 86 81 01 42 f7 81 01 42 f2 81 04 42 f3 81 08 42 82 84 77 65 62 6d 42 87 81 04 42 85 81 02 18 53 80 67 01 00 00 00 00 00 56 fd 11 4d ... 22267 more bytes>,
-//   size: 22317
-// } 68f612b1ad916a584418a416-68f627aa750890ee59b36b1e 68f612b1ad916a584418a416 UserA
-// filepath from trans {
-//   fieldname: 'file',
-//   originalname: 'audio.webm',
-//   encoding: '7bit',
-//   mimetype: 'audio/webm',
-//   buffer: <Buffer 1a 45 df a3 9f 42 86 81 01 42 f7 81 01 42 f2 81 04 42 f3 81 08 42 82 84 77 65 62 6d 42 87 81 04 42 85 81 02 18 53 80 67 01 00 00 00 00 00 56 fd 11 4d ... 22267 more bytes>,
-//   size: 22317
-// }
-// res from tran {
-//   task: 'transcribe',
-//   language: 'Hindi',
-//   duration: 7.98,
-//   text: ' K Украї� Sportsgoились. crossedQUE',
-//   words: [ { word: 'K', start: 1.82, end: 1.84 } ],
-//   segments: [
-//     {
-//       id: 0,
-//       seek: 0,
-//       start: 0,
-//       end: 1.34,
-//       text: ' K Украї� Sportsgoились.',
-//       tokens: [Array],
-//       temperature: 1,
-//       avg_logprob: -5.750283,
-//       compression_ratio: 0.8804348,
-//       no_speech_prob: 4.4881446e-10
-//     },
-//     {
-//       id: 1,
-//       seek: 134,
-//       start: 1.34,
-//       end: 7.98,
-//       text: ' crossedQUE',
-//       tokens: [Array],
-//       temperature: 1,
-//       avg_logprob: -5.5484514,
-//       compression_ratio: 0.5555556,
-//       no_speech_prob: 3.7541384e-10
-//     }
-//   ],
-//   x_groq: { id: 'req_01kfas7wcxew1vn9a5gyp42g6b' }
-// }
-// filepath from transcription  K Украї� Sportsgoились. crossedQUE
-// res from tran {
-//   task: 'transcribe',
-//   language: 'Hindi',
-//   duration: 7.98,
-//   text: ' Hello, I am currently taking computer to N IC, Mr XVNI .',
-//   words: [
-//     { word: 'Hello,', start: 1.94, end: 2.4 },
-//     { word: 'I', start: 2.4, end: 2.6 },
-//     { word: 'am', start: 2.6, end: 2.64 },
-//     { word: 'currently', start: 2.64, end: 3.76 },
-//     { word: 'taking', start: 3.76, end: 4.88 },
-//     { word: 'computer', start: 4.88, end: 5.52 },
-//     { word: 'to', start: 5.52, end: 5.82 },
-//     { word: 'N', start: 5.82, end: 6.3 },
-//     { word: 'IC,', start: 6.3, end: 6.32 },
-//     { word: 'Mr', start: 6.32, end: 6.68 },
-//     { word: 'XVNI .', start: 6.68, end: 7.2 }
-//   ],
-//   segments: [
-//     {
-//       id: 0,
-//       seek: 0,
-//       start: 0,
-//       end: 8,
-//       text: ' Hello, I am currently taking computer to N IC, Mr XVNI .',
-//       tokens: [Array],
-//       temperature: 1,
-//       avg_logprob: -3.5246632,
-//       compression_ratio: 0.875,
-//       no_speech_prob: 5.652086e-10
-//     }
-//   ],
-//   x_groq: { id: 'req_01kfas7wj0ejvtv5hr33esc71c' }
-// }
-// filepath from transcription  Hello, I am currently taking computer to N IC, Mr XVNI .
-// res from transcription It appears there is no transcript to summarize. The provided text seems to be incomplete or contains characters that are not recognizable. Please provide a complete and legible transcript of the meeting conversation, and I'll be happy to summarize it for you.
-// final  {
-//   roomId: '68f612b1ad916a584418a416-68f627aa750890ee59b36b1e',
-//   speakerId: '68f612b1ad916a584418a416',
-//   speakerRole: 'UserA',
-//   language: 'hi',
-//   audioFilePath: 'audio.webm',
-//   transcription: ' K Украї� Sportsgoились. crossedQUE',
-//   summary: "It appears there is no transcript to summarize. The provided text seems to be incomplete or contains characters that are not recognizable. Please provide a complete and legible transcript of the meeting conversation, and I'll be happy to summarize it for you.",
-//   _id: new ObjectId('696df8d08a2d363c63457b81'),
-//   segments: [],
-//   createdAt: 2026-01-19T09:26:40.618Z,
-//   updatedAt: 2026-01-19T09:26:40.618Z,
-//   __v: 0
-// }
-// res from transcription Here is a concise summary of the transcript per speaker:
 
-// * Speaker: Introduced themselves and mentioned they are currently taking a computer to N IC, addressed Mr. XVNI.
-// final  {
-//   roomId: '68f612b1ad916a584418a416-68f627aa750890ee59b36b1e',
-//   speakerId: '68f612b1ad916a584418a416',
-//   speakerRole: 'UserA',
-//   language: 'hi',
-//   audioFilePath: 'audio.webm',
-//   transcription: ' Hello, I am currently taking computer to N IC, Mr XVNI .',
-//   summary: 'Here is a concise summary of the transcript per speaker:\n' +
-//     '\n' +
-//     '* Speaker: Introduced themselves and mentioned they are currently taking a computer to N IC, addressed Mr. XVNI.',
-//   _id: new ObjectId('696df8d08a2d363c63457b83'),
-//   segments: [],
-//   createdAt: 2026-01-19T09:26:40.929Z,
-//   updatedAt: 2026-01-19T09:26:40.929Z,
-//   __v: 0
-// }
-// ^C
-// PS D:\zuhair\project4\newss\skillswap\backend> ^C
-// PS D:\zuhair\project4\newss\skillswap\backend>
