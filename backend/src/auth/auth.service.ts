@@ -22,6 +22,8 @@ import { NotificationService } from 'src/notification/notification.service';
 import { getForgotPasswordEmailTemplate } from 'src/template/forgotPassword.template';
 import axios from 'axios';
 import * as nodemailer from 'nodemailer';
+import * as crypto from 'crypto';
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -47,7 +49,7 @@ export class AuthService {
     private readonly notificationService: NotificationService
   ) {
     this.client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-      this.transporter = nodemailer.createTransport({
+    this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.MAIL_USER,
@@ -58,11 +60,33 @@ export class AuthService {
     // Verify transporter on startup
     this.transporter.verify((error, success) => {
       if (error) {
-        console.error('❌ Mail transporter error:', error);
+        console.error(' Mail transporter error:', error);
       } else {
-        console.log('✅ Mail server is ready');
+        console.log(' Mail server is ready');
       }
     });
+  }
+
+  private encrypt(data: any): string {
+    if (!process.env.ENCRYPT_KEY) {
+      throw new Error('ENCRYPT_KEY is not defined in environment variables');
+    }
+
+    const algorithm = 'aes-256-cbc';
+    const secretKey = crypto
+      .createHash('sha256')
+      .update(process.env.ENCRYPT_KEY)
+      .digest(); // raw 32 bytes
+
+    const iv = Buffer.alloc(16, 0);
+
+    const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
+    const encrypted = Buffer.concat([
+      cipher.update(JSON.stringify(data), 'utf8'),
+      cipher.final(),
+    ]);
+
+    return encrypted.toString('base64');
   }
 
   generateToken(user: UserDocument): AuthTokens {
@@ -72,16 +96,26 @@ export class AuthService {
       role: user.role,
     };
 
-    const accessToken = this.jwtService.sign(payload, {
+    const commonOptions = {
+      issuer: 'skillswap-api',
+      audience: 'skillswap-client',
+    };
+
+    const accessT = this.jwtService.sign(payload, {
+      ...commonOptions,
       secret: process.env.JWT_ACCESS_SECRET,
       expiresIn: '50m',
     });
-    const refreshToken = this.jwtService.sign(payload, {
+    const refreshT = this.jwtService.sign(payload, {
+      ...commonOptions,
       secret: process.env.JWT_REFRESH_SECRET,
       expiresIn: process.env.JWT_REFRESH_EXPIRY
         ? parseInt(process.env.JWT_REFRESH_EXPIRY, 10)
         : '7d',
     });
+
+    const accessToken = this.encrypt(accessT);
+    const refreshToken = this.encrypt(refreshT);
 
     return { accessToken, refreshToken };
   }
@@ -249,7 +283,7 @@ export class AuthService {
     }
   }
 
-   async sendEmail(to: string, subject: string, html: string) {
+  async sendEmail(to: string, subject: string, html: string) {
     try {
       const info = await this.transporter.sendMail({
         from: `"Support Team" <${process.env.MAIL_USER}>`,
@@ -266,7 +300,7 @@ export class AuthService {
     }
   }
 
-    private getForgotPasswordEmailTemplate(otp: number): string {
+  private getForgotPasswordEmailTemplate(otp: number): string {
     return `
       <div style="font-family: Arial; padding: 20px;">
         <h2>Password Reset</h2>
@@ -288,7 +322,7 @@ export class AuthService {
       await this.redis.set(`otp:${emailId}`, generateOTP, 'EX', 300);
       const subject = 'forgot password '
       const html = this.getForgotPasswordEmailTemplate(generateOTP);
-       await this.sendEmail(emailId, subject, html)
+      await this.sendEmail(emailId, subject, html)
 
 
       return {
@@ -344,7 +378,7 @@ export class AuthService {
   }
 
   async verifyCaptcha(token: string): Promise<boolean> {
-    console.log("token" , token)
+    console.log("token", token)
     if (!token) {
       throw new BadRequestException('Captcha token missing');
     }
@@ -355,7 +389,7 @@ export class AuthService {
         null,
         {
           params: {
-            secret:process.env.RECAPTCHA_SECRET_KEY,
+            secret: process.env.RECAPTCHA_SECRET_KEY,
             response: token,
           },
         },
