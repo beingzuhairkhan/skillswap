@@ -3,14 +3,21 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
-
 export default function OAuthRedirect() {
   const router = useRouter();
   const { loginWithToken } = useAuth();
+  const didRun = useRef(false);
 
   useEffect(() => {
+    if (didRun.current) return;
+    didRun.current = true;
+
     const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
+    const rawToken = params.get('token');
+
+    const token = rawToken ? decodeURIComponent(rawToken) : null;
+
+    console.log("token" , token)
 
     if (!token) {
       router.push('/login');
@@ -20,14 +27,22 @@ export default function OAuthRedirect() {
     const handleOAuthLogin = async () => {
       try {
         await loginWithToken(token);
+
+        // 🔥 remove token from URL
+        window.history.replaceState({}, document.title, '/oauth');
+
         router.push('/');
-      } catch {
+      } catch (err) {
+        console.error('OAuth login failed', err);
         router.push('/login');
       }
     };
 
     handleOAuthLogin();
   }, [router, loginWithToken]);
+
+  return null;
+}
 
   return  <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-white">
     <div className="relative flex h-16 w-16 items-center justify-center">
