@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
+
 export default function OAuthRedirect() {
   const router = useRouter();
   const { loginWithToken } = useAuth();
   const didRun = useRef(false);
+  const [status, setStatus] = useState<'loading' | 'error'>('loading');
 
   useEffect(() => {
     if (didRun.current) return;
@@ -16,45 +18,54 @@ export default function OAuthRedirect() {
     const rawToken = params.get('token');
 
     const token = rawToken ? decodeURIComponent(rawToken) : null;
-
-    console.log("token" , token)
+    console.log('🔍 Extracted token:', token);
 
     if (!token) {
-      router.push('/login');
+      router.replace('/login');
       return;
     }
 
-    const handleOAuthLogin = async () => {
+    (async () => {
       try {
+        setStatus('loading');
+
         await loginWithToken(token);
 
-        // 🔥 remove token from URL
+        // ✅ remove token from URL for security
         window.history.replaceState({}, document.title, '/oauth');
 
-        router.push('/');
+        router.replace('/');
       } catch (err) {
-        console.error('OAuth login failed', err);
-        router.push('/login');
-      }
-    };
+        console.error('OAuth login failed:', err);
+        setStatus('error');
 
-    handleOAuthLogin();
+        setTimeout(() => {
+          router.replace('/login');
+        }, 1000);
+      }
+    })();
   }, [router, loginWithToken]);
 
-  return null;
-}
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-white">
+      {status === 'loading' && (
+        <>
+          <div className="relative flex h-16 w-16 items-center justify-center">
+            <div className="absolute h-full w-full rounded-full bg-blue-500 opacity-30 animate-ping" />
+            <div className="h-6 w-6 rounded-full bg-blue-600 animate-pulse" />
+          </div>
 
-  return  <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-white">
-    <div className="relative flex h-16 w-16 items-center justify-center">
-      {/* Outer pulse */}
-      <div className="absolute h-full w-full rounded-full bg-blue-500 opacity-30 animate-ping" />
+          <p className="text-sm font-medium text-gray-600 animate-pulse">
+            Logging you in...
+          </p>
+        </>
+      )}
 
-      {/* Inner circle */}
-      <div className="h-6 w-6 rounded-full bg-blue-600 animate-pulse" />
+      {status === 'error' && (
+        <p className="text-sm font-medium text-red-500">
+          Login failed. Redirecting...
+        </p>
+      )}
     </div>
-
-    <p className="text-sm font-medium text-gray-600 animate-pulse">
-      Logging you in...
-    </p>
-  </div>;
+  );
 }
