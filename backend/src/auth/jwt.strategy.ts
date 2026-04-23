@@ -43,23 +43,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   private decrypt(token: string): string {
     const crypto = require('crypto');
 
-    console.log('🔐 START DECRYPT');
-
     const [ivBase64, encryptedData] = token.split(':');
-
-    console.log('IV BASE64:', ivBase64);
-    console.log('ENCRYPTED DATA:', encryptedData);
-
-    if (!ivBase64 || !encryptedData) {
-      throw new Error('Invalid token format (missing :)');
-    }
-
-    const iv = Buffer.from(ivBase64, 'base64');
 
     const key = crypto
       .createHash('sha256')
       .update(process.env.ENCRYPT_KEY!)
       .digest();
+
+    const iv = Buffer.from(ivBase64, 'base64');
 
     const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
 
@@ -68,11 +59,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       decipher.final(),
     ]);
 
-    const result = decrypted.toString('utf8');
-
-    console.log('🔓 DECRYPTED RESULT:', result);
-
-    return result;
+    return decrypted.toString('utf8');
   }
 
   async validate(payload: any) {
