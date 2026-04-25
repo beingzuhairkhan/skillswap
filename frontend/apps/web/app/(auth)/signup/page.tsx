@@ -38,7 +38,7 @@ const SignUp = () => {
         toast.success("User registered successfully");
         router.push("/login");
       } else {
-        toast.error(response.message || "Registration failed");
+        toast.success(response.message || "Registration Successful. Please login.");
       }
     } catch (error) {
       toast.error("Registration failed");
