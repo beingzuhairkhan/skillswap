@@ -27,7 +27,7 @@ const SignUp = () => {
   const { Register } = useAuth()
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false)
-   const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const onSubmit = async (data: IUserSignup) => {
     try {
       setIsLoading(true);
@@ -85,7 +85,24 @@ const SignUp = () => {
         </div>
 
         {/* Email */}
-       <div className="relative">
+        <div>
+          <input
+            type="email"
+            {...register("email", { required: "Email is required" })}
+            placeholder="Enter your Email"
+            className="w-full bg-gray-50 border border-gray-300 rounded-md p-3 text-gray-800
+             focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500"
+          />
+
+          {errors.email && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.email.message}
+            </p>
+          )}
+        </div>
+
+
+        <div className="relative">
           <input
             id="password"
             type={showPassword ? "text" : "password"}
@@ -112,10 +129,10 @@ const SignUp = () => {
             </p>
           )}
 
-          
+
         </div>
 
-       
+
 
         {/* Submit */}
         <button
