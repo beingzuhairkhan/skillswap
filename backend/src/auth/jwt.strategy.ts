@@ -9,6 +9,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: any) => {
+          console.log('🔍 Extracting JWT from request...' , req?.headers);
 
           const authHeader = req?.headers?.authorization;
           console.log('🔍 Authorization header:', authHeader)
@@ -18,9 +19,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             return null;
           }
 
-          const encryptedToken = authHeader
-  .replace('Bearer ', '')
-  .replace(/\s/g, ''); // 🔥 remove ALL spaces/newlines
+         const encryptedToken = authHeader
+              .replace('Bearer ', '')
+            .replace(/\s+/g, '')   // remove ALL spaces/newlines
+              .trim();
+
+          console.log('🔍 CLEANED token:', encryptedToken);
 
 
           try {
