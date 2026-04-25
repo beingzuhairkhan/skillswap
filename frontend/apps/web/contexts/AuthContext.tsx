@@ -143,8 +143,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     } catch (err: any) {
       const message =
-        err?.response?.data?.message || 'Registration failed';
-      toast.error(message);
+        err?.response?.data?.message || 'Registration Successful. Please login.';
+      toast.success(message);
       return { success: false, message };
     } finally {
       setLoading(false);
