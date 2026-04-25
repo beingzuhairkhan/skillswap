@@ -86,13 +86,12 @@ export class AuthController {
   googleAuthRedirect(@Res() res: Response) {
     const url =
       'https://accounts.google.com/o/oauth2/v2/auth' +
-      '?client_id=' +
-      process.env.GOOGLE_CLIENT_ID +
-      '&redirect_uri=' +
-      encodeURIComponent(`${process.env.BACKEND_URL}/auth/google/callback`) +
+      '?client_id=' + process.env.GOOGLE_CLIENT_ID +
+      '&redirect_uri=' + `${process.env.BACKEND_URL}/auth/google/callback` +
       '&response_type=code' +
       '&scope=openid email profile' +
-      '&access_type=offline';
+      '&access_type=offline' +
+      '&prompt=consent';
 
     return res.redirect(url);
   }
@@ -100,12 +99,12 @@ export class AuthController {
   @Get('google/callback')
   async googleCallback(@Query('code') code: string, @Res() res: Response) {
     const tokenResponse = await axios.post(
-      `${process.env.GOOGLE_OAUTH}`,
+      'https://oauth2.googleapis.com/token',
       qs.stringify({
         code,
         client_id: process.env.GOOGLE_CLIENT_ID,
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        redirect_uri: encodeURIComponent(`${process.env.BACKEND_URL}/auth/google/callback`),
+        redirect_uri: `${process.env.BACKEND_URL}/auth/google/callback`,
         grant_type: 'authorization_code',
       }),
       {
@@ -118,8 +117,9 @@ export class AuthController {
     const { id_token } = tokenResponse.data;
 
     const { user, tokens } = await this.authService.googleLogin(id_token);
-    res.redirect(
-      `${process.env.FRONTEND_URL}/oauth?token=${encodeURIComponent(tokens.accessToken)}`,
+
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/oauth?token=${encodeURIComponent(tokens.accessToken)}`
     );
   }
 
