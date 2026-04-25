@@ -18,7 +18,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             return null;
           }
 
-          const encryptedToken = authHeader.replace('Bearer ', '');
+          const encryptedToken = authHeader
+  .replace('Bearer ', '')
+  .replace(/\s/g, ''); // 🔥 remove ALL spaces/newlines
 
 
           try {
