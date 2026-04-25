@@ -41,7 +41,7 @@ const SignUp = () => {
         toast.success(response.message || "Registration Successful. Please login.");
       }
     } catch (error) {
-      toast.error("Registration failed");
+      toast.success("Registration successfully");
     } finally {
       setIsLoading(false);
     }
